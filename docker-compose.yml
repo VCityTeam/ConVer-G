@@ -1,0 +1,17 @@
+version: '3.0'
+
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sparqltosql
+    volumes:
+      - pg:/var/lib/postgresql/data
+
+volumes:
+  pg:
+    driver: local

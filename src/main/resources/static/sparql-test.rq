@@ -1,0 +1,24 @@
+# Across multiple concurrent city versions, what is the maximum known height of a particular building?
+
+SELECT (MAX(?height) AS ?maximum) WHERE {
+	GRAPH ?validity {
+  		<https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1> <http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight> ?height .
+  	}
+}
+
+
+# TODO
+SELECT (MAX(?height) AS ?maximum) WHERE {
+	GRAPH ?validity {
+  		<https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Geometry> ;
+            <http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight> ?height .
+  	}
+}
+
+# TODO  
+SELECT (SUM(?height) AS ?sum) WHERE {
+	GRAPH ?validity {
+  		<https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Geometry> ;
+            <http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight> ?height .
+  	}
+}
