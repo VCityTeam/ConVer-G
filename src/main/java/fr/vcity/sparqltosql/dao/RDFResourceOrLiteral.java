@@ -1,28 +1,28 @@
 package fr.vcity.sparqltosql.dao;
 
 
-import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.List;
-
-@Entity
 @Data
-@Table(name = "resource_or_literal")
+@Table("resource_or_literal")
 public class RDFResourceOrLiteral {
 
     public RDFResourceOrLiteral() {}
+
+    public RDFResourceOrLiteral(Integer idResourceOrLiteral, String name, String type) {
+        this.idResourceOrLiteral = idResourceOrLiteral;
+        this.name = name;
+        this.type = type;
+    }
 
     public RDFResourceOrLiteral(String name, String type) {
         this.name = name;
         this.type = type;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer idResourceOrLiteral;
 
-    @Column(columnDefinition = "TEXT")
     private String name;
 
     // NOT NULL if literal

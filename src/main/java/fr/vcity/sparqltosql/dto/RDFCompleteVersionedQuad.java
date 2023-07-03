@@ -15,14 +15,14 @@ public class RDFCompleteVersionedQuad {
 
     private String namedGraph;
 
-    private String validity;
+    private byte[] validity;
 
     public RDFCompleteVersionedQuad(
             String s,
             String p,
             String o,
             String namedGraph,
-            String validity
+            byte[] validity
     ) {
         this.s = s;
         this.p = p;

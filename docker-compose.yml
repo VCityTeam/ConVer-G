@@ -10,6 +10,8 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=sparqltosql
     volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./files:/files
       - pg:/var/lib/postgresql/data
 
 volumes:

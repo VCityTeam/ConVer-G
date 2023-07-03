@@ -9,7 +9,4 @@ public interface IQuadQueryService {
 
     void query2(String queryString);
 
-    void importModel(String modelString, String lang);
-
-    void resetDatabase();
 }

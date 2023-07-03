@@ -1,6 +1,6 @@
 package fr.vcity.sparqltosql;
 
-import fr.vcity.sparqltosql.services.IQuadQueryService;
+import fr.vcity.sparqltosql.services.IQuadImportService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -29,13 +29,13 @@ class SparqlToSqlApplicationTests {
     private ResourceLoader resourceLoader;
 
     @Autowired
-    private IQuadQueryService quadQueryService;
+    private IQuadImportService quadImportService;
 
     @Test
     @Order(1)
     public void resetDatabase() {
         log.info("Cleaning database...");
-        quadQueryService.resetDatabase();
+        quadImportService.resetDatabase();
     }
 
     @Test

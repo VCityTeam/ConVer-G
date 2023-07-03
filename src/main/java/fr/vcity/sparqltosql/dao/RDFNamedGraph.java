@@ -1,16 +1,13 @@
 package fr.vcity.sparqltosql.dao;
 
-import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
 @Data
-@Table(name = "named_graph")
+@Table("named_graph")
 public class RDFNamedGraph {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer idNamedGraph;
 
     private String name;
 
