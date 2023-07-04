@@ -6,7 +6,7 @@ The aim of this POC is to query a set of city version and extract associated kno
 ## Getting started
 ### Installation
 This project uses Java 17 JDK + Maven and a [dockerized (make sure that Docker is installed too)](https://www.docker.com/) [PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html).
-If you don't have Java 17 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/).
+If you don't have Java 17 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this tool to set Java 17 as current session version.
 
 > SDKMAN! is a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems.
 
@@ -37,11 +37,8 @@ mvn spring-boot:run
 ```
 
 ### Implementation
-
+#### Entity–Relationship model
 ```mermaid
----
-title: ER model
----
 erDiagram
     VersionedQuad |{--|| ResourceOrLiteral: extends
     VersionedQuad |{--|| NamedGraph: extends
@@ -68,29 +65,39 @@ erDiagram
         timestamptz date_commit
     }
 ```
+
+#### Flowcharts
+##### Query the relational database with a SPARQL query
+
 ```mermaid
----
-title: Query the relational database with SPARQL
----
-sequenceDiagram
-    actor CS as Computer Scientist
-    CS ->> Query Endpoint: N-Quads file
-    Query Endpoint -->> STS: Sends the SPARQL query to the parser
-    STS -->> JPA: Sends the SQL query to the JPA
-    JPA -->> PostgreSQL: Queries the database with generated SQL query
-    JPA -->> STS: Returns the filtered quads
-    STS -->> CS: Sends the result of the query (the filtered Quads)
+flowchart LR
+    CS[Computer Scientist] --> |Sends the SPARQL query to the endpoint| SE
+    SE --> |Sends the quads to the Computer Scientist| CS 
+    subgraph Server
+        SE --> |Sends the SPARQL query for translation| ARQ[Jena ARQ]
+        ARQ --> |Sends the SQL translated query to JDBC| JDBC[Java Database Connectivity]
+        JDBC --> |The filtered quads| ARQ
+        ARQ --> |The filtered quads| SE
+        
+    end
+    subgraph Database
+        JDBC --> |Sends the SQL query to the database| DB[PostgreSQL]
+        DB --> |Sends the result of the SQL query| JDBC
+    end
 ```
+
+##### Store RDF quads inside a relational database
+
 ```mermaid
----
-title: Store RDF quads inside a relational database
----
-sequenceDiagram
-    actor CS as Computer Scientist
-    CS->>Import Endpoint: RDF data
-    Import Endpoint-->>Jena ARQ: Sends the data to the Jena ARQ parser
-    Jena ARQ-->>JPA: Parses the RDF data and sends it to the JPA
-    JPA-->>PostgreSQL: Saves the quads inside the database as a new version
+flowchart LR
+    CS[Computer Scientist] --> |Sends the files to the import endpoint| SE
+    subgraph Server
+        SE --> |Sends files to import| RIOT[Jena RIOT]
+        RIOT --> |Send the quads for insertion| JDBC[Java Database Connectivity]        
+    end
+    subgraph Database
+        JDBC --> |Sends the SQL query to the database| DB[PostgreSQL]
+    end
 ```
 
 ### Testing

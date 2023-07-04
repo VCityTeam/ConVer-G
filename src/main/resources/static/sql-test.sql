@@ -21,7 +21,7 @@ FROM versioned_quad vq1
 WHERE rl1.name = 'https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1'
   AND rl2.name = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
   AND rl3.name = 'http://www.opengis.net/ont/geosparql#Geometry'
-  AND rl4.name = 'http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight'
+  AND rl4.name = 'http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight';
 
 -- Across multiple concurrent versions, find all the quads that were not valid once (or more) before the '2023-07-03 13:18'
 SELECT (c.id_commit - 1) as version, rls.name, rlp.name, rlo.name
