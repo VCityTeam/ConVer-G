@@ -5,8 +5,9 @@ import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
 import java.util.List;
 
 public interface IQuadQueryService {
-    List<RDFCompleteVersionedQuad> query(String queryString);
+    List<RDFCompleteVersionedQuad> queryRequestedValidity(String requestedVersions);
 
-    void query2(String queryString);
+    List<RDFCompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion);
 
+    void querySPARQL(String queryString);
 }

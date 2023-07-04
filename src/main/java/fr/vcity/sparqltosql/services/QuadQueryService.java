@@ -39,15 +39,31 @@ public class QuadQueryService implements IQuadQueryService {
     }
 
     /**
-     * @param requestedVersions the versions where the fact has to be truthy
-     * @return the result of the given query
+     * @param requestedValidity the request validity
+     * @return the quads list filtered by requestedValidity
      */
     @Override
-    public List<RDFCompleteVersionedQuad> query(String requestedVersions) {
-        log.debug("Requested: {}", requestedVersions);
+    public List<RDFCompleteVersionedQuad> queryRequestedValidity(String requestedValidity) {
+        log.debug("Requested: {}", requestedValidity);
+
+        if (requestedValidity.equals("*")) {
+            return rdfVersionedQuadComponent.findAll();
+        }
 
         return rdfVersionedQuadComponent
-                .findAllByValidity(requestedVersions);
+                .findAllByValidity(requestedValidity);
+    }
+
+    /**
+     * @param requestedVersion the request version number
+     * @return the quads list filtered by requestedVersion where the fact has to be truthy
+     */
+    @Override
+    public List<RDFCompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion) {
+        log.debug("Requested version: {}", requestedVersion);
+
+        return rdfVersionedQuadComponent
+                .findAllByVersion(requestedVersion);
     }
 
     /**
@@ -55,7 +71,8 @@ public class QuadQueryService implements IQuadQueryService {
      *
      * @param queryString The given query string
      */
-    public void query2(String queryString) {
+    @Override
+    public void querySPARQL(String queryString) {
         getOperatorsFromQuery(queryString);
     }
 

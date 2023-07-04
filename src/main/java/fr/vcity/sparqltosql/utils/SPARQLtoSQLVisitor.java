@@ -1,12 +1,14 @@
 package fr.vcity.sparqltosql.utils;
 
-import fr.vcity.sparqltosql.exceptions.BadValidityURIException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.sparql.algebra.OpVisitor;
 import org.apache.jena.sparql.algebra.op.*;
 
 @Slf4j
 public class SPARQLtoSQLVisitor implements OpVisitor {
+
+    private static final String VALIDITY_PATTERN = "/Validity#";
+    private static final String VERSION_PATTERN = "/Version#";
 
     /**
      * gets the list of triple from the Basic Graph Pattern
@@ -124,17 +126,13 @@ public class SPARQLtoSQLVisitor implements OpVisitor {
      */
     @Override
     public void visit(OpGraph opGraph) {
-        log.debug("Visiting OpGraph: {}", opGraph.getNode().toString());
+        String nodeString = opGraph.getNode().toString();
+        log.debug("Visiting OpGraph: {}", nodeString);
 
-        try {
-            if (opGraph.getNode().toString().contains("validity")) {
-                log.debug("Validity: {}", getValidityFromURI(opGraph.getNode().toString()));
-            } else if (opGraph.getNode().toString().contains("version")) {
-                log.debug("Version: {}", opGraph.getNode().toString());
-            }
-        } catch (BadValidityURIException e) {
-            log.error(e.getMessage());
+        if (nodeString.contains(VALIDITY_PATTERN) || nodeString.contains(VERSION_PATTERN)) {
+            log.debug("V: {}", getAnchorValueFromURI(nodeString));
         }
+
         log.debug("-----------------");
     }
 
@@ -364,12 +362,7 @@ public class SPARQLtoSQLVisitor implements OpVisitor {
         log.debug("-----------------");
     }
 
-    private static String getValidityFromURI(String uri) throws BadValidityURIException {
-        // checking the URI contains validity pattern
-        if (!uri.contains("/Validity#")) {
-            throw new BadValidityURIException(uri);
-        }
-
+    private static String getAnchorValueFromURI(String uri) {
         return uri.substring(uri.indexOf('#') + 1);
     }
 }

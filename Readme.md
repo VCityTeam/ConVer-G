@@ -43,23 +43,29 @@ mvn spring-boot:run
 title: ER model
 ---
 erDiagram
-    RDFVersionedQuad |{--|| RDFResourceOrLiteral : extends
-    RDFVersionedQuad |{--|| RDFNamedGraph : extends
-    RDFVersionedQuad {
+    VersionedQuad |{--|| ResourceOrLiteral: extends
+    VersionedQuad |{--|| NamedGraph: extends
+    VersionedQuad |{--|| Commit: extends
+    VersionedQuad {
         int id_subject PK, FK
         int id_property PK, FK
         int id_object PK, FK
         int id_named_graph FK
-        bytea validity
+        bitstring validity
     }
-    RDFNamedGraph {
-        int id PK, FK
+    NamedGraph {
+        int id_named_graph PK, FK
         int name
     }
-    RDFResourceOrLiteral {
-        int id PK, FK
-        Text name 
+    ResourceOrLiteral {
+        int id_resource_or_literal PK, FK
+        Text name
         string type "Not null if literal"
+    }
+    Commit {
+        int id_commit PK, FK
+        Varchar(255) message
+        timestamptz date_commit
     }
 ```
 ```mermaid
@@ -68,11 +74,12 @@ title: Query the relational database with SPARQL
 ---
 sequenceDiagram
     actor CS as Computer Scientist
-    CS->>Query Endpoint: N-Quads file
-    Query Endpoint-->>STS: Sends the SPARQL query to the parser
-    STS-->>JPA: Sends the SQL   query to the JPA
-    JPA-->>PostgreSQL: Queries the database with generated SQL query
-    
+    CS ->> Query Endpoint: N-Quads file
+    Query Endpoint -->> STS: Sends the SPARQL query to the parser
+    STS -->> JPA: Sends the SQL query to the JPA
+    JPA -->> PostgreSQL: Queries the database with generated SQL query
+    JPA -->> STS: Returns the filtered quads
+    STS -->> CS: Sends the result of the query (the filtered Quads)
 ```
 ```mermaid
 ---
@@ -84,9 +91,14 @@ sequenceDiagram
     Import Endpoint-->>Jena ARQ: Sends the data to the Jena ARQ parser
     Jena ARQ-->>JPA: Parses the RDF data and sends it to the JPA
     JPA-->>PostgreSQL: Saves the quads inside the database as a new version
-    
 ```
 
 ### Testing
 The API description is available on the [swagger-ui](http://localhost:8080/swagger-ui/index.html) at runtime.
-TODO: Explain tests here
+
+```shell
+# make sure your database is up
+
+# starts the tests
+mvn spring-boot:run test
+```

@@ -4,11 +4,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface IQuadImportService {
 
-    void importModelToAdd(String modelString, String lang);
+    void importModelToAdd(MultipartFile[] files);
 
-    void importModelToRemove(String modelString, String lang);
+    void importModelToRemove(MultipartFile[] files);
 
     void resetDatabase();
 
-    void importModelToRemoveAndAddFile(MultipartFile[] files);
+    void importModelToRemoveAndAdd(MultipartFile[] files);
 }
