@@ -31,10 +31,10 @@ public class QuadQueryController {
             @ApiResponse(responseCode = "404", description = "Nothing found",
                     content = @Content)}
     )
-    @PostMapping("/validity")
+    @GetMapping("/validity/{pattern}")
     List<RDFCompleteVersionedQuad> queryRequestedValidity(
-            @RequestBody(description = "The validity string (in bit string format)", required = true)
-            @org.springframework.web.bind.annotation.RequestBody String requestedValidity
+            @Parameter(description = "The validity string (in bit string format)")
+            @PathVariable("pattern") String requestedValidity
     ) {
         return quadQueryService.queryRequestedValidity(requestedValidity);
     }

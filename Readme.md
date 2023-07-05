@@ -25,6 +25,7 @@ This project uses:
 - a [Dockerized PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html), so the `postgresql` driver is installed too.
 
 ### Start the application
+#### Dockerized database + Java Spring
 
 ```shell
 # at the root of the project
@@ -34,6 +35,16 @@ docker compose up -d
 # wait until the PostgreSQL database is up
 # starts the Java Spring application locally (http://localhost:8080/)
 mvn spring-boot:run 
+```
+#### Kubernetes deployment
+
+```shell
+# at the root of the project
+kubectl apply -f ./kubernetes/secrets
+kubectl apply -f ./kubernetes/configMap
+kubectl apply -f ./kubernetes/persistentVolumeClaim
+kubectl apply -f ./kubernetes/services
+kubectl apply -f ./kubernetes/deployments
 ```
 
 ### Implementation

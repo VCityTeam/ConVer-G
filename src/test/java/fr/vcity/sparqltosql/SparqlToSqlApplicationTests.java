@@ -208,15 +208,14 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(4)
     public void queryAllVersion() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/validity")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content("*"))
+        String validity = "*";
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/validity/" + validity))
                 .andExpect(status().isOk())
                 .andReturn();
 
         List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
+        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity(validity);
 
         for (int index = 0; index < quads.size(); index++) {
             assertEquals(resultQuads.get(index).getS(), quads.get(index).getS());
@@ -230,15 +229,14 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(5)
     public void queryValidity() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/validity")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content("101"))
+        String validity = "101";
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/validity/" + validity))
                 .andExpect(status().isOk())
                 .andReturn();
 
         List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("101");
+        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity(validity);
 
         for (int index = 0; index < quads.size(); index++) {
             assertEquals(resultQuads.get(index).getS(), quads.get(index).getS());
