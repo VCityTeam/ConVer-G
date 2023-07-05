@@ -72,8 +72,9 @@ public class QuadQueryService implements IQuadQueryService {
      * @param queryString The given query string
      */
     @Override
-    public void querySPARQL(String queryString) {
+    public List<RDFCompleteVersionedQuad> querySPARQL(String queryString) {
         getOperatorsFromQuery(queryString);
+        return null;
     }
 
     /**

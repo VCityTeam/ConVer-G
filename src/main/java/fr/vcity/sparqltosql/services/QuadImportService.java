@@ -51,6 +51,7 @@ public class QuadImportService implements IQuadImportService {
      *
      * @param files The input files
      */
+    @Override
     public void importModelToAdd(MultipartFile[] files) {
         Integer maxLength = rdfVersionedQuadRepository.getMaxValidity();
 
@@ -106,6 +107,7 @@ public class QuadImportService implements IQuadImportService {
      *
      * @param files The input files
      */
+    @Override
     public void importModelToRemove(MultipartFile[] files) {
         Integer maxLength = rdfVersionedQuadRepository.getMaxValidity();
 
@@ -162,6 +164,7 @@ public class QuadImportService implements IQuadImportService {
      *
      * @param files The input files
      */
+    @Override
     public void importModelToRemoveAndAdd(MultipartFile[] files) {
         Long start = System.nanoTime();
         Integer maxLength = rdfVersionedQuadRepository.getMaxValidity();
@@ -236,7 +239,16 @@ public class QuadImportService implements IQuadImportService {
         log.info("Time of execution: {} ns", end - start);
     }
 
-
+    /**
+     * Deletes all the elements inside the database
+     */
+    @Override
+    public void resetDatabase() {
+        rdfVersionedQuadRepository.deleteAll();
+        rdfResourceRepository.deleteAll();
+        rdfNamedGraphRepository.deleteAll();
+        rdfCommitRepository.deleteAll();
+    }
 
     /**
      * Import RDF default model statements
@@ -245,7 +257,7 @@ public class QuadImportService implements IQuadImportService {
      * @param action The action (add or remove)
      * @param maxLength The size of the bit string
      */
-    public void importDefaultModel(Model defaultModel, String action, Integer maxLength) {
+    private void importDefaultModel(Model defaultModel, String action, Integer maxLength) {
         for (StmtIterator s = defaultModel.listStatements(); s.hasNext(); ) {
             RDFSavedQuad rdfSavedQuad = getRDFSavedQuad(s, "default");
 
@@ -267,16 +279,6 @@ public class QuadImportService implements IQuadImportService {
                 );
             }
         }
-    }
-
-    /**
-     * Deletes all the elements inside the database
-     */
-    public void resetDatabase() {
-        rdfVersionedQuadRepository.deleteAll();
-        rdfResourceRepository.deleteAll();
-        rdfNamedGraphRepository.deleteAll();
-        rdfCommitRepository.deleteAll();
     }
 
     /**

@@ -9,5 +9,5 @@ public interface IQuadQueryService {
 
     List<RDFCompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion);
 
-    void querySPARQL(String queryString);
+    List<RDFCompleteVersionedQuad> querySPARQL(String queryString);
 }

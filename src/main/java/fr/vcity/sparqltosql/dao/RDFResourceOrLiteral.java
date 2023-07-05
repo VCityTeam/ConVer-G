@@ -1,6 +1,7 @@
 package fr.vcity.sparqltosql.dao;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -21,10 +22,13 @@ public class RDFResourceOrLiteral {
         this.type = type;
     }
 
+    @Schema(name = "Resource or literal ID", example = "1")
     private Integer idResourceOrLiteral;
 
+    @Schema(name = "Name of the resource or literal", example = "100")
     private String name;
 
     // NOT NULL if literal
+    @Schema(name = "Type of the literal", example = "http://www.w3.org/2001/XMLSchema#string")
     private String type;
 }
