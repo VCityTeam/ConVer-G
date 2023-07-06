@@ -36,16 +36,6 @@ docker compose up -d
 # starts the Java Spring application locally (http://localhost:8080/)
 mvn spring-boot:run 
 ```
-#### Kubernetes deployment
-
-```shell
-# at the root of the project
-kubectl apply -f ./kubernetes/secrets
-kubectl apply -f ./kubernetes/configMap
-kubectl apply -f ./kubernetes/persistentVolumeClaim
-kubectl apply -f ./kubernetes/services
-kubectl apply -f ./kubernetes/deployments
-```
 
 ### Implementation
 #### Entity–Relationship model
