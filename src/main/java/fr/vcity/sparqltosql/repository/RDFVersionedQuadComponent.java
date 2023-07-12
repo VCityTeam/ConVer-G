@@ -64,6 +64,7 @@ public class RDFVersionedQuadComponent {
             Integer idNamedGraph,
             Integer length
     ) {
+        // FIXME : SQL injection !
         String query = String.format("""
                 INSERT INTO versioned_quad (id_subject, id_property, id_object, id_named_graph, validity)
                 VALUES (%s, %s, %s, %s, (
@@ -82,6 +83,7 @@ public class RDFVersionedQuadComponent {
             Integer idNamedGraph,
             Integer length
     ) {
+        // FIXME : SQL injection !
         String query = String.format("""
                 INSERT INTO versioned_quad (id_subject, id_property, id_object, id_named_graph, validity)
                 VALUES (%s, %s, %s, %s, (

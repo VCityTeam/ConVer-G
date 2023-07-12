@@ -10,9 +10,21 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=sparqltosql
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pg:/var/lib/postgresql/data
+      - pg-volume:/var/lib/postgresql/data
+
+  postgres-test:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres-test
+      - POSTGRES_PASSWORD=password-test
+      - POSTGRES_DB=sparqltosql-test
+    volumes:
+      - pg-volume-test:/var/lib/postgresql/data
 
 volumes:
-  pg:
+  pg-volume:
+    driver: local
+  pg-volume-test:
     driver: local

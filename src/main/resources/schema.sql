@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS resource_or_literal
     type                   varchar(255)
 );
 
-CREATE UNIQUE INDEX resource_or_literal_idx ON resource_or_literal (name, type);
+CREATE UNIQUE INDEX IF NOT EXISTS resource_or_literal_idx ON resource_or_literal (name, type);
 
 CREATE TABLE IF NOT EXISTS versioned_quad
 (

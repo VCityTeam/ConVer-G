@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 
 @RestController
 @Tag(name = "Import API")
@@ -31,7 +33,7 @@ public class QuadImportController {
     @PostMapping(value = "/add")
     void importModelAdd(
             @Parameter(description = "The file list containing all the triple/quads to import as valid in a new version", name = "files")
-            @RequestParam("files") MultipartFile[] files
+            @RequestParam("files") List<MultipartFile> files
     ) {
         quadImportService.importModelToAdd(files);
     }
@@ -47,7 +49,7 @@ public class QuadImportController {
     @PostMapping(value = "/remove")
     void importModelRemove(
             @Parameter(description = "The file list containing all the triple/quads to import as invalid in a new version", name = "files")
-            @RequestParam("files") MultipartFile[] files
+            @RequestParam("files") List<MultipartFile> files
     ) {
         quadImportService.importModelToRemove(files);
     }
@@ -63,7 +65,7 @@ public class QuadImportController {
     @PostMapping(value = "/remove-add")
     void submit(
             @Parameter(description = "The file list containing all the triple/quads to import as valid when filename contains 'add' and invalid when filename contains 'remove' in a new version", name = "files")
-            @RequestParam("files") MultipartFile[] files
+            @RequestParam("files") List<MultipartFile> files
     ) {
         quadImportService.importModelToRemoveAndAdd(files);
     }

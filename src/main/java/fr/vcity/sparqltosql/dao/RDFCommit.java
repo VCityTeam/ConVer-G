@@ -10,7 +10,7 @@ public class RDFCommit {
     @Schema(name = "Commit ID", example = "1")
     private Integer idCommit;
 
-    @Schema(name = "Message of the new commit", example = "") // TODO : Add example
+    @Schema(name = "Message of the new commit", example = "add: [(dataset1-add.nq)]")
     private String message;
 
     public RDFCommit() {
