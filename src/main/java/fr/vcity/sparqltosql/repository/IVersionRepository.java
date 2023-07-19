@@ -1,16 +1,16 @@
 package fr.vcity.sparqltosql.repository;
 
-import fr.vcity.sparqltosql.dao.RDFCommit;
+import fr.vcity.sparqltosql.dao.Version;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface IRDFCommitRepository extends CrudRepository<RDFCommit, Integer> {
+public interface IVersionRepository extends CrudRepository<Version, Integer> {
 
     @Query("""
-    INSERT INTO commit VALUES (DEFAULT, :message, DEFAULT)
+    INSERT INTO version VALUES (DEFAULT, :message, DEFAULT, DEFAULT)
     RETURNING *
     """)
-    RDFCommit save(String message);
+    Version save(String message);
 }

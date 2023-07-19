@@ -5,8 +5,8 @@ import lombok.Data;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@Table("named_graph")
-public class RDFNamedGraph {
+@Table("versioned_named_graph")
+public class RDFVersionedNamedGraph {
 
     @Schema(name = "Named Graph ID", example = "1")
     private Integer idNamedGraph;
@@ -14,10 +14,12 @@ public class RDFNamedGraph {
     @Schema(name = "Name of the graph", example = "https://github.com/VCityTeam/VCity/City#Lyon")
     private String name;
 
-    public RDFNamedGraph() {
-    }
+    @Schema(name = "Validity", example = "B'10001'")
+    private byte[] validity;
 
-    public RDFNamedGraph(String name) {
+    public RDFVersionedNamedGraph(Integer idNamedGraph, String name, byte[] validity) {
+        this.idNamedGraph = idNamedGraph;
         this.name = name;
+        this.validity = validity;
     }
 }

@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.services;
 
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
-import fr.vcity.sparqltosql.repository.IRDFNamedGraphRepository;
+import fr.vcity.sparqltosql.repository.IRDFVersionedNamedGraphRepository;
 import fr.vcity.sparqltosql.repository.IRDFResourceOrLiteralRepository;
 import fr.vcity.sparqltosql.repository.IRDFVersionedQuadRepository;
 import fr.vcity.sparqltosql.repository.RDFVersionedQuadComponent;
@@ -23,13 +23,13 @@ public class QuadQueryService implements IQuadQueryService {
 
     IRDFResourceOrLiteralRepository rdfResourceRepository;
     IRDFVersionedQuadRepository rdfVersionedQuadRepository;
-    IRDFNamedGraphRepository rdfNamedGraphRepository;
+    IRDFVersionedNamedGraphRepository rdfNamedGraphRepository;
     RDFVersionedQuadComponent rdfVersionedQuadComponent;
 
     public QuadQueryService(
             IRDFResourceOrLiteralRepository rdfResourceRepository,
             IRDFVersionedQuadRepository rdfVersionedQuadRepository,
-            IRDFNamedGraphRepository rdfNamedGraphRepository,
+            IRDFVersionedNamedGraphRepository rdfNamedGraphRepository,
             RDFVersionedQuadComponent rdfVersionedQuadComponent
     ) {
         this.rdfResourceRepository = rdfResourceRepository;

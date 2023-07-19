@@ -21,7 +21,7 @@ public class RDFVersionedQuadComponent {
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                             LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                            LEFT JOIN named_graph ng ON ng.id_named_graph = v.id_named_graph
+                            LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
                                 """,
                 getRdfCompleteVersionedQuadRowMapper()
         );
@@ -34,7 +34,7 @@ public class RDFVersionedQuadComponent {
                     FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                     LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                     LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                    LEFT JOIN named_graph ng ON ng.id_named_graph = v.id_named_graph
+                    LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
                     WHERE v.validity = B'%s'
                 """, validity);
         return jdbcTemplate.query(query,
@@ -49,7 +49,7 @@ public class RDFVersionedQuadComponent {
                     FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                     LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                     LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                    LEFT JOIN named_graph ng ON ng.id_named_graph = v.id_named_graph
+                    LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
                     WHERE get_bit(v.validity, %s) = 1
                 """, requestedVersion);
         return jdbcTemplate.query(query,

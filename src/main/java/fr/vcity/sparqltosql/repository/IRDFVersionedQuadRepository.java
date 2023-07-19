@@ -23,7 +23,4 @@ public interface IRDFVersionedQuadRepository extends CrudRepository<RDFVersioned
             """)
     @Modifying
     void updateValidityVersionedQuad();
-
-    @Query(value = "SELECT bit_length(v.validity) FROM versioned_quad v LIMIT 1")
-    Integer getMaxValidity();
 }
