@@ -24,10 +24,16 @@ instead of representing each version as a separate dataset, leads to a more effi
 A query-scenario of this experiment can be : *"Which city version has the highest number of trees in the district 1?"*
 
 ### Notes
-Using an **SQL backend for SPARQL** has been done in some cases (see, e.g. https://www.good-eris.net/ocaml-rdf/ or https://www.w3.org/2008/07/MappingRules/StemMapping).
-That is not directly related to the exposition of relational data as RDF data which requires a language such as https://www.w3.org/TR/r2rml/ to express the mapping.
-A tool such as https://ontop-vkg.org/ uses the mapping to translate SPARQL queries to SQL.
-**But they are not sufficient for our use case.**
+Using a SQL as a backend for SPARQL has been done in some cases.
+- **[A Mapping of SPARQL Onto Conventional SQL - W3C](https://www.w3.org/2008/07/MappingRules/StemMapping)**
+  This paper discusses a semantics for expressing relational data as an RDF graph and an algebra for mapping SPARQL SELECT queries over that RDF to SQL queries over the original relational data.
+  The goal is to provide a specification for SPARQL tool vendors and a foundation for the Semantic Web. It highlights the importance of creating a computable mapping from SPARQL semantics to SQL semantics.
+- **[Evaluating SPARQL-to-SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
+  This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
+  It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL-to-SQL translation in the Ontop system.
+- **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
+  This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL queries to relational queries,
+  either by rewriting them into SQL queries or by compiling them directly into evaluation structures native to the database.
 
 ## Getting started
 ### Installation
