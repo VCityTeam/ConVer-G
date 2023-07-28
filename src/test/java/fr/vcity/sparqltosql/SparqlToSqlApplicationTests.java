@@ -53,7 +53,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(0)
-    public void resetDatabase() {
+    void resetDatabase() {
         quadImportService.resetDatabase();
         List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
@@ -64,7 +64,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(1)
-    public void importQuadsAdd() throws Exception {
+    void importQuadsAdd() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:static/add/LYON_1ER_BATI_2015-add_bldg.nq");
 
         MockMultipartFile file
@@ -88,7 +88,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(2)
-    public void importQuadsRemove() throws Exception {
+    void importQuadsRemove() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:static/remove/LYON_1ER_BATI_2015-remove_bldg.nq");
 
         MockMultipartFile file
@@ -133,7 +133,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(3)
-    public void importQuadsRemoveAdd() throws Exception {
+    void importQuadsRemoveAdd() throws Exception {
         Resource resource1 = resourceLoader.getResource("classpath:static/remove-add/LYON_1ER_BATI_2015-remove_bldg.nq");
         Resource resource2 = resourceLoader.getResource("classpath:static/remove-add/LYON_1ER_BATI_2015-add_bldg.nq");
 
@@ -211,7 +211,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(4)
-    public void queryAllVersion() throws Exception {
+    void queryAllVersion() throws Exception {
         String validity = "*";
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/validity/" + validity))
                 .andExpect(status().isOk())
@@ -232,7 +232,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(5)
-    public void queryValidity() throws Exception {
+    void queryValidity() throws Exception {
         String validity = "101";
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/validity/" + validity))
                 .andExpect(status().isOk())
@@ -253,7 +253,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(6)
-    public void queryVersion() throws Exception {
+    void queryVersion() throws Exception {
         int index = 1;
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/version/" + index))
                 .andExpect(status().isOk())
@@ -268,7 +268,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(7)
-    public void getGraphVersion() throws Exception {
+    void getGraphVersion() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -277,7 +277,7 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(8)
-    public void querySPARQL() throws Exception {
+    void querySPARQL() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:static/queries/sparql.rq");
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
                         .contentType(MediaType.TEXT_PLAIN)

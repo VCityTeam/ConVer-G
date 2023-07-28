@@ -59,7 +59,7 @@ public class QuadImportService implements IQuadImportService {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
-                .collect(Collectors.toList());
+                .toList();
         Version version = versionRepository.save(summarizeImport(fileList, "add"));
 
         fileList.forEach(file -> {
@@ -75,7 +75,7 @@ public class QuadImportService implements IQuadImportService {
 
                 Long start = System.nanoTime();
 
-                if (dataset.getDefaultModel().listStatements().toList().size() > 0) {
+                if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
                     importDefaultModel(dataset.getDefaultModel(), "add", version.getIndexVersion());
                 }
 
@@ -108,6 +108,8 @@ public class QuadImportService implements IQuadImportService {
         rdfVersionedQuadRepository.updateValidityVersionedQuad();
         rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
         Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
+
+
         return updatedVersion.getShaVersion();
     }
 
@@ -122,7 +124,7 @@ public class QuadImportService implements IQuadImportService {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
-                .collect(Collectors.toList());
+                .toList();
         Version version = versionRepository.save(summarizeImport(fileList, "remove"));
 
         fileList.forEach(file -> {
@@ -136,7 +138,7 @@ public class QuadImportService implements IQuadImportService {
                                 .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
                                 .toDataset();
 
-                if (dataset.getDefaultModel().listStatements().toList().size() > 0) {
+                if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
                     importDefaultModel(dataset.getDefaultModel(), "remove", version.getIndexVersion());
                 }
 
@@ -183,7 +185,7 @@ public class QuadImportService implements IQuadImportService {
                 .stream()
                 .filter(file -> !file.isEmpty())
                 .sorted(getRemoveAddFileComparator())
-                .collect(Collectors.toList());
+                .toList();
         Version version = versionRepository.save(summarizeImport(fileList, "remove-add"));
 
         fileList.forEach(file -> {
@@ -196,7 +198,7 @@ public class QuadImportService implements IQuadImportService {
                                 .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
                                 .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
                                 .toDataset();
-                if (dataset.getDefaultModel().listStatements().toList().size() > 0) {
+                if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
                     if (file.getOriginalFilename().contains("add")) {
                         importDefaultModel(dataset.getDefaultModel(), "add", version.getIndexVersion());
                     } else if (file.getOriginalFilename().contains("remove")) {
