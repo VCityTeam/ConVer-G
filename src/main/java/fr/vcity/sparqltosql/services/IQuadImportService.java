@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface IQuadImportService {
 
-    void importModelToAdd(List<MultipartFile> files);
+    String importModelToAdd(String shaParent, List<MultipartFile> files);
 
-    void importModelToRemove(List<MultipartFile> files);
+    String importModelToRemove(String shaParent, List<MultipartFile> files);
+
+    String importModelToRemoveAndAdd(String shaParent, List<MultipartFile> files);
 
     void resetDatabase();
-
-    void importModelToRemoveAndAdd(List<MultipartFile> files);
 }

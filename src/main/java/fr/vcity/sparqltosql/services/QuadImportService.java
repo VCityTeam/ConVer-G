@@ -49,13 +49,13 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Import RDF statements represented in language <code>lang</code> to the model as valid in the new version.
-     * <br />Predefined values for <code>lang</code> are "TRIG" and "NQUADS"
+     * Import RDF statements represented in language <code>of the file extension</code> to the model as valid in the new version.
      *
+     * @param shaParent the sha of the Parent version
      * @param files The input files
      */
     @Override
-    public void importModelToAdd(List<MultipartFile> files) {
+    public String importModelToAdd(String shaParent, List<MultipartFile> files) {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
@@ -107,16 +107,18 @@ public class QuadImportService implements IQuadImportService {
 
         rdfVersionedQuadRepository.updateValidityVersionedQuad();
         rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
+        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
+        return updatedVersion.getShaVersion();
     }
 
     /**
-     * Import RDF statements represented in language <code>lang</code> to the model as not valid in the new version.
-     * <br />Predefined values for <code>lang</code> are "TRIG" and "NQUADS"
+     * Import RDF statements represented in language <code>of the file extension</code> to the model as not valid in the new version.
      *
+     * @param shaParent the sha of the Parent version
      * @param files The input files
      */
     @Override
-    public void importModelToRemove(List<MultipartFile> files) {
+    public String importModelToRemove(String shaParent, List<MultipartFile> files) {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
@@ -165,15 +167,18 @@ public class QuadImportService implements IQuadImportService {
 
         rdfVersionedQuadRepository.updateValidityVersionedQuad();
         rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
+        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
+        return updatedVersion.getShaVersion();
     }
 
     /**
      * Import RDF statements inside the <code>files</code>
      *
+     * @param shaParent the sha of the Parent version
      * @param files The input files
      */
     @Override
-    public void importModelToRemoveAndAdd(List<MultipartFile> files) {
+    public String importModelToRemoveAndAdd(String shaParent, List<MultipartFile> files) {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
@@ -236,6 +241,8 @@ public class QuadImportService implements IQuadImportService {
 
         rdfVersionedQuadRepository.updateValidityVersionedQuad();
         rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
+        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
+        return updatedVersion.getShaVersion();
     }
 
     /**

@@ -35,8 +35,14 @@ CREATE TABLE IF NOT EXISTS versioned_quad
 
 CREATE TABLE IF NOT EXISTS version
 (
-    index_version integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    index_version integer GENERATED ALWAYS AS IDENTITY,
+    sha_version varchar(255) UNIQUE DEFAULT NULL,
+    sha_version_parent varchar(255) DEFAULT NULL,
     message   varchar(255),
     begin_version_date timestamptz default current_timestamp,
-    end_version_date timestamptz default NULL
+    end_version_date timestamptz default NULL,
+    PRIMARY KEY (index_version),
+    CONSTRAINT fk_sha_version_parent
+        FOREIGN KEY (sha_version_parent)
+            REFERENCES version (sha_version)
 )

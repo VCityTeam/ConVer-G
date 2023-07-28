@@ -1,10 +1,8 @@
 package fr.vcity.sparqltosql.services;
 
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
-import fr.vcity.sparqltosql.repository.IRDFVersionedNamedGraphRepository;
-import fr.vcity.sparqltosql.repository.IRDFResourceOrLiteralRepository;
-import fr.vcity.sparqltosql.repository.IRDFVersionedQuadRepository;
-import fr.vcity.sparqltosql.repository.RDFVersionedQuadComponent;
+import fr.vcity.sparqltosql.dto.VersionAncestry;
+import fr.vcity.sparqltosql.repository.*;
 import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.query.Query;
@@ -24,17 +22,20 @@ public class QuadQueryService implements IQuadQueryService {
     IRDFResourceOrLiteralRepository rdfResourceRepository;
     IRDFVersionedQuadRepository rdfVersionedQuadRepository;
     IRDFVersionedNamedGraphRepository rdfNamedGraphRepository;
+    IVersionRepository versionRepository;
     RDFVersionedQuadComponent rdfVersionedQuadComponent;
 
     public QuadQueryService(
             IRDFResourceOrLiteralRepository rdfResourceRepository,
             IRDFVersionedQuadRepository rdfVersionedQuadRepository,
             IRDFVersionedNamedGraphRepository rdfNamedGraphRepository,
+            IVersionRepository versionRepository,
             RDFVersionedQuadComponent rdfVersionedQuadComponent
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.rdfNamedGraphRepository = rdfNamedGraphRepository;
+        this.versionRepository = versionRepository;
         this.rdfVersionedQuadComponent = rdfVersionedQuadComponent;
     }
 
@@ -75,6 +76,24 @@ public class QuadQueryService implements IQuadQueryService {
     public List<RDFCompleteVersionedQuad> querySPARQL(String queryString) {
         getOperatorsFromQuery(queryString);
         return null;
+    }
+
+    /**
+     * Returns the whole graph version of the database
+     */
+    @Override
+    public List<VersionAncestry> getGraphVersion() {
+        return versionRepository.getGraphVersion();
+    }
+
+    /**
+     * Returns the hash of a specified version
+     *
+     * @param indexVersion The given index version
+     */
+    @Override
+    public String getHashOfVersion(Integer indexVersion) {
+        return versionRepository.getHashVersionByIndexVersion(indexVersion);
     }
 
     /**

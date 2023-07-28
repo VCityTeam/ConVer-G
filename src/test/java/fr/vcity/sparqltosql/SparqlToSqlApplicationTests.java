@@ -99,7 +99,9 @@ class SparqlToSqlApplicationTests {
                 resource.getInputStream().readAllBytes()
         );
 
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/remove")
+        String hashParentVersion = quadQueryService.getHashOfVersion(1);
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/remove/" + hashParentVersion)
                         .file(file))
                 .andExpect(status().isOk());
 
@@ -151,7 +153,9 @@ class SparqlToSqlApplicationTests {
                 resource2.getInputStream().readAllBytes()
         );
 
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/remove-add")
+        String hashParentVersion = quadQueryService.getHashOfVersion(1);
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/remove-add/" + hashParentVersion)
                         .file(file1)
                         .file(file2))
                 .andExpect(status().isOk());
@@ -264,6 +268,15 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(7)
+    public void getGraphVersion() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
+                .andExpect(status().isOk())
+                .andReturn();
+        // TODO : Ajouter un test sur toutes les versions générées et le graphe associé
+    }
+
+    @Test
+    @Order(8)
     public void querySPARQL() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:static/queries/sparql.rq");
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")

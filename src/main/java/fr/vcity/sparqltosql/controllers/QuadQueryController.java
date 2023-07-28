@@ -1,6 +1,7 @@
 package fr.vcity.sparqltosql.controllers;
 
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
+import fr.vcity.sparqltosql.dto.VersionAncestry;
 import fr.vcity.sparqltosql.services.QuadQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,11 +35,11 @@ public class QuadQueryController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The query filtered result",
                     content = {
-                    @Content(mediaType = "application/json",
-                            array = @ArraySchema(
-                                    schema = @Schema(implementation = RDFCompleteVersionedQuad.class)
-                            )
-                    )}),
+                            @Content(mediaType = "application/json",
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = RDFCompleteVersionedQuad.class)
+                                    )
+                            )}),
             @ApiResponse(responseCode = "400", description = "Invalid validity",
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "Nothing found",
@@ -98,5 +99,22 @@ public class QuadQueryController {
             @org.springframework.web.bind.annotation.RequestBody String queryString
     ) {
         return ResponseEntity.ok(quadQueryService.querySPARQL(queryString));
+    }
+
+    @Operation(
+            summary = "Get version tree",
+            description = "Gets all versions and their ancestry"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The version tree",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = VersionAncestry.class)
+                            )
+                    )})}
+    )
+    @GetMapping("/versions")
+    ResponseEntity<List<VersionAncestry>> getGraphVersion() {
+        return ResponseEntity.ok(quadQueryService.getGraphVersion());
     }
 }

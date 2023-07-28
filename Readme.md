@@ -95,6 +95,8 @@ erDiagram
     }
     Version {
         int index_version "PK, (FK)"
+        varchar(255) sha_version
+        varchar(255) sha_version_parent FK
         Text message
         timestamptz date_version_begin
         timestamptz date_version_end
