@@ -13,6 +13,4 @@ public interface IQuadQueryService {
     List<RDFCompleteVersionedQuad> querySPARQL(String queryString);
 
     List<VersionAncestry> getGraphVersion();
-
-    String getHashOfVersion(Integer indexVersion);
 }

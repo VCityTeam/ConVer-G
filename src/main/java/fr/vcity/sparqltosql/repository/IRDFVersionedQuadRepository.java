@@ -15,7 +15,7 @@ public interface IRDFVersionedQuadRepository extends CrudRepository<RDFVersioned
                 WHEN bit_length(v.validity) = (
                     SELECT MAX(bit_length(v1.validity)) FROM versioned_quad v1
                 ) THEN v.validity
-                ELSE v.validity || get_bit(v.validity, length(v.validity) - 1)::bit
+                ELSE v.validity || B'0'
             END
             WHERE bit_length(v.validity) = (
                 SELECT MIN(bit_length(v1.validity)) FROM versioned_quad v1

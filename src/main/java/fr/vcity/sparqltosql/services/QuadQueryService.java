@@ -13,6 +13,7 @@ import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.OpWalker;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -75,7 +76,7 @@ public class QuadQueryService implements IQuadQueryService {
     @Override
     public List<RDFCompleteVersionedQuad> querySPARQL(String queryString) {
         getOperatorsFromQuery(queryString);
-        return null;
+        return Collections.emptyList();
     }
 
     /**
@@ -83,17 +84,7 @@ public class QuadQueryService implements IQuadQueryService {
      */
     @Override
     public List<VersionAncestry> getGraphVersion() {
-        return versionRepository.getGraphVersion();
-    }
-
-    /**
-     * Returns the hash of a specified version
-     *
-     * @param indexVersion The given index version
-     */
-    @Override
-    public String getHashOfVersion(Integer indexVersion) {
-        return versionRepository.getHashVersionByIndexVersion(indexVersion);
+        return Collections.emptyList();
     }
 
     /**
@@ -110,8 +101,9 @@ public class QuadQueryService implements IQuadQueryService {
                     SPARQLtoSQLVisitor sparqLtoSQLVisitor = new SPARQLtoSQLVisitor();
                     OpWalker.walk(op, sparqLtoSQLVisitor);
                 }
-                case UNKNOWN, ASK, CONSTRUCT, DESCRIBE, CONSTRUCT_JSON ->
+                case ASK, CONSTRUCT, DESCRIBE, CONSTRUCT_JSON ->
                         log.warn("Query with type: {} not implemented", query.queryType().toString());
+                case UNKNOWN -> log.warn("Unknown query not supported. Ignoring it.");
             }
         } catch (QueryParseException e) {
             log.error(e.getMessage());

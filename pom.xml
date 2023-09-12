@@ -18,6 +18,7 @@
         <jmh.version>1.36</jmh.version>
         <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <jacoco.version>0.8.10</jacoco.version>
     </properties>
     <dependencies>
         <dependency>
@@ -69,6 +70,13 @@
             <artifactId>jena-arq</artifactId>
             <version>4.8.0</version>
         </dependency>
+
+        <!--   Coverage dependency     -->
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
@@ -81,6 +89,25 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

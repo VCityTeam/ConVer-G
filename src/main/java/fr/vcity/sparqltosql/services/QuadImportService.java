@@ -1,8 +1,8 @@
 package fr.vcity.sparqltosql.services;
 
-import fr.vcity.sparqltosql.dao.Version;
-import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
 import fr.vcity.sparqltosql.dao.RDFResourceOrLiteral;
+import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
+import fr.vcity.sparqltosql.dao.Version;
 import fr.vcity.sparqltosql.exceptions.FileException;
 import fr.vcity.sparqltosql.model.RDFSavedTriple;
 import fr.vcity.sparqltosql.repository.*;
@@ -18,7 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,16 +52,15 @@ public class QuadImportService implements IQuadImportService {
     /**
      * Import RDF statements represented in language <code>of the file extension</code> to the model as valid in the new version.
      *
-     * @param shaParent the sha of the Parent version
      * @param files The input files
      */
     @Override
-    public String importModelToAdd(String shaParent, List<MultipartFile> files) {
+    public Integer importModel(List<MultipartFile> files) {
         List<MultipartFile> fileList = files
                 .stream()
                 .filter(file -> !file.isEmpty())
                 .toList();
-        Version version = versionRepository.save(summarizeImport(fileList, "add"));
+        Version version = versionRepository.save(summarizeImport(fileList));
 
         fileList.forEach(file -> {
             log.info("Current file: {}", file.getOriginalFilename());
@@ -76,7 +76,7 @@ public class QuadImportService implements IQuadImportService {
                 Long start = System.nanoTime();
 
                 if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
-                    importDefaultModel(dataset.getDefaultModel(), "add", version.getIndexVersion());
+                    importDefaultModel(dataset.getDefaultModel(), version.getIndexVersion());
                 }
 
                 for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
@@ -88,7 +88,7 @@ public class QuadImportService implements IQuadImportService {
                     model.listStatements().toList().parallelStream().forEach(statement -> {
                         RDFSavedTriple rdfSavedTriple = getRDFSavedTriple(statement);
 
-                        rdfVersionedQuadComponent.saveAdd(
+                        rdfVersionedQuadComponent.save(
                                 rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
                                 rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
                                 rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
@@ -101,150 +101,14 @@ public class QuadImportService implements IQuadImportService {
                 Long end = System.nanoTime();
                 log.info("Time of execution: {} ns for file: {}", end - start, file.getOriginalFilename());
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new FileException(e.getMessage());
             }
         });
 
         rdfVersionedQuadRepository.updateValidityVersionedQuad();
         rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
-        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
 
-
-        return updatedVersion.getShaVersion();
-    }
-
-    /**
-     * Import RDF statements represented in language <code>of the file extension</code> to the model as not valid in the new version.
-     *
-     * @param shaParent the sha of the Parent version
-     * @param files The input files
-     */
-    @Override
-    public String importModelToRemove(String shaParent, List<MultipartFile> files) {
-        List<MultipartFile> fileList = files
-                .stream()
-                .filter(file -> !file.isEmpty())
-                .toList();
-        Version version = versionRepository.save(summarizeImport(fileList, "remove"));
-
-        fileList.forEach(file -> {
-            log.info("Current file: {}", file.getOriginalFilename());
-
-            try (InputStream inputStream = file.getInputStream()) {
-                Dataset dataset =
-                        RDFParser.create()
-                                .source(inputStream)
-                                .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
-                                .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                                .toDataset();
-
-                if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
-                    importDefaultModel(dataset.getDefaultModel(), "remove", version.getIndexVersion());
-                }
-
-                for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
-                    Resource namedModel = i.next();
-                    Model model = dataset.getNamedModel(namedModel);
-                    log.debug("Name Graph : {}", namedModel.getURI());
-                    RDFVersionedNamedGraph savedRDFVersionedNamedGraph = saveRDFNamedGraphOrReturnExisting(namedModel.getURI(), version.getIndexVersion() - 1);
-
-                    model.listStatements().toList().parallelStream().forEach(statement -> {
-                        RDFSavedTriple rdfSavedTriple = getRDFSavedTriple(statement);
-
-                        rdfVersionedQuadComponent.saveRemove(
-                                rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                                rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                                rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                                savedRDFVersionedNamedGraph.getIdNamedGraph(),
-                                version.getIndexVersion() - 1
-                        );
-                    });
-                }
-
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        rdfVersionedQuadRepository.updateValidityVersionedQuad();
-        rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
-        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
-        return updatedVersion.getShaVersion();
-    }
-
-    /**
-     * Import RDF statements inside the <code>files</code>
-     *
-     * @param shaParent the sha of the Parent version
-     * @param files The input files
-     */
-    @Override
-    public String importModelToRemoveAndAdd(String shaParent, List<MultipartFile> files) {
-        List<MultipartFile> fileList = files
-                .stream()
-                .filter(file -> !file.isEmpty())
-                .sorted(getRemoveAddFileComparator())
-                .toList();
-        Version version = versionRepository.save(summarizeImport(fileList, "remove-add"));
-
-        fileList.forEach(file -> {
-            log.info("Current file: {}", file.getOriginalFilename());
-
-            try (InputStream inputStream = file.getInputStream()) {
-                Dataset dataset =
-                        RDFParser.create()
-                                .source(inputStream)
-                                .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
-                                .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                                .toDataset();
-                if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
-                    if (file.getOriginalFilename().contains("add")) {
-                        importDefaultModel(dataset.getDefaultModel(), "add", version.getIndexVersion());
-                    } else if (file.getOriginalFilename().contains("remove")) {
-                        importDefaultModel(dataset.getDefaultModel(), "remove", version.getIndexVersion());
-                    } else {
-                        throw new FileException("The file: " + file.getOriginalFilename() + " doesn't contain 'add' or 'remove'");
-                    }
-                }
-
-                for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
-                    Resource namedModel = i.next();
-                    Model model = dataset.getNamedModel(namedModel);
-                    log.debug("Name Graph : {}", namedModel.getURI());
-                    RDFVersionedNamedGraph savedRDFVersionedNamedGraph = saveRDFNamedGraphOrReturnExisting(namedModel.getURI(), version.getIndexVersion() - 1);
-
-                    model.listStatements().toList().parallelStream().forEach(statement -> {
-                        RDFSavedTriple rdfSavedTriple = getRDFSavedTriple(statement);
-
-                        if (file.getOriginalFilename().contains("add")) {
-                            rdfVersionedQuadComponent.saveAdd(
-                                    rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                                    rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                                    rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                                    savedRDFVersionedNamedGraph.getIdNamedGraph(),
-                                    version.getIndexVersion() - 1
-                            );
-                        } else {
-                            rdfVersionedQuadComponent.saveRemove(
-                                    rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                                    rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                                    rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                                    savedRDFVersionedNamedGraph.getIdNamedGraph(),
-                                    version.getIndexVersion() - 1
-                            );
-                        }
-                    });
-                }
-            } catch (IOException e) {
-                throw new FileException("Failed to store file.", e);
-            }
-        });
-
-        rdfVersionedQuadRepository.updateValidityVersionedQuad();
-        rdfVersionedNamedGraphComponent.updateVersionedNamedGraphValidity();
-        Version updatedVersion = versionRepository.updateVersionSha(shaParent == null ? "" : shaParent, shaParent, version.getIndexVersion());
-        return updatedVersion.getShaVersion();
+        return version.getIndexVersion();
     }
 
     /**
@@ -261,12 +125,11 @@ public class QuadImportService implements IQuadImportService {
     /**
      * Summarize the new version
      *
-     * @param fileList   The non empty files
-     * @param actionType the action type
+     * @param fileList The non-empty files
      * @return The computed summary of the import
      */
-    private String summarizeImport(List<MultipartFile> fileList, String actionType) {
-        return String.format("%s: [%s]", actionType, fileList
+    private String summarizeImport(List<MultipartFile> fileList) {
+        return String.format("[%s]", fileList
                 .stream()
                 .map(multipartFile -> "(" + multipartFile.getOriginalFilename() + ")")
                 .collect(Collectors.joining(",")));
@@ -276,32 +139,21 @@ public class QuadImportService implements IQuadImportService {
      * Import RDF default model statements
      *
      * @param defaultModel The default graph
-     * @param action       The action (add or remove)
      * @param indexBS      The size of the bit string
      */
-    private void importDefaultModel(Model defaultModel, String action, Integer indexBS) {
+    private void importDefaultModel(Model defaultModel, Integer indexBS) {
         RDFVersionedNamedGraph savedRDFVersionedNamedGraph = saveRDFNamedGraphOrReturnExisting("default", indexBS - 1);
 
         defaultModel.listStatements().toList().parallelStream().forEach(statement -> {
             RDFSavedTriple rdfSavedTriple = getRDFSavedTriple(statement);
 
-            if (action.equals("remove")) {
-                rdfVersionedQuadComponent.saveRemove(
-                        rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                        rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                        rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                        savedRDFVersionedNamedGraph.getIdNamedGraph(),
-                        indexBS - 1
-                );
-            } else {
-                rdfVersionedQuadComponent.saveAdd(
-                        rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                        rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                        rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                        savedRDFVersionedNamedGraph.getIdNamedGraph(),
-                        indexBS - 1
-                );
-            }
+            rdfVersionedQuadComponent.save(
+                    rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
+                    rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
+                    rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
+                    savedRDFVersionedNamedGraph.getIdNamedGraph(),
+                    indexBS - 1
+            );
         });
     }
 
@@ -359,27 +211,5 @@ public class QuadImportService implements IQuadImportService {
             log.debug("Upsert {} resource: {}", type, spo);
             return rdfResourceRepository.save(spo.toString(), null);
         }
-    }
-
-    /**
-     * Compares two multipartfile (sorting "remove" first and "add" then)
-     *
-     * @return The comparison
-     */
-    private static Comparator<MultipartFile> getRemoveAddFileComparator() {
-        return (o1, o2) -> {
-            if (o1.getOriginalFilename() == null || o2.getOriginalFilename() == null) {
-                throw new FileException("The filename is broken");
-            }
-
-            if (o1.getOriginalFilename().contains("remove") && o2.getOriginalFilename().contains("remove")) {
-                return 0;
-            } else if (o1.getOriginalFilename().contains("add") && o2.getOriginalFilename().contains("add")) {
-                return 0;
-            } else if (o1.getOriginalFilename().contains("remove") && o2.getOriginalFilename().contains("add")) {
-                return 1;
-            }
-            return -1;
-        };
     }
 }

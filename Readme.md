@@ -56,6 +56,11 @@ This project uses:
 - the `springdoc-openapi-starter-webmvc-ui 2.1.0` library to parse the Swagger API annotations and displays the [swagger-ui](http://localhost:8080/swagger-ui/index.html),
 - a [Dockerized PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html), so the `postgresql` driver is installed too.
 
+### Maven plugins
+This project has been tested with:
+- `sonarqube`, assuring the code quality,
+- `JaCoCo`, testing the code coverage.
+
 ### Start the application
 #### Dockerized database + Java Spring
 
@@ -73,9 +78,8 @@ mvn spring-boot:run
 #### Entity–Relationship model
 ```mermaid
 erDiagram
-    VersionedQuad |{--}| ResourceOrLiteral: references
-    VersionedQuad ||--}| VersionedNamedGraph: references
-    VersionedQuad |{--}| Version: extends
+    VersionedQuad }|--|{ ResourceOrLiteral: "foreign key"
+    VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
     VersionedQuad {
         int id_subject PK, FK
         int id_property PK, FK
@@ -90,14 +94,13 @@ erDiagram
     }
     ResourceOrLiteral {
         int id_resource_or_literal PK, FK
-        Text name
+        text name
         string type "Not null if literal"
     }
     Version {
         int index_version "PK, (FK)"
         varchar(255) sha_version
-        varchar(255) sha_version_parent FK
-        Text message
+        text message
         timestamptz date_version_begin
         timestamptz date_version_end
     }
