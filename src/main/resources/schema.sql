@@ -36,16 +36,20 @@ CREATE TABLE IF NOT EXISTS version
     PRIMARY KEY (index_version)
 );
 
--- TODO : Think about the alternative city version graph model
--- CREATE TABLE IF NOT EXISTS version_links
--- (
---     index_version integer,
---     index_version_parent integer,
---     PRIMARY KEY (index_version),
---     CONSTRAINT fk_version_parent
---         FOREIGN KEY (index_version_parent)
---             REFERENCES version_links (index_version),
---     CONSTRAINT fk_version
---         FOREIGN KEY (index_version)
---             REFERENCES version (index_version)
--- );
+CREATE TABLE IF NOT EXISTS versioned_workspace
+(
+    id_object      integer,
+    id_property    integer,
+    id_subject     integer,
+    validity       bit varying,
+    PRIMARY KEY (id_object, id_property, id_subject)
+);
+
+CREATE TABLE IF NOT EXISTS workspace_version
+(
+    index_workspace_version integer GENERATED ALWAYS AS IDENTITY,
+    message   varchar(255),
+    begin_workspace_version_date timestamptz default current_timestamp,
+    end_workspace_version_date timestamptz default NULL,
+    PRIMARY KEY (index_workspace_version)
+);

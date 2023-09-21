@@ -1,7 +1,10 @@
 package fr.vcity.sparqltosql.services;
 
+import fr.vcity.sparqltosql.dao.ScenarioVersion;
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
-import fr.vcity.sparqltosql.dto.VersionAncestry;
+import fr.vcity.sparqltosql.dto.Scenario;
+import fr.vcity.sparqltosql.dto.Space;
+import fr.vcity.sparqltosql.dto.Workspace;
 import fr.vcity.sparqltosql.repository.*;
 import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,31 +16,34 @@ import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.OpWalker;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class QuadQueryService implements IQuadQueryService {
+public class QueryService implements IQueryService {
 
     IRDFResourceOrLiteralRepository rdfResourceRepository;
     IRDFVersionedQuadRepository rdfVersionedQuadRepository;
     IRDFVersionedNamedGraphRepository rdfNamedGraphRepository;
+    IVersionedWorkspaceRepository versionedWorkspaceRepository;
     IVersionRepository versionRepository;
     RDFVersionedQuadComponent rdfVersionedQuadComponent;
 
-    public QuadQueryService(
+    public QueryService(
             IRDFResourceOrLiteralRepository rdfResourceRepository,
             IRDFVersionedQuadRepository rdfVersionedQuadRepository,
             IRDFVersionedNamedGraphRepository rdfNamedGraphRepository,
             IVersionRepository versionRepository,
-            RDFVersionedQuadComponent rdfVersionedQuadComponent
+            RDFVersionedQuadComponent rdfVersionedQuadComponent,
+            IVersionedWorkspaceRepository versionedWorkspaceRepository
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.rdfNamedGraphRepository = rdfNamedGraphRepository;
         this.versionRepository = versionRepository;
         this.rdfVersionedQuadComponent = rdfVersionedQuadComponent;
+        this.versionedWorkspaceRepository = versionedWorkspaceRepository;
     }
 
     /**
@@ -83,8 +89,60 @@ public class QuadQueryService implements IQuadQueryService {
      * Returns the whole graph version of the database
      */
     @Override
-    public List<VersionAncestry> getGraphVersion() {
-        return Collections.emptyList();
+    public Workspace getGraphVersion() {
+        List<ScenarioVersion> scenarios = versionedWorkspaceRepository.getAllScenarios();
+
+        Workspace workspace = new Workspace();
+
+        Map<String, List<ScenarioVersion>> spaceMap = scenarios
+                .stream()
+                .collect(Collectors.groupingBy(ScenarioVersion::getSpaceType));
+
+        for (Map.Entry<String, List<ScenarioVersion>> entry : spaceMap.entrySet()) {
+            String s = entry.getKey();
+            List<ScenarioVersion> scenarioVersions = entry.getValue();
+            Map<String, List<ScenarioVersion>> scenariosMap = scenarioVersions
+                    .stream()
+                    .filter(scenarioVersion -> scenarioVersion.getSpaceType().equals(s))
+                    .collect(Collectors.groupingBy(ScenarioVersion::getScenario));
+
+            List<Scenario> computedScenarioList = new ArrayList<>();
+
+            scenariosMap.forEach((sc, scVersions) -> {
+                ScenarioVersion currentSV = scenariosMap.get(sc).get(0);
+
+                List<String> versions = new ArrayList<>();
+                while (currentSV != null) {
+                    if (currentSV.getPreviousVersion() != null && !versions.contains(currentSV.getPreviousVersion())) {
+                        versions.add(currentSV.getPreviousVersion());
+                    }
+                    versions.add(currentSV.getVersion());
+                    ScenarioVersion finalCurrentSV = currentSV;
+                    currentSV = scenariosMap
+                            .get(sc)
+                            .stream()
+                            .filter(
+                                    scenarioVersion ->
+                                            scenarioVersion.getScenario().equals(sc) &&
+                                            scenarioVersion.getPreviousVersion() != null &&
+                                            scenarioVersion.getPreviousVersion().equals(finalCurrentSV.getVersion())
+                            )
+                            .findFirst()
+                            .orElse(null);
+                }
+
+                computedScenarioList.add(new Scenario(sc, versions));
+            });
+
+            workspace.setConsensusSpace(new Space(
+                    s.equals("https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#ConcensusSpace") ?
+                            "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#ConcensusSpace" :
+                            "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#PropositionSpace",
+                    computedScenarioList
+            ));
+        }
+
+        return workspace;
     }
 
     /**
@@ -109,7 +167,6 @@ public class QuadQueryService implements IQuadQueryService {
             log.error(e.getMessage());
             log.warn("Query: {}", queryString);
             log.warn("Info: INSERT, UPDATE queries are not supported by the Query class");
-            // TODO: implement ?
         }
     }
 }

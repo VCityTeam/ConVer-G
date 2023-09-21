@@ -78,39 +78,52 @@ mvn spring-boot:run
 #### Entity–Relationship model
 ```mermaid
 erDiagram
-    VersionedQuad }|--|{ ResourceOrLiteral: "foreign key"
-    VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
-    VersionedQuad {
-        int id_subject PK, FK
-        int id_property PK, FK
-        int id_object PK, FK
-        int id_named_graph FK
-        bitstring validity
-    }
-    VersionedNamedGraph {
-        int id_named_graph PK, FK
-        int name
-        bitstring validity
-    }
-    ResourceOrLiteral {
-        int id_resource_or_literal PK, FK
-        text name
-        string type "Not null if literal"
-    }
-    Version {
-        int index_version "PK, (FK)"
-        varchar(255) sha_version
-        text message
-        timestamptz date_version_begin
-        timestamptz date_version_end
-    }
+  VersionedQuad }|--|{ ResourceOrLiteral: "foreign key"
+  VersionedWorkspace }|--|{ ResourceOrLiteral: "foreign key"
+  VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
+  VersionedQuad {
+    int id_subject PK, FK
+    int id_property PK, FK
+    int id_object PK, FK
+    int id_named_graph FK
+    bitstring validity
+  }
+  VersionedNamedGraph {
+    int id_named_graph PK, FK
+    int name
+    bitstring validity
+  }
+  ResourceOrLiteral {
+    int id_resource_or_literal PK, FK
+    text name
+    string type "Not null if literal"
+  }
+  Version {
+    int index_version "PK, (FK)"
+    text message
+    timestamptz date_version_begin
+    timestamptz date_version_end
+  }
+
+  VersionedWorkspace {
+    int id_subject PK, FK
+    int id_property PK, FK
+    int id_object PK, FK
+    bitstring validity
+  }
+  WorkspaceVersion {
+    int index_workspace_version "PK, (FK)"
+    text message
+    timestamptz date_workspace_version_begin
+    timestamptz date_workspace_version_end
+  }
 ```
 
 #### Flowcharts
 ##### Query the relational database with a SPARQL query
 
 ```mermaid
-flowchart LR
+flowchart BT
     CS[Computer Scientist] --> |Sends the SPARQL query to the endpoint| SE
     SE --> |Sends the quads to the Computer Scientist| CS 
     subgraph Server
@@ -129,7 +142,7 @@ flowchart LR
 ##### Store RDF quads inside a relational database
 
 ```mermaid
-flowchart LR
+flowchart TB
     CS[Computer Scientist] --> |Sends the files to the import endpoint| SE
     subgraph Server
         SE --> |Sends files to import| RIOT[Jena RIOT]
@@ -141,11 +154,16 @@ flowchart LR
 ```
 
 ### Testing
+#### Swagger
 The API description is available on the [swagger-ui](http://localhost:8080/swagger-ui/index.html) at runtime.
 
+#### Tests 
 ```shell
 # make sure your database is up
 
 # starts the tests
 mvn spring-boot:run test
 ```
+
+#### Code quality and coverage
+The code coverage and quality is available on the [Sonarqube server](http://localhost:9000) after running a sonar inspection.

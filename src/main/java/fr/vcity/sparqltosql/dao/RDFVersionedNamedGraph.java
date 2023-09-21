@@ -2,12 +2,13 @@ package fr.vcity.sparqltosql.dao;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @Table("versioned_named_graph")
 public class RDFVersionedNamedGraph {
-
+    @Id
     @Schema(name = "Named Graph ID", example = "1")
     private Integer idNamedGraph;
 

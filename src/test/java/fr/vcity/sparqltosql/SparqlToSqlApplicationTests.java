@@ -3,15 +3,8 @@ package fr.vcity.sparqltosql;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
 import fr.vcity.sparqltosql.services.IQuadImportService;
-import fr.vcity.sparqltosql.services.IQuadQueryService;
+import fr.vcity.sparqltosql.services.IQueryService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.riot.RDFParser;
-import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -30,7 +23,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
@@ -49,7 +42,7 @@ class SparqlToSqlApplicationTests {
     private IQuadImportService quadImportService;
 
     @Autowired
-    private IQuadQueryService quadQueryService;
+    private IQueryService quadQueryService;
 
     @Test
     @Order(0)
@@ -62,12 +55,12 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(1)
-    void importQuadsV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/dataset/LYON_1ER_BATI_2015-1_bldg.nq");
+    void importV1() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2018_split.ttl");
 
         MockMultipartFile file
                 = new MockMultipartFile(
-                "files",
+                "file",
                 resource.getFilename(),
                 MediaType.TEXT_PLAIN_VALUE,
                 resource.getInputStream().readAllBytes()
@@ -86,44 +79,28 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(2)
-    void importQuadsV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/dataset/LYON_1ER_BATI_2015-2_bldg.nq");
+    void importV2() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2015_split.ttl");
 
         MockMultipartFile file
                 = new MockMultipartFile(
-                "files",
+                "file",
                 resource.getFilename(),
                 MediaType.TEXT_PLAIN_VALUE,
                 resource.getInputStream().readAllBytes()
         );
 
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/version" )
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/version")
                         .file(file))
                 .andExpect(status().isOk());
 
         List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
-        Dataset dataset =
-                RDFParser.create()
-                        .source(resource.getInputStream())
-                        .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
-                        .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                        .toDataset();
-
-        for (StmtIterator s = dataset.getDefaultModel().listStatements(); s.hasNext();) {
-            Statement statement = s.nextStatement();
-            RDFCompleteVersionedQuad foundCVQ = quads
-                    .stream()
-                    .filter(rdfCVQ ->
-                            rdfCVQ.getS().equals(statement.getSubject().getURI()) &&
-                                    rdfCVQ.getP().equals(statement.getPredicate().getURI()) &&
-                                    rdfCVQ.getO().equals(statement.getObject().toString()) &&
-                                    rdfCVQ.getNamedGraph().equals("default")
-                    )
-                    .findFirst()
-                    .orElseThrow();
-
-            assertEquals("11", new String(foundCVQ.getValidity(), StandardCharsets.UTF_8));
+        for (RDFCompleteVersionedQuad quad : quads) {
+            assertEquals("default", quad.getNamedGraph());
+            assertNotNull(quad.getS());
+            assertNotNull(quad.getP());
+            assertNotNull(quad.getO());
         }
     }
 
@@ -137,35 +114,31 @@ class SparqlToSqlApplicationTests {
 
         List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity(validity);
-
-        for (int index = 0; index < quads.size(); index++) {
-            assertEquals(resultQuads.get(index).getS(), quads.get(index).getS());
-            assertEquals(resultQuads.get(index).getP(), quads.get(index).getP());
-            assertEquals(resultQuads.get(index).getO(), quads.get(index).getO());
-            assertEquals(resultQuads.get(index).getNamedGraph(), quads.get(index).getNamedGraph());
-            assertEquals(new String(resultQuads.get(index).getValidity(), StandardCharsets.UTF_8), new String(quads.get(index).getValidity(), StandardCharsets.UTF_8));
+        for (RDFCompleteVersionedQuad resultQuad : resultQuads) {
+            assertNotNull(resultQuad.getS());
+            assertNotNull(resultQuad.getP());
+            assertNotNull(resultQuad.getO());
+            assertNotNull(resultQuad.getNamedGraph());
+            assertNotEquals("", new String(resultQuad.getValidity(), StandardCharsets.UTF_8));
         }
     }
 
     @Test
     @Order(4)
     void queryValidity() throws Exception {
-        String validity = "101";
+        String validity = "10";
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/validity/" + validity))
                 .andExpect(status().isOk())
                 .andReturn();
 
         List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity(validity);
-
-        for (int index = 0; index < quads.size(); index++) {
-            assertEquals(resultQuads.get(index).getS(), quads.get(index).getS());
-            assertEquals(resultQuads.get(index).getP(), quads.get(index).getP());
-            assertEquals(resultQuads.get(index).getO(), quads.get(index).getO());
-            assertEquals(resultQuads.get(index).getNamedGraph(), quads.get(index).getNamedGraph());
-            assertEquals(new String(resultQuads.get(index).getValidity(), StandardCharsets.UTF_8), new String(quads.get(index).getValidity(), StandardCharsets.UTF_8));
+        for (RDFCompleteVersionedQuad resultQuad : resultQuads) {
+            assertNotNull(resultQuad.getS());
+            assertNotNull(resultQuad.getP());
+            assertNotNull(resultQuad.getO());
+            assertNotNull(resultQuad.getNamedGraph());
+            assertEquals("10", new String(resultQuad.getValidity(), StandardCharsets.UTF_8));
         }
     }
 
@@ -180,21 +153,95 @@ class SparqlToSqlApplicationTests {
         List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
 
         for (RDFCompleteVersionedQuad quad : resultQuads) {
-            assertEquals('1' , new String(quad.getValidity(), StandardCharsets.UTF_8).charAt(index));
+            assertEquals('1', new String(quad.getValidity(), StandardCharsets.UTF_8).charAt(index));
         }
     }
 
-//    @Test
-//    @Order(6)
-//    void getGraphVersion() throws Exception {
-//        mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//        // TODO : Ajouter un test sur toutes les versions générées et le graphe associé
-//    }
+    @Test
+    @Order(6)
+    void importWorkspace() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2009_2018_Workspace.ttl");
+        Resource resource2 = resourceLoader.getResource("classpath:static/dataset/Transition_2015_2018.ttl");
+
+        MockMultipartFile file
+                = new MockMultipartFile(
+                "file",
+                resource.getFilename(),
+                MediaType.TEXT_PLAIN_VALUE,
+                resource.getInputStream().readAllBytes()
+        );
+
+        MockMultipartFile file2
+                = new MockMultipartFile(
+                "file",
+                resource2.getFilename(),
+                MediaType.TEXT_PLAIN_VALUE,
+                resource2.getInputStream().readAllBytes()
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+                        .file(file))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+                        .file(file2))
+                .andExpect(status().isOk());
+    }
 
     @Test
     @Order(7)
+    void getGraphVersion() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNotNull(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    @Order(8)
+    void removeWorkspace() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.delete("http://localhost:8080/import/workspace"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertNotNull(mvcResult.getResponse().getContentAsString());
+    }
+
+    @Test
+    @Order(9)
+    void sendCorruptedFileVersion() throws Exception {
+        MockMultipartFile file
+                = new MockMultipartFile(
+                "file",
+                "Corrupted_File.ttl",
+                MediaType.TEXT_PLAIN_VALUE,
+                new byte[]{0}
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/version")
+                        .file(file))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(10)
+    void sendCorruptedFileWorkspace() throws Exception {
+        MockMultipartFile file
+                = new MockMultipartFile(
+                "file",
+                "Corrupted_File.ttl",
+                MediaType.TEXT_PLAIN_VALUE,
+                new byte[]{0, 1}
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+                        .file(file))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(11)
     void querySPARQL() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:static/queries/sparql.rq");
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")

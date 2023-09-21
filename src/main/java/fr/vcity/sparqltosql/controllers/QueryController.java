@@ -2,7 +2,8 @@ package fr.vcity.sparqltosql.controllers;
 
 import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
 import fr.vcity.sparqltosql.dto.VersionAncestry;
-import fr.vcity.sparqltosql.services.QuadQueryService;
+import fr.vcity.sparqltosql.dto.Workspace;
+import fr.vcity.sparqltosql.services.QueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -21,11 +22,11 @@ import java.util.List;
 @RestController
 @Tag(name = "Query API")
 @RequestMapping("/query")
-public class QuadQueryController {
-    QuadQueryService quadQueryService;
+public class QueryController {
+    QueryService queryService;
 
-    public QuadQueryController(QuadQueryService quadQueryService) {
-        this.quadQueryService = quadQueryService;
+    public QueryController(QueryService queryService) {
+        this.queryService = queryService;
     }
 
     @Operation(
@@ -50,7 +51,7 @@ public class QuadQueryController {
             @Parameter(description = "The validity string (in bit string format)", name = "pattern", example = "110")
             @PathVariable("pattern") String requestedValidity
     ) {
-        return ResponseEntity.ok(quadQueryService.queryRequestedValidity(requestedValidity));
+        return ResponseEntity.ok(queryService.queryRequestedValidity(requestedValidity));
     }
 
     @Operation(
@@ -74,7 +75,7 @@ public class QuadQueryController {
             @Parameter(description = "The version number", name = "idVersion", example = "3")
             @PathVariable("idVersion") Integer requestedVersion
     ) {
-        return ResponseEntity.ok(quadQueryService.queryRequestedVersion(requestedVersion));
+        return ResponseEntity.ok(queryService.queryRequestedVersion(requestedVersion));
     }
 
     @Operation(
@@ -98,7 +99,7 @@ public class QuadQueryController {
             @RequestBody(description = "The SPARQL query", required = true)
             @org.springframework.web.bind.annotation.RequestBody String queryString
     ) {
-        return ResponseEntity.ok(quadQueryService.querySPARQL(queryString));
+        return ResponseEntity.ok(queryService.querySPARQL(queryString));
     }
 
     @Operation(
@@ -114,7 +115,7 @@ public class QuadQueryController {
                     )})}
     )
     @GetMapping("/versions")
-    ResponseEntity<List<VersionAncestry>> getGraphVersion() {
-        return ResponseEntity.ok(quadQueryService.getGraphVersion());
+    ResponseEntity<Workspace> getGraphVersion() {
+        return ResponseEntity.ok(queryService.getGraphVersion());
     }
 }
