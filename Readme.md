@@ -167,3 +167,41 @@ mvn spring-boot:run test
 
 #### Code quality and coverage
 The code coverage and quality is available on the [Sonarqube server](http://localhost:9000) after running a sonar inspection.
+
+
+### Sample data and workflow
+This project has been tested with a dataset created by the [UD-Graph Project](https://github.com/VCityTeam/UD-Graph).
+This dataset as been transformed to be compatible with the designed conceptual model.
+
+```mermaid
+sequenceDiagram
+  title Transformation and Import workflow
+  autonumber
+  box SPARQL-to-SQL
+    participant Version Import API
+    participant Workspace Import API
+  end
+
+  System->>NextCloud: Query for the dataset
+  NextCloud->>System: Download the dataset
+  loop For each downloaded version
+    System->>System: Replace the all PREFIX data with a versionable PREFIX
+  end
+  loop For each downloaded version
+    System->>Triple store: Sends the version to import
+
+    System->>Version Import API: Sends the version to import
+    Version Import API->>System: Returns the version index
+  end
+
+  System->>Workspace Import API: Sends the workspace to import
+  Workspace Import API->>System: Returns the workspace index
+  System->>Triple store: Sends the workspace to import
+  
+  loop For each downloaded version transitions
+    System->>Triple store: Sends the version transition to import
+
+    System->>Workspace Import API: Sends the version transitions to import
+    Workspace Import API->>System: Returns the workspace index
+  end
+```

@@ -1,0 +1,13 @@
+# CityGML 2.0 prefixes
+PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/3.0/building#>
+
+# Return the number of features within all graph names
+SELECT (COUNT(?object) AS ?number)
+WHERE {
+    ?graph a <https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#GraphName> .
+    GRAPH ?graph {
+      ?object a bldg:Building .
+    }
+}
+
+# Question : Est-ce qu'ici on entend "Toutes les features, en comptant les doublons par graph-name ?"
