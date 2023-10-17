@@ -31,6 +31,26 @@ services:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     container_name: sonarqube
 
+  blazegraph:
+    image: vcity/blazegraph-cors
+    ports:
+      - "9999:8080"
+    container_name: blazegraph
+    volumes:
+      - ./blazegraph.properties:/data/blazegraph.properties
+
+  sparql-to-sql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+    ports:
+      - "8080:8080"
+    container_name: sparql-to-sql
+
 volumes:
   pg-volume:
     driver: local

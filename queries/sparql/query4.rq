@@ -1,11 +1,8 @@
-# CityGML 2.0 prefixes
-PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/3.0/building#>
-
-# Return the number of features by version and graph names
+# Return the number of Buildings by version and graph names
 SELECT ?graph (COUNT(?object) AS ?number)
 WHERE {
     GRAPH ?graph {
-      ?object a bldg:Building .
+        ?object a "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/3.0/building#Building" .
     }
 }
 GROUP BY ?graph

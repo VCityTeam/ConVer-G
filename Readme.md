@@ -187,7 +187,13 @@ sequenceDiagram
   loop For each downloaded version
     System->>System: Replace the all PREFIX data with a versionable PREFIX
   end
-  loop For each downloaded version
+  loop For each Versionable version
+    System->>Annotation: Send the versionable data to annotate
+    Annotation->>System: The annotated data with the version index
+    System->>Annotation: Send the versionable data to annotate
+    Annotation->>System: The annotated data with the graph name
+  end
+  loop For each Annotated version
     System->>Triple store: Sends the version to import
 
     System->>Version Import API: Sends the version to import

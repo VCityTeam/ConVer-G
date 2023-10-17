@@ -153,6 +153,24 @@ public class QuadImportService implements IQuadImportService {
                 importDefaultModel(dataset.getDefaultModel(), workspaceVersion.getIndexWorkspaceVersion(), false);
             }
 
+            for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
+                Resource namedModel = i.next();
+                Model model = dataset.getNamedModel(namedModel);
+                log.debug("Name Graph : {}", namedModel.getURI());
+                saveRDFNamedGraphOrReturnExisting(namedModel.getURI(), workspaceVersion.getIndexWorkspaceVersion() - 1);
+
+                model.listStatements().toList().parallelStream().forEach(statement -> {
+                    RDFSavedTriple rdfSavedTriple = getRDFSavedTriple(statement);
+
+                    versionedWorkspaceComponent.save(
+                            rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
+                            rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
+                            rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
+                            workspaceVersion.getIndexWorkspaceVersion() - 1
+                    );
+                });
+            }
+
             Long end = System.nanoTime();
             log.info("Time of execution: {} ns for file: {}", end - start, file.getOriginalFilename());
         } catch (RiotException | IOException e) {

@@ -16,8 +16,6 @@
     <properties>
         <java.version>17</java.version>
         <jmh.version>1.36</jmh.version>
-        <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <jacoco.version>0.8.10</jacoco.version>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>

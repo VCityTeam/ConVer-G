@@ -56,7 +56,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(1)
     void importV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2018_split.ttl");
+        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2018_split.ttl.quads_named_graph.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -80,7 +80,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(2)
     void importV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2015_split.ttl");
+        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2015_split.ttl.quads_named_graph.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -97,7 +97,7 @@ class SparqlToSqlApplicationTests {
         List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         for (RDFCompleteVersionedQuad quad : quads) {
-            assertEquals("default", quad.getNamedGraph());
+            assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne", quad.getNamedGraph());
             assertNotNull(quad.getS());
             assertNotNull(quad.getP());
             assertNotNull(quad.getO());
@@ -160,8 +160,8 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(6)
     void importWorkspace() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/dataset/GratteCiel_2009_2018_Workspace.ttl");
-        Resource resource2 = resourceLoader.getResource("classpath:static/dataset/Transition_2015_2018.ttl");
+        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2009_2018_Workspace.ttl.quads_named_graph.nq");
+        Resource resource2 = resourceLoader.getResource("classpath:dataset/quads/Transition_2015_2018.ttl.quads_named_graph.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -214,7 +214,7 @@ class SparqlToSqlApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl",
+                "Corrupted_File.ttl.quads_named_graph.nq",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0}
         );
@@ -230,7 +230,7 @@ class SparqlToSqlApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl",
+                "Corrupted_File.ttl.quads_named_graph.nq",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0, 1}
         );
@@ -243,7 +243,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(11)
     void querySPARQL() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:static/queries/sparql.rq");
+        Resource resource = resourceLoader.getResource("classpath:queries/sparql.rq");
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8)))

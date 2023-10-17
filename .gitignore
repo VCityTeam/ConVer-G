@@ -34,3 +34,6 @@ build/
 
 ### Dataset ###
 **/dataset
+
+### venv ###
+**/venv
