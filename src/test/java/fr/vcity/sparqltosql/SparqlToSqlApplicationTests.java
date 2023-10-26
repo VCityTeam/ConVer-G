@@ -97,7 +97,11 @@ class SparqlToSqlApplicationTests {
         List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         for (RDFCompleteVersionedQuad quad : quads) {
-            assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne", quad.getNamedGraph());
+            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne")) {
+                assertEquals("urn:x-rdflib:default", quad.getNamedGraph());
+            } else {
+                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne", quad.getNamedGraph());
+            }
             assertNotNull(quad.getS());
             assertNotNull(quad.getP());
             assertNotNull(quad.getO());

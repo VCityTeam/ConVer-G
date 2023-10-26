@@ -211,3 +211,31 @@ sequenceDiagram
     Workspace Import API->>System: Returns the workspace index
   end
 ```
+
+#### Data annotations
+Before importing the dataset inside the triple store and the relational database, we transform the data.
+
+##### Entity linking
+
+# TODO : Resolve the geospatial entity linking
+
+##### Contextualization
+We add a quad for each triple (the graph name).
+Its semantic is the link between the triple and the source of the data.
+The transformation has been made with the [annotate python program](python/annotate_graph.py).
+We used a virtual environment with pip 23.3.1 from Python 3.10.12.
+
+```shell
+# create a virtual environment
+python3 -m venv venv
+
+# activate the virtual environment
+source venv/bin/activate
+
+# install the dependencies
+pip install -r python/requirements.txt
+
+# run the program
+cd workflows
+/bin/bash workflow-gratte_ciel.sh
+```
