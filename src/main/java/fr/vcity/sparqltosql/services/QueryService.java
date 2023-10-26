@@ -7,16 +7,22 @@ import fr.vcity.sparqltosql.dto.Space;
 import fr.vcity.sparqltosql.dto.Workspace;
 import fr.vcity.sparqltosql.repository.*;
 import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor;
+import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor2;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QueryParseException;
+import org.apache.jena.query.Syntax;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.OpWalker;
+import org.apache.jena.sparql.syntax.ElementWalker;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,12 +158,17 @@ public class QueryService implements IQueryService {
      */
     private void getOperatorsFromQuery(String queryString) {
         try {
-            Query query = QueryFactory.create(queryString);
+            Query query = QueryFactory.create(queryString, Syntax.syntaxSPARQL_12);
+            SPARQLtoSQLVisitor sparqLtoSQLVisitor = new SPARQLtoSQLVisitor();
+            SPARQLtoSQLVisitor2 sparqLtoSQLVisitor2 = new SPARQLtoSQLVisitor2();
             switch (query.queryType()) {
                 case SELECT -> {
+                    log.info("******* Op walker - OpVisitor *******");
                     Op op = Algebra.compile(query);
-                    SPARQLtoSQLVisitor sparqLtoSQLVisitor = new SPARQLtoSQLVisitor();
                     OpWalker.walk(op, sparqLtoSQLVisitor);
+
+                    log.info("******* Element walker - ElementVisitor *******");
+                    ElementWalker.walk(query.getQueryPattern(), sparqLtoSQLVisitor2);
                 }
                 case ASK, CONSTRUCT, DESCRIBE, CONSTRUCT_JSON ->
                         log.warn("Query with type: {} not implemented", query.queryType().toString());

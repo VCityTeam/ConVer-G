@@ -23,14 +23,6 @@ services:
     volumes:
       - pg-volume-test:/var/lib/postgresql/data
 
-  sonarqube:
-    image: sonarqube:latest
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-    container_name: sonarqube
-
   blazegraph:
     image: vcity/blazegraph-cors
     ports:
