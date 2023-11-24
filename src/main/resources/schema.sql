@@ -27,13 +27,19 @@ CREATE TABLE IF NOT EXISTS versioned_quad
             REFERENCES versioned_named_graph (id_named_graph)
 );
 
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_property, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_property);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_property, id_object, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_property, id_subject, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_property, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_property);
+
 CREATE TABLE IF NOT EXISTS version
 (
-    index_version integer GENERATED ALWAYS AS IDENTITY,
+    index_version integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     message   varchar(255),
     begin_version_date timestamptz default current_timestamp,
-    end_version_date timestamptz default NULL,
-    PRIMARY KEY (index_version)
+    end_version_date timestamptz default NULL
 );
 
 CREATE TABLE IF NOT EXISTS versioned_workspace

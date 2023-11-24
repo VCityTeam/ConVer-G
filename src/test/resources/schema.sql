@@ -1,3 +1,9 @@
+DROP INDEX IF EXISTS versioned_quad_ng_s_p_o;
+DROP INDEX IF EXISTS versioned_quad_ng_s_o_p;
+DROP INDEX IF EXISTS versioned_quad_ng_p_o_s;
+DROP INDEX IF EXISTS versioned_quad_ng_p_s_o;
+DROP INDEX IF EXISTS versioned_quad_ng_o_p_s;
+DROP INDEX IF EXISTS versioned_quad_ng_o_s_p;
 DROP TABLE IF EXISTS versioned_quad;
 DROP TABLE IF EXISTS versioned_named_graph;
 DROP INDEX IF EXISTS resource_or_literal_idx;
@@ -34,6 +40,13 @@ CREATE TABLE IF NOT EXISTS versioned_quad
         FOREIGN KEY (id_named_graph)
             REFERENCES versioned_named_graph (id_named_graph)
 );
+
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_property, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_property);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_property, id_object, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_property, id_subject, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_property, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_property);
 
 CREATE TABLE IF NOT EXISTS version
 (

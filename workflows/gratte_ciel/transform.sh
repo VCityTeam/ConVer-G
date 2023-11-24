@@ -7,7 +7,7 @@
 cd ../dataset/triples || exit
 
 ## WORKAROUND - Replace data prefix (enabling versioning)
-echo "[Transformations] Replacement started."
+printf "\n%s$(date +%FT%T) - [Transformations] Replacement started."
 
 ### We set the new data prefix to a versionable compatible one
 ### FIXME : Autoincrement (fix entity linking)
@@ -19,42 +19,40 @@ do
     sed -i '/^@prefix data:/c\'"$replacement" "$file"
 done
 
-echo "[Transformations] Replacement completed."
+printf "\n%s$(date +%FT%T) - [Transformations] Replacement completed."
 
 ## Transform data as quads
 ### Use the find command to locate all files ending with "split.ttl"
-echo "[Transformations] Version annotation started."
+printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 
 find . -type f -name "*split.ttl" -print0 | while IFS= read -r -d '' file
 do
-    python3 ../../python/annotate_graph.py "$file" ttl "$file.quads_versions.nq" version
+    python3 ../../python/annotate_graph.py "$file" ttl "$file.theoretical.nq" theoretical Villeurbanne
 done
 
 find . -type f -name "*.ttl" -print0 | while IFS= read -r -d '' file
 do
-    python3 ../../python/annotate_graph.py "$file" ttl "$file.quads_named_graph.nq" named_graph Villeurbanne
+    python3 ../../python/annotate_graph.py "$file" ttl "$file.relational.nq" relational Villeurbanne
 done
 
-echo "[Transformations] Version annotation completed."
+printf "\n%s$(date +%FT%T) - [Transformations] Version annotation completed."
 
 ## Moving quads
-echo "[Transformations] Moving quads started."
-mkdir -p ../quads/named_graph
-mkdir -p ../quads/versions
+printf "\n%s$(date +%FT%T) - [Transformations] Moving quads started."
+mkdir -p ../quads/theoretical
+mkdir -p ../quads/relational
 
-mv *.quads_versions.nq ../quads/versions
-mv *.quads_named_graph.nq ../quads/named_graph
-echo "[Transformations] Moving quads completed."
+cp *.theoretical.nq ../quads/theoretical
+cp *.relational.nq ../quads/theoretical
+cp *.relational.nq ../quads/relational
+printf "\n%s$(date +%FT%T) - [Transformations] Moving quads completed."
 
 ## Adds data in test workspace
-echo "[Transformations] Copy for test workspace started."
+printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace started."
 ### Adds Villeurbanne tagged data in test workspace
-mkdir -p ../../src/test/resources/dataset/quads
-cp ../quads/named_graph/GratteCiel_* ../../src/test/resources/dataset/quads
-cp ../quads/named_graph/Transition_* ../../src/test/resources/dataset/quads
 
-### Adds non tagged data in test workspace
-mkdir -p ../../src/test/resources/dataset/triples
-cp ../triples/GratteCiel_* ../../src/test/resources/dataset/triples
-cp ../triples/Transition_* ../../src/test/resources/dataset/triples
-echo "[Transformations] Copy for test workspace completed."
+rm -rf ../../src/test/resources/dataset
+mkdir -p ../../src/test/resources/dataset
+cp ../quads/relational/* ../../src/test/resources/dataset
+
+printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace completed."

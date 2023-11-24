@@ -78,8 +78,14 @@ mvn spring-boot:run
 #### Entity–Relationship model
 ```mermaid
 erDiagram
-  VersionedQuad }|--|{ ResourceOrLiteral: "foreign key"
-  VersionedWorkspace }|--|{ ResourceOrLiteral: "foreign key"
+  VersionedQuad ||--|{ ResourceOrLiteral: "subject"
+  VersionedQuad ||--|{ ResourceOrLiteral: "object"
+  VersionedQuad ||--|{ ResourceOrLiteral: "property"
+  VersionedNamedGraph ||--|{ ResourceOrLiteral: "named graph"
+  VersionedNamedGraph ||--|{ ResourceOrLiteral: "versioned named graph"
+  Workspace }|--|{ ResourceOrLiteral: "subject"
+  Workspace }|--|{ ResourceOrLiteral: "object"
+  Workspace }|--|{ ResourceOrLiteral: "property"
   VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
   VersionedQuad {
     int id_subject PK, FK
@@ -90,8 +96,8 @@ erDiagram
   }
   VersionedNamedGraph {
     int id_named_graph PK, FK
-    int name
-    bitstring validity
+    int index PK
+    int id_versioned_named_graph FK
   }
   ResourceOrLiteral {
     int id_resource_or_literal PK, FK
@@ -101,21 +107,13 @@ erDiagram
   Version {
     int index_version "PK, (FK)"
     text message
-    timestamptz date_version_begin
-    timestamptz date_version_end
+    timestamptz transaction_time_start
+    timestamptz transaction_time_end
   }
-
-  VersionedWorkspace {
+  Workspace {
     int id_subject PK, FK
     int id_property PK, FK
     int id_object PK, FK
-    bitstring validity
-  }
-  WorkspaceVersion {
-    int index_workspace_version "PK, (FK)"
-    text message
-    timestamptz date_workspace_version_begin
-    timestamptz date_workspace_version_end
   }
 ```
 
@@ -213,7 +211,7 @@ sequenceDiagram
 ```
 
 #### Data annotations
-Before importing the dataset inside the triple store and the relational database, we transform the data.
+Before importing the dataset inside the triple store and the relational database, we transform the data to match the theoretical model and the implementation.
 
 ##### Entity linking
 
@@ -239,3 +237,51 @@ pip install -r python/requirements.txt
 cd workflows
 /bin/bash workflow-gratte_ciel.sh
 ```
+
+Lets assume that we have a dataset with 2 versions with the following quads:
+
+**Version 1 (buildings-2015.nq):**
+| Subject | Predicate | Object | Named Graph | 
+| --- | --- | --- | --- |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+| http://example.edu/Building#2 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#GratteCiel |
+
+**Version 2 (buildings-2018.nq):**
+| Subject | Predicate | Object | Named Graph |
+| --- | --- | --- | --- |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#GratteCiel |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#Villeurbanne |
+| http://example.edu/Building#3 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+
+##### Theoretical model
+
+After some transformations, we have the following quads representing the theoretical model:
+
+| Subject | Predicate | Object | Named Graph | 
+| --- | --- | --- | --- |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+| http://example.edu/Building#2 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf | http://example.edu/GraphName#Villeurbanne | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf | http://example.edu/GraphName#GratteCiel | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 | urn:x-rdflib:default |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#GratteCiel |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#Villeurbanne |
+| http://example.edu/Building#3 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf | http://example.edu/GraphName#Villeurbanne | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf | http://example.edu/GraphName#GratteCiel | urn:x-rdflib:default |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 | urn:x-rdflib:default |
+
+##### Implementation
+
+After the import inside the relational database, we have the following quads representing the implementation:
+
+| Subject | Predicate | Object | Named Graph | Validity |
+| --- | --- | --- | --- | --- |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne | 10 |
+| http://example.edu/Building#2 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne | 10 |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#GratteCiel | 11 |
+| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/GraphName#Villeurbanne | 01 |
+| http://example.edu/Building#3 | a | http://example.edu/Type#Building | http://example.edu/GraphName#Villeurbanne | 01 |

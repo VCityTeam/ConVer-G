@@ -1,14 +1,15 @@
 import argparse
 import os
-
+import hashlib
 import rdflib
 from rdflib import Dataset, URIRef, Literal
 
+RDFLIB_INPUT_SUPPORTED_FORMATS = ['turtle', 'ttl', 'turtle2', 'xml',
+                                  'pretty-xml', 'json-ld', 'ntriples', 'nt', 'nt11', 'n3', 'trig', 'trix']
+ANNOTATION_TYPES = ['theoretical', 'relational']
+
 
 def main():
-    RDFLIB_INPUT_SUPPORTED_FORMATS = ['turtle', 'ttl', 'turtle2', 'xml',
-                                      'pretty-xml', 'json-ld', 'ntriples', 'nt', 'nt11', 'n3', 'trig', 'trix']
-    ANNOTATION_TYPES = ['version', 'named_graph']
     parser = argparse.ArgumentParser(description='Annotate RDF graph formats')
     parser.add_argument('input_file', help='Specify the input datafile, folder, or URL')
     parser.add_argument('input_format', choices=RDFLIB_INPUT_SUPPORTED_FORMATS,
@@ -16,7 +17,7 @@ def main():
     parser.add_argument('output_file', default='', help='Specify the output datafile')
     parser.add_argument('annotation_type', choices=ANNOTATION_TYPES,
                         help='Specify the annotation type for the given triples')
-    parser.add_argument('annotation', nargs='?', help='Specify the annotation when the annotation type is "graph name"')
+    parser.add_argument('annotation', help='Specify the graph name annotation')
     args = parser.parse_args()
 
     if args.annotation_type == 'version':
@@ -25,7 +26,7 @@ def main():
         if args.annotation is None:
             print('Graph name annotation is missing')
             exit(1)
-        print(f'named_graph annotation to input file: {args.input_file}')
+        print(f'({args.annotation_type} annotation) - file: {args.input_file} with {args.annotation}')
 
     converter = RdfConverter(args)
     converter.convert(args.input_file, args.input_format, args.output_file)
@@ -37,14 +38,20 @@ class RdfConverter:
         self.filename = '.'.join(os.path.split(
             args.input_file)[-1].split('.')[:-1])
         self.graph = rdflib.Graph()
-        self.graph_name = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}' \
-            if args.annotation_type == 'version' \
-            else f'https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#{args.annotation}'
+        self.version = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}'
+        self.annotation = f'https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#{args.annotation}'
+
+        if args.annotation_type == 'theoretical':
+            self.graph_name = ('https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#'
+                               + hashlib.sha256(self.filename.encode("utf-8")).hexdigest()
+                               )
+        else:
+            self.graph_name = f'https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#{args.annotation}'
         self.annotation_type = args.annotation_type
 
     def convert(self, input_file, input_format, output_file):
         """
-        It takes an input file, an input format, an output file, an annotation_type, and an annotation, and it adds annotation to the
+        It takes an input file, an input format, an output file, and an annotation, and it adds annotation to the
         input file from the input format and saves it to the output file
 
         :param input_file: The file to be converted
@@ -65,21 +72,19 @@ class RdfConverter:
 
             # Ajouter le quadruplet au jeu de données
             ds.add((subject, predicate, object_literal, named_graph))
-
-        if self.annotation_type == 'version':
+        if self.annotation_type == 'theoretical':
             ds.add(
                 (
                     named_graph,
-                    URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                    Literal('https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#Version')
+                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf'),
+                    Literal(self.annotation)
                 )
             )
-        else:
             ds.add(
                 (
                     named_graph,
-                    URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                    Literal('https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#GraphName')
+                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion'),
+                    Literal(self.version)
                 )
             )
         ds.serialize(destination=output_file, format='nquads', encoding='utf-8')

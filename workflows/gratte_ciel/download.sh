@@ -4,7 +4,9 @@
 # Download the dataset from the LIRIS dataset server
 ######################################################
 
-echo "[Download] Dataset download started."
+printf "\n%s$(date +%FT%T) - [Download] Dataset download started."
+
+rm -rf ../dataset
 
 mkdir -p ../dataset/triples
 
@@ -66,4 +68,4 @@ curl --request GET -sL \
   --url 'https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Datasets/GratteCiel_Workspace_2009_2018/3.0/Transition_2015_2018.ttl' \
   --output 'Transition_2015_2018.ttl'
 
-echo "[Download] Dataset download completed."
+printf "\n%s$(date +%FT%T) - [Download] Dataset download completed."

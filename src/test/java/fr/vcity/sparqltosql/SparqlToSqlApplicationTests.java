@@ -56,7 +56,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(1)
     void importV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2018_split.ttl.quads_named_graph.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2018_split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -80,7 +80,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(2)
     void importV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2015_split.ttl.quads_named_graph.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2015_split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -164,8 +164,8 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(6)
     void importWorkspace() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/quads/GratteCiel_2009_2018_Workspace.ttl.quads_named_graph.nq");
-        Resource resource2 = resourceLoader.getResource("classpath:dataset/quads/Transition_2015_2018.ttl.quads_named_graph.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2009_2018_Workspace.ttl.relational.nq");
+        Resource resource2 = resourceLoader.getResource("classpath:dataset/Transition_2015_2018.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -218,7 +218,7 @@ class SparqlToSqlApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl.quads_named_graph.nq",
+                "Corrupted_File.ttl.relational.nq",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0}
         );
@@ -234,7 +234,7 @@ class SparqlToSqlApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl.quads_named_graph.nq",
+                "Corrupted_File.ttl.relational.nq",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0, 1}
         );

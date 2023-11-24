@@ -15,7 +15,7 @@ import org.apache.jena.query.QueryParseException;
 import org.apache.jena.query.Syntax;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
-import org.apache.jena.sparql.algebra.OpWalker;
+import org.apache.jena.sparql.algebra.walker.Walker;
 import org.apache.jena.sparql.syntax.ElementWalker;
 import org.springframework.stereotype.Service;
 
@@ -165,7 +165,7 @@ public class QueryService implements IQueryService {
                 case SELECT -> {
                     log.info("******* Op walker - OpVisitor *******");
                     Op op = Algebra.compile(query);
-                    OpWalker.walk(op, sparqLtoSQLVisitor);
+                    Walker.walk(op, sparqLtoSQLVisitor);
 
                     log.info("******* Element walker - ElementVisitor *******");
                     ElementWalker.walk(query.getQueryPattern(), sparqLtoSQLVisitor2);
