@@ -6,8 +6,8 @@ import lombok.Data;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@Table("versioned_workspace")
-public class VersionedWorkspace {
+@Table("workspace")
+public class Workspace {
 
     @Schema(name = "Subject ID", example = "1")
     private Integer idSubject;
@@ -18,16 +18,12 @@ public class VersionedWorkspace {
     @Schema(name = "Object ID", example = "3")
     private Integer idObject;
 
-    @Schema(name = "Validity", example = "B'10001'")
-    private byte[] validity;
-
-    public VersionedWorkspace(Integer idSubject, Integer idProperty, Integer idObject, byte[] validity) {
+    public Workspace(Integer idSubject, Integer idProperty, Integer idObject) {
         this.idSubject = idSubject;
         this.idProperty = idProperty;
         this.idObject = idObject;
-        this.validity = validity;
     }
 
-    public VersionedWorkspace() {}
+    public Workspace() {}
 
 }

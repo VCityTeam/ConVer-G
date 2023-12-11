@@ -9,7 +9,7 @@ public interface IQuadImportService {
 
     void resetDatabase();
 
-    Integer importWorkspace(MultipartFile file) throws RiotException;
+    void importWorkspace(MultipartFile file) throws RiotException;
 
     void removeWorkspace();
 }

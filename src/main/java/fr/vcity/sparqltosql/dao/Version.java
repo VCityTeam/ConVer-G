@@ -17,11 +17,11 @@ public class Version {
     @Schema(name = "Message of the new version", example = "Inserted trees and removed building")
     private String message;
 
-    @Schema(name = "Start of the validity's date", example = "2023-07-17 11:20:00+02")
-    private LocalDateTime beginVersionDate;
+    @Schema(name = "Start of the transaction date", example = "2023-07-17 11:20:00+02")
+    private LocalDateTime transactionTimeStart;
 
-    @Schema(name = "End of the validity's date", example = "2023-07-18 20:00:00+02")
-    private LocalDateTime endVersionDate;
+    @Schema(name = "End of the transaction date", example = "2023-07-18 20:00:00+02")
+    private LocalDateTime transactionTimeEnd;
 
     public Version() {
     }
@@ -29,12 +29,12 @@ public class Version {
     public Version(
             Integer indexVersion,
             String message,
-            LocalDateTime beginVersionDate,
-            LocalDateTime endVersionDate
+            LocalDateTime transactionTimeStart,
+            LocalDateTime transactionTimeEnd
     ) {
         this.indexVersion = indexVersion;
         this.message = message;
-        this.beginVersionDate = beginVersionDate;
-        this.endVersionDate = endVersionDate;
+        this.transactionTimeStart = transactionTimeStart;
+        this.transactionTimeEnd = transactionTimeEnd;
     }
 }

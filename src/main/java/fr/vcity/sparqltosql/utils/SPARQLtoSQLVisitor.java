@@ -176,10 +176,8 @@ public class SPARQLtoSQLVisitor implements OpVisitor {
     @Override
     public void visit(OpJoin opJoin) {
         log.info("Visiting OpJoin");
-        log.info("    opJoin Left: {}", opJoin.getLeft().toString());
-        log.info(opJoin.getLeft().getName());
-        log.info("    opJoin Right: {}", opJoin.getRight().toString());
-        log.info(opJoin.getRight().getName());
+        log.info("    opJoin Left: {}", opJoin.getLeft().getName());
+        log.info("    opJoin Right: {}", opJoin.getRight().getName());
     }
 
     /**

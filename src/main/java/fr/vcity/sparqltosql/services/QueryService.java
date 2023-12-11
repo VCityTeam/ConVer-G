@@ -7,7 +7,6 @@ import fr.vcity.sparqltosql.dto.Space;
 import fr.vcity.sparqltosql.dto.Workspace;
 import fr.vcity.sparqltosql.repository.*;
 import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor;
-import fr.vcity.sparqltosql.utils.SPARQLtoSQLVisitor2;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
@@ -16,7 +15,6 @@ import org.apache.jena.query.Syntax;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.walker.Walker;
-import org.apache.jena.sparql.syntax.ElementWalker;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -76,8 +74,7 @@ public class QueryService implements IQueryService {
     public List<RDFCompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion) {
         log.debug("Requested version: {}", requestedVersion);
 
-        return rdfVersionedQuadComponent
-                .findAllByVersion(requestedVersion);
+        return rdfVersionedQuadComponent.findAllByVersion(requestedVersion);
     }
 
     /**
@@ -158,17 +155,13 @@ public class QueryService implements IQueryService {
      */
     private void getOperatorsFromQuery(String queryString) {
         try {
-            Query query = QueryFactory.create(queryString, Syntax.syntaxSPARQL_12);
+            Query query = QueryFactory.create(queryString, Syntax.syntaxSPARQL);
             SPARQLtoSQLVisitor sparqLtoSQLVisitor = new SPARQLtoSQLVisitor();
-            SPARQLtoSQLVisitor2 sparqLtoSQLVisitor2 = new SPARQLtoSQLVisitor2();
             switch (query.queryType()) {
                 case SELECT -> {
                     log.info("******* Op walker - OpVisitor *******");
                     Op op = Algebra.compile(query);
                     Walker.walk(op, sparqLtoSQLVisitor);
-
-                    log.info("******* Element walker - ElementVisitor *******");
-                    ElementWalker.walk(query.getQueryPattern(), sparqLtoSQLVisitor2);
                 }
                 case ASK, CONSTRUCT, DESCRIBE, CONSTRUCT_JSON ->
                         log.warn("Query with type: {} not implemented", query.queryType().toString());

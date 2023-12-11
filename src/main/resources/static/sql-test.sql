@@ -10,10 +10,10 @@ FROM versioned_quad vq1
 
 -- Get the workspace scenarios information
 SELECT rl4.name, rl5.name, rl6.name
-FROM versioned_workspace vw
-         JOIN resource_or_literal rl3 ON vw.id_object = rl3.id_resource_or_literal AND rl3.name = 'https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#Scenario'
-         JOIN versioned_workspace vw2 on vw.id_subject = vw2.id_subject
-         JOIN resource_or_literal rl4 ON vw2.id_subject = rl4.id_resource_or_literal
-         JOIN resource_or_literal rl5 ON vw2.id_property = rl5.id_resource_or_literal
-         JOIN resource_or_literal rl6 ON vw2.id_object = rl6.id_resource_or_literal
+FROM workspace w
+         JOIN resource_or_literal rl3 ON w.id_object = rl3.id_resource_or_literal AND rl3.name = 'https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#Scenario'
+         JOIN workspace w2 on w.id_subject = w2.id_subject
+         JOIN resource_or_literal rl4 ON w2.id_subject = rl4.id_resource_or_literal
+         JOIN resource_or_literal rl5 ON w2.id_property = rl5.id_resource_or_literal
+         JOIN resource_or_literal rl6 ON w2.id_object = rl6.id_resource_or_literal
 ORDER BY rl4.name, rl5.name;

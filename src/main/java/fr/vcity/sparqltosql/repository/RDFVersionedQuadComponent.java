@@ -19,11 +19,11 @@ public class RDFVersionedQuadComponent {
 
     public List<RDFCompleteVersionedQuad> findAll() {
         return namedParameterJdbcTemplate.query("""
-                        SELECT rls.name, rlp.name, rlo.name, ng.name, v.validity
+                        SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                             LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                            LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
+                            LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                                 """,
                 getRdfCompleteVersionedQuadRowMapper()
         );
@@ -31,11 +31,11 @@ public class RDFVersionedQuadComponent {
 
     public List<RDFCompleteVersionedQuad> findAllByValidity(String validity) {
         return namedParameterJdbcTemplate.query("""
-                        SELECT rls.name, rlp.name, rlo.name, ng.name, v.validity
+                        SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                             LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                            LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
+                            LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                             WHERE v.validity = CAST(:validity as bit varying)
                         """, new MapSqlParameterSource()
                         .addValue("validity", validity),
@@ -45,11 +45,11 @@ public class RDFVersionedQuadComponent {
 
     public List<RDFCompleteVersionedQuad> findAllByVersion(Integer requestedVersion) {
         return namedParameterJdbcTemplate.query("""
-                        SELECT rls.name, rlp.name, rlo.name, ng.name, v.validity
+                        SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                             LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                            LEFT JOIN versioned_named_graph ng ON ng.id_named_graph = v.id_named_graph
+                            LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                             WHERE get_bit(v.validity, :requestedVersion) = 1
                         """, new MapSqlParameterSource()
                         .addValue("requestedVersion", requestedVersion),

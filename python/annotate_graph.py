@@ -39,14 +39,14 @@ class RdfConverter:
             args.input_file)[-1].split('.')[:-1])
         self.graph = rdflib.Graph()
         self.version = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}'
-        self.annotation = f'https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#{args.annotation}'
+        self.annotation = f'https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#{args.annotation}'
 
         if args.annotation_type == 'theoretical':
-            self.graph_name = ('https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-GraphName#'
+            self.graph_name = ('https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#'
                                + hashlib.sha256(self.filename.encode("utf-8")).hexdigest()
                                )
         else:
-            self.graph_name = f'https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#{args.annotation}'
+            self.graph_name = f'https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#{args.annotation}'
         self.annotation_type = args.annotation_type
 
     def convert(self, input_file, input_format, output_file):
@@ -76,14 +76,14 @@ class RdfConverter:
             ds.add(
                 (
                     named_graph,
-                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL/Version#VersionOf'),
+                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of'),
                     Literal(self.annotation)
                 )
             )
             ds.add(
                 (
                     named_graph,
-                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL/Version#IsInVersion'),
+                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version'),
                     Literal(self.version)
                 )
             )

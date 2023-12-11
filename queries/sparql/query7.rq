@@ -6,6 +6,9 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 # Return the maximum height within all graphs
 # Solving the previous data quality problem
 SELECT (MAX(xsd:float(?height)) AS ?maximum) WHERE {
-    ?subject a owl:NamedIndividual ;
-        cons:Height.value ?height .
+    ?v <https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of> ?named_graph .
+    GRAPH ?v {
+      ?subject a owl:NamedIndividual ;
+              cons:Height.value ?height .
+    }
 }

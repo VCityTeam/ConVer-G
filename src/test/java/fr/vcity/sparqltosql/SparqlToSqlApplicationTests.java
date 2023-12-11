@@ -53,6 +53,10 @@ class SparqlToSqlApplicationTests {
         assertEquals(0, quads.size());
     }
 
+    /**
+     * Tests the import of the first version and check if the validity is set to 1
+     * @throws Exception a input stream or MVC exception
+     */
     @Test
     @Order(1)
     void importV1() throws Exception {
@@ -77,6 +81,10 @@ class SparqlToSqlApplicationTests {
         }
     }
 
+    /**
+     * Tests the import of a second version and check the metadata and the data is well annotated
+     * @throws Exception a input stream or MVC exception
+     */
     @Test
     @Order(2)
     void importV2() throws Exception {
@@ -108,6 +116,10 @@ class SparqlToSqlApplicationTests {
         }
     }
 
+    /**
+     * Tests the query of all the versions and check that the data is not empty
+     * @throws Exception a MVC exception
+     */
     @Test
     @Order(3)
     void queryAllVersion() throws Exception {
@@ -127,6 +139,10 @@ class SparqlToSqlApplicationTests {
         }
     }
 
+    /**
+     * Tests the query of a specific validity pattern and check the associated data and validity
+     * @throws Exception a MVC exception
+     */
     @Test
     @Order(4)
     void queryValidity() throws Exception {
@@ -146,6 +162,10 @@ class SparqlToSqlApplicationTests {
         }
     }
 
+    /**
+     * Tests the query of all the versions and check that the data is not empty
+     * @throws Exception a MVC exception
+     */
     @Test
     @Order(5)
     void queryVersion() throws Exception {
@@ -161,6 +181,10 @@ class SparqlToSqlApplicationTests {
         }
     }
 
+    /**
+     * Tests the import of the workspace
+     * @throws Exception a input stream or MVC exception
+     */
     @Test
     @Order(6)
     void importWorkspace() throws Exception {
@@ -199,6 +223,7 @@ class SparqlToSqlApplicationTests {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // FIXME : Consensus space and Proposition space are empty
         assertNotNull(mvcResult.getResponse().getContentAsString());
     }
 
@@ -246,8 +271,20 @@ class SparqlToSqlApplicationTests {
 
     @Test
     @Order(11)
-    void querySPARQL() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:queries/sparql.rq");
+    void querySPARQL0() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:queries/sparql-0.rq");
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8)))
+                .andExpect(status().isOk())
+                .andReturn();
+        // TODO : Ajouter les tests sur le résultat retourné lorsque le parser SPARQL sera réalisé
+    }
+
+    @Test
+    @Order(12)
+    void querySPARQL1() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:queries/sparql-1.rq");
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8)))

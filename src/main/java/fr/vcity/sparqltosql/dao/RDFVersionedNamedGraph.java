@@ -9,18 +9,18 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("versioned_named_graph")
 public class RDFVersionedNamedGraph {
     @Id
+    @Schema(name = "Versioned Named Graph id", example = "2")
+    private Integer idVersionedNamedGraph;
+
     @Schema(name = "Named Graph ID", example = "1")
     private Integer idNamedGraph;
 
-    @Schema(name = "Name of the graph", example = "https://github.com/VCityTeam/VCity/City#Lyon")
-    private String name;
+    @Schema(name = "Index", example = "2")
+    private Integer index;
 
-    @Schema(name = "Validity", example = "B'10001'")
-    private byte[] validity;
-
-    public RDFVersionedNamedGraph(Integer idNamedGraph, String name, byte[] validity) {
+    public RDFVersionedNamedGraph(Integer idNamedGraph, Integer index, Integer idVersionedNamedGraph) {
         this.idNamedGraph = idNamedGraph;
-        this.name = name;
-        this.validity = validity;
+        this.index = index;
+        this.idVersionedNamedGraph = idVersionedNamedGraph;
     }
 }
