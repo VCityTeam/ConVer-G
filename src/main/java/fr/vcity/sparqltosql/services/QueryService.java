@@ -112,7 +112,7 @@ public class QueryService implements IQueryService {
             List<Scenario> computedScenarioList = new ArrayList<>();
 
             scenariosMap.forEach((sc, scVersions) -> {
-                ScenarioVersion currentSV = scenariosMap.get(sc).get(0);
+                ScenarioVersion currentSV = scenariosMap.get(sc).getFirst();
 
                 List<String> versions = new ArrayList<>();
                 while (currentSV != null) {
@@ -137,10 +137,8 @@ public class QueryService implements IQueryService {
                 computedScenarioList.add(new Scenario(sc, versions));
             });
 
-            workspace.setConsensusSpace(new Space(
-                    s.equals("https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#ConcensusSpace") ?
-                            "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#ConcensusSpace" :
-                            "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#PropositionSpace",
+            workspace.setSpace(new Space(
+                    s,
                     computedScenarioList
             ));
         }

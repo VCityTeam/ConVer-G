@@ -317,7 +317,7 @@ cd workflows
 /bin/bash workflow-gratte_ciel.sh
 ```
 
-Lets assume that we have a dataset with 2 versions with the following quads:
+Let's assume that we have a dataset with 2 versions with the following quads:
 
 **Version 1 (buildings-2015.nq):**
 | Subject | Predicate | Object | Named Graph |

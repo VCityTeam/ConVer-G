@@ -17,6 +17,14 @@ public class Workspace {
     )
     Space propositionSpace;
 
+    public void setSpace(Space space) {
+        if (space.getSpaceType().equals("https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#ConcensusSpace")) {
+            consensusSpace = space;
+        } else {
+            propositionSpace = space;
+        }
+    }
+
     public Workspace(Space consensusSpace, Space propositionSpace) {
         this.consensusSpace = consensusSpace;
         this.propositionSpace = propositionSpace;
