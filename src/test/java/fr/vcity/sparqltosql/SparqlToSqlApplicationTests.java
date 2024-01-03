@@ -105,10 +105,10 @@ class SparqlToSqlApplicationTests {
         List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         for (RDFCompleteVersionedQuad quad : quads) {
-            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne")) {
-                assertEquals("urn:x-rdflib:default", quad.getNamedGraph());
+            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#Villeurbanne")) {
+                assertEquals("default", quad.getNamedGraph());
             } else {
-                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/GraphName#Villeurbanne", quad.getNamedGraph());
+                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#Villeurbanne", quad.getNamedGraph());
             }
             assertNotNull(quad.getS());
             assertNotNull(quad.getP());
@@ -223,7 +223,6 @@ class SparqlToSqlApplicationTests {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // FIXME : Consensus space and Proposition space are empty
         assertNotNull(mvcResult.getResponse().getContentAsString());
     }
 

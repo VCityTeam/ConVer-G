@@ -71,8 +71,13 @@
         <!--   RDF dependencies     -->
         <dependency>
             <groupId>org.apache.jena</groupId>
-            <artifactId>jena-arq</artifactId>
-            <version>4.8.0</version>
+            <artifactId>apache-jena-libs</artifactId>
+            <version>4.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-fuseki-server</artifactId>
+            <version>4.10.0</version>
         </dependency>
 
         <!--   Coverage dependency     -->

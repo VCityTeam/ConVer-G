@@ -38,6 +38,7 @@ class RdfConverter:
         self.filename = '.'.join(os.path.split(
             args.input_file)[-1].split('.')[:-1])
         self.graph = rdflib.Graph()
+        self.workspace_graph = rdflib.Graph()
         self.version = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}'
         self.annotation = f'https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#{args.annotation}'
 
@@ -73,21 +74,42 @@ class RdfConverter:
             # Ajouter le quadruplet au jeu de données
             ds.add((subject, predicate, object_literal, named_graph))
         if self.annotation_type == 'theoretical':
-            ds.add(
-                (
-                    named_graph,
-                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of'),
-                    Literal(self.annotation)
-                )
+            self.add_theoretical_annotation(named_graph)
+        ds.serialize(destination=output_file,
+                     format='nquads', encoding='utf-8')
+
+    def add_theoretical_annotation(self, named_graph):
+        """
+        Creates a new ttl file or append at the end the annotation for the named graph
+        :param named_graph: The named graph to be annotated
+        """
+        workspace_ds = Dataset()
+        if os.path.exists('theoretical_annotations.ttl'):
+            self.workspace_graph.parse(
+                'theoretical_annotations.ttl', format='ttl')
+            for s, p, o in self.workspace_graph.query('''
+                SELECT ?s ?p ?o
+                WHERE { ?s ?p ?o . }'''):
+                subject = URIRef(s)
+                predicate = URIRef(p)
+                object_literal = Literal(o)
+                workspace_ds.add((subject, predicate, object_literal))
+        workspace_ds.add(
+            (
+                named_graph,
+                URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of'),
+                Literal(self.annotation)
             )
-            ds.add(
-                (
-                    named_graph,
-                    URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version'),
-                    Literal(self.version)
-                )
+        )
+        workspace_ds.add(
+            (
+                named_graph,
+                URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version'),
+                Literal(self.version)
             )
-        ds.serialize(destination=output_file, format='nquads', encoding='utf-8')
+        )
+        workspace_ds.serialize(
+            destination='theoretical_annotations.ttl', format='ttl', encoding='utf-8')
 
 
 if __name__ == "__main__":
