@@ -42,42 +42,34 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   SELECT queries over that RDF to SQL queries over the original relational data.
   The goal is to provide a specification for SPARQL tool vendors and a foundation for the Semantic Web. It highlights
   the importance of creating a computable mapping from SPARQL semantics to SQL semantics.
--
-    *
+- **[Evaluating SPARQL-to-SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
+  This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
+  It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL-to-SQL translation in
+  the Ontop system.
 
-*[Evaluating SPARQL-to-SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)
-**
-This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
-It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL-to-SQL translation in
-the Ontop system.
-
--
-    *
-
-*[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)
-**
-This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
-techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL
-queries to relational queries,
-either by rewriting them into SQL queries or by compiling them directly into evaluation structures native to the
-database.
+- **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
+  This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
+  techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL
+  queries to relational queries,
+  either by rewriting them into SQL queries or by compiling them directly into evaluation structures native to the
+  database.
 
 ## Getting started
 
 ### Installation
 
-This project uses Java 17 JDK + Maven and
+This project uses Java 21 JDK + Maven and
 a [dockerized (make sure that Docker is installed too)](https://www.docker.com/) [PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html).
-If you don't have Java 17 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this
-tool to set Java 17 as current session version.
+If you don't have Java 21 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this
+tool to set Java 21 as current session version.
 
 > SDKMAN! is a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems.
 
 Once you have `SDKMAN!` installed, run:
 
 ```shell
-sdk install java 17.0.7-amzn
-sdk use java 17.0.7-amzn
+sdk install java 21.0.1-amzn
+sdk use java 21.0.1-amzn
 ```
 
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
@@ -86,8 +78,8 @@ Make sure you have Maven installed. If you don't have Maven installed, run: `sud
 
 This project uses:
 
-- the `jena-arq 4.8.0` library for parsing SPARQL statements in Java,
-- the `springdoc-openapi-starter-webmvc-ui 2.1.0` library to parse the Swagger API annotations and displays
+- the `jena-arq` library for parsing SPARQL statements in Java,
+- the `springdoc-openapi-starter-webmvc-ui` library to parse the Swagger API annotations and displays
   the [swagger-ui](http://localhost:8080/swagger-ui/index.html),
 - a [Dockerized PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html), so the `postgresql` driver is
   installed too.
@@ -314,7 +306,11 @@ pip install -r python/requirements.txt
 
 # run the program
 cd workflows
-/bin/bash workflow-gratte_ciel.sh
+/bin/bash workflow-gratte_ciel.sh > allout.txt 2>&1
+
+# in another terminal
+cd workflows
+tail -f allout.txt
 ```
 
 Let's assume that we have a dataset with 2 versions with the following quads:
