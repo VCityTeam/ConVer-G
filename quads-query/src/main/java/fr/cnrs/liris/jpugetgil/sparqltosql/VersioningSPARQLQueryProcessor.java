@@ -1,19 +1,17 @@
-package fr.vcity.sparqltosql.services;
+package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.fuseki.servlets.HttpAction;
 import org.apache.jena.fuseki.servlets.SPARQLQueryProcessor;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.sparql.core.DatasetGraph;
-import org.apache.jena.sparql.core.DatasetGraphFactory;
-import org.apache.jena.sparql.exec.QueryExec;
-import org.apache.jena.sparql.exec.QueryExecDatasetBuilder;
-import org.apache.jena.sparql.exec.QueryExecutionAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(VersioningSPARQLQueryProcessor.class);
 
     /**
      * @param action

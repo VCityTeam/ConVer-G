@@ -1,4 +1,4 @@
-package fr.vcity.sparqltosql.services;
+package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
@@ -11,18 +11,23 @@ import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.resultset.ResultSetMem;
 import org.apache.jena.sparql.util.Context;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+// Check QueryExecutionAdapter ?
 
 public class VersioningQueryExecution implements QueryExecution {
-    private final Query query;
+    private Query query;
+
+    private PostgreSQLJDBC jdbc;
 
     public VersioningQueryExecution(Query query) {
         this.query = query;
+        jdbc = new PostgreSQLJDBC();
     }
 
     @Override
@@ -57,6 +62,10 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public ResultSet execSelect() {
+        // FIXME : Create SELECT query and inject
+        jdbc.doSelect();
+
+        // FIXME : Create SELECT query
         Var toto = Var.alloc("toto");
         Node totoVal = NodeFactory.createURI("http://toto.example.com");
         List<Var> vars = new ArrayList<>();
@@ -172,4 +181,3 @@ public class VersioningQueryExecution implements QueryExecution {
         return 0;
     }
 }
-

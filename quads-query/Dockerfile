@@ -6,5 +6,5 @@ RUN ["mvn", "package", "-Dmaven.test.skip=true"]
 FROM eclipse-temurin:21
 LABEL maintainer="vcity"
 RUN mkdir /opt/app
-COPY --from=build /app/target/sparql-to-sql-0.0.1-SNAPSHOT.jar /opt/app/sparql-to-sql.jar
-CMD [ "java", "-jar", "/opt/app/sparql-to-sql.jar" ]
+COPY --from=build /app/target/sparql-to-sql-query-0.0.1-SNAPSHOT.jar /opt/app/sparql-to-sql-query.jar
+CMD [ "java", "-jar", "/opt/app/sparql-to-sql-query.jar" ]

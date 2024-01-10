@@ -31,17 +31,29 @@ services:
     volumes:
       - ./blazegraph.properties:/data/blazegraph.properties
 
-  sparql-to-sql:
+  sparql-to-sql-importer:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: quads-importer/Dockerfile
     depends_on:
       - postgres
     environment:
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
     ports:
       - "8080:8080"
-    container_name: sparql-to-sql
+    container_name: sparql-to-sql-importer
+
+  sparql-to-sql-query:
+    build:
+      context: .
+      dockerfile: quads-query/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+    ports:
+      - "8081:8081"
+    container_name: sparql-to-sql-query
 
 volumes:
   pg-volume:
