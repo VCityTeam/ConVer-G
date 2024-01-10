@@ -19,14 +19,14 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-fuseki-main</artifactId>
+            <version>4.10.0</version>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.4.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-fuseki-server</artifactId>
-            <version>4.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
