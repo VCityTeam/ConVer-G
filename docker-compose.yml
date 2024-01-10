@@ -33,8 +33,8 @@ services:
 
   sparql-to-sql-importer:
     build:
-      context: .
-      dockerfile: quads-importer/Dockerfile
+      context: quads-importer
+      dockerfile: Dockerfile
     depends_on:
       - postgres
     environment:
@@ -45,8 +45,8 @@ services:
 
   sparql-to-sql-query:
     build:
-      context: .
-      dockerfile: quads-query/Dockerfile
+      context: quads-query
+      dockerfile: Dockerfile
     depends_on:
       - postgres
     environment:
