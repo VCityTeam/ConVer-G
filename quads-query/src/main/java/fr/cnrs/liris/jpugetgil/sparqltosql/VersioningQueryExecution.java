@@ -1,33 +1,45 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
+import fr.cnrs.liris.jpugetgil.sparqltosql.hibernate.HibernateSessionSingleton;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.query.*;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.apache.jena.sparql.resultset.ResultSetMem;
 import org.apache.jena.sparql.util.Context;
+import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-// Check QueryExecutionAdapter ?
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class VersioningQueryExecution implements QueryExecution {
-    private Query query;
 
-    private PostgreSQLJDBC jdbc;
+    private static final Logger log = LoggerFactory.getLogger(VersioningQueryExecution.class);
+
+    private final Query query;
+
+    private final SessionFactory sessionFactory;
 
     public VersioningQueryExecution(Query query) {
         this.query = query;
-        jdbc = new PostgreSQLJDBC();
+        this.sessionFactory = HibernateSessionSingleton.getInstance().getSessionFactory();
     }
 
     @Override
@@ -61,19 +73,36 @@ public class VersioningQueryExecution implements QueryExecution {
     }
 
     @Override
-    public ResultSet execSelect() {
-        // FIXME : Create SELECT query and inject
-        jdbc.doSelect();
+    public org.apache.jena.query.ResultSet execSelect() {
+        SPARQLtoSQLTranslator translator = new SPARQLtoSQLTranslator(sessionFactory);
+        try (ResultSet rs = translator.translate(query)) {
+            List<Var> vars = new ArrayList<>();
+            List<Binding> bindings = new ArrayList<>();
 
-        // FIXME : Create SELECT query
-        Var toto = Var.alloc("toto");
-        Node totoVal = NodeFactory.createURI("http://toto.example.com");
-        List<Var> vars = new ArrayList<>();
-        vars.add(toto);
-        Binding binding = Binding.builder().add(toto, totoVal).build();
-        List<Binding> bindings = new ArrayList<>();
-        bindings.add(binding);
-        return ResultSetStream.create(vars, bindings.iterator());
+            while (Objects.requireNonNull(rs).next()) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int nbColumns = rsmd.getColumnCount();
+                for (int i = 1; i <= nbColumns; i++) {
+                    String columnName = rsmd.getColumnName(i);
+                    Var variable = Var.alloc(columnName);
+                    Node variableValue;
+                    if (rs.getString(columnName) != null) {
+                        variableValue = NodeFactory.createLiteral(rs.getString(columnName));
+                        if (!vars.contains(variable)) {
+                            vars.add(variable);
+                        }
+                        Binding binding = Binding.builder().add(variable, variableValue).build();
+                        bindings.add(binding);
+                    }
+                }
+            }
+
+            return ResultSetStream.create(vars, bindings.iterator());
+
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -152,7 +181,7 @@ public class VersioningQueryExecution implements QueryExecution {
     }
 
     @Override
-    public void setTimeout(long timeout, java.util.concurrent.TimeUnit timeoutUnits) {
+    public void setTimeout(long timeout, TimeUnit timeoutUnits) {
 
     }
 
@@ -162,7 +191,7 @@ public class VersioningQueryExecution implements QueryExecution {
     }
 
     @Override
-    public void setTimeout(long timeout1, java.util.concurrent.TimeUnit timeUnit1, long timeout2, java.util.concurrent.TimeUnit timeUnit2) {
+    public void setTimeout(long timeout1, TimeUnit timeUnit1, long timeout2, TimeUnit timeUnit2) {
 
     }
 

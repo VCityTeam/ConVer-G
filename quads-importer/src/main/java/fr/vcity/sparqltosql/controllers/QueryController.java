@@ -1,6 +1,6 @@
 package fr.vcity.sparqltosql.controllers;
 
-import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
+import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
 import fr.vcity.sparqltosql.dto.VersionAncestry;
 import fr.vcity.sparqltosql.dto.Workspace;
 import fr.vcity.sparqltosql.services.QueryService;
@@ -38,7 +38,7 @@ public class QueryController {
                     content = {
                             @Content(mediaType = "application/json",
                                     array = @ArraySchema(
-                                            schema = @Schema(implementation = RDFCompleteVersionedQuad.class)
+                                            schema = @Schema(implementation = CompleteVersionedQuad.class)
                                     )
                             )}),
             @ApiResponse(responseCode = "400", description = "Invalid validity",
@@ -47,7 +47,7 @@ public class QueryController {
                     content = @Content)}
     )
     @GetMapping(value = "/validity/{pattern}")
-    ResponseEntity<List<RDFCompleteVersionedQuad>> queryRequestedValidity(
+    ResponseEntity<List<CompleteVersionedQuad>> queryRequestedValidity(
             @Parameter(description = "The validity string (in bit string format)", name = "pattern", example = "110")
             @PathVariable("pattern") String requestedValidity
     ) {
@@ -62,7 +62,7 @@ public class QueryController {
             @ApiResponse(responseCode = "200", description = "The query filtered result",
                     content = {@Content(mediaType = "application/json",
                             array = @ArraySchema(
-                                    schema = @Schema(implementation = RDFCompleteVersionedQuad.class)
+                                    schema = @Schema(implementation = CompleteVersionedQuad.class)
                             )
                     )}),
             @ApiResponse(responseCode = "400", description = "Invalid version",
@@ -71,7 +71,7 @@ public class QueryController {
                     content = @Content)}
     )
     @GetMapping("/version/{idVersion}")
-    ResponseEntity<List<RDFCompleteVersionedQuad>> queryRequestedVersion(
+    ResponseEntity<List<CompleteVersionedQuad>> queryRequestedVersion(
             @Parameter(description = "The version number", name = "idVersion", example = "3")
             @PathVariable("idVersion") Integer requestedVersion
     ) {
@@ -86,7 +86,7 @@ public class QueryController {
             @ApiResponse(responseCode = "200", description = "The query filtered result",
                     content = {@Content(mediaType = "application/json",
                             array = @ArraySchema(
-                                    schema = @Schema(implementation = RDFCompleteVersionedQuad.class)
+                                    schema = @Schema(implementation = CompleteVersionedQuad.class)
                             )
                     )}),
             @ApiResponse(responseCode = "400", description = "Invalid SPARQL request",
@@ -95,7 +95,7 @@ public class QueryController {
                     content = @Content)}
     )
     @PostMapping("/sparql")
-    ResponseEntity<List<RDFCompleteVersionedQuad>> querySPARQL(
+    ResponseEntity<List<CompleteVersionedQuad>> querySPARQL(
             @RequestBody(description = "The SPARQL query", required = true)
             @org.springframework.web.bind.annotation.RequestBody String queryString
     ) {

@@ -1,6 +1,6 @@
 package fr.vcity.sparqltosql.services;
 
-import fr.vcity.sparqltosql.dao.RDFResourceOrLiteral;
+import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
 import fr.vcity.sparqltosql.dao.Version;
 import fr.vcity.sparqltosql.model.RDFSavedTriple;
@@ -25,32 +25,32 @@ import java.util.Iterator;
 @Slf4j
 public class QuadImportService implements IQuadImportService {
 
-    IRDFResourceOrLiteralRepository rdfResourceRepository;
-    IRDFVersionedQuadRepository rdfVersionedQuadRepository;
+    IResourceOrLiteralRepository rdfResourceRepository;
+    IVersionedQuadRepository rdfVersionedQuadRepository;
     IVersionedWorkspaceRepository versionedWorkspaceRepository;
-    IRDFVersionedNamedGraphRepository rdfVersionedNamedGraphRepository;
-    RDFVersionedNamedGraphComponent rdfVersionedNamedGraphComponent;
+    IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository;
+    VersionedNamedGraphComponent versionedNamedGraphComponent;
     WorkspaceComponent workspaceComponent;
     IVersionRepository versionRepository;
-    RDFVersionedQuadComponent rdfVersionedQuadComponent;
+    VersionedQuadComponent versionedQuadComponent;
 
     public QuadImportService(
-            IRDFResourceOrLiteralRepository rdfResourceRepository,
-            IRDFVersionedQuadRepository rdfVersionedQuadRepository,
+            IResourceOrLiteralRepository rdfResourceRepository,
+            IVersionedQuadRepository rdfVersionedQuadRepository,
             IVersionedWorkspaceRepository versionedWorkspaceRepository,
-            IRDFVersionedNamedGraphRepository rdfVersionedNamedGraphRepository,
-            RDFVersionedNamedGraphComponent rdfVersionedNamedGraphComponent,
+            IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository,
+            VersionedNamedGraphComponent versionedNamedGraphComponent,
             WorkspaceComponent workspaceComponent,
             IVersionRepository versionRepository,
-            RDFVersionedQuadComponent rdfVersionedQuadComponent
+            VersionedQuadComponent versionedQuadComponent
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.versionedWorkspaceRepository = versionedWorkspaceRepository;
         this.rdfVersionedNamedGraphRepository = rdfVersionedNamedGraphRepository;
-        this.rdfVersionedNamedGraphComponent = rdfVersionedNamedGraphComponent;
+        this.versionedNamedGraphComponent = versionedNamedGraphComponent;
         this.workspaceComponent = workspaceComponent;
-        this.rdfVersionedQuadComponent = rdfVersionedQuadComponent;
+        this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
     }
 
@@ -80,25 +80,25 @@ public class QuadImportService implements IQuadImportService {
                 Resource namedModel = i.next();
                 Model model = dataset.getNamedModel(namedModel);
                 log.info("Name Graph : {}", namedModel.getURI());
-                RDFResourceOrLiteral rdfResourceOrLiteralNG = saveRDFResourceOrLiteralOrReturnExisting(namedModel, "Named Graph");
-                RDFResourceOrLiteral rdfResourceOrLiteralVNG = saveRDFResourceOrLiteralOrReturnExisting(
+                ResourceOrLiteral resourceOrLiteralNG = saveRDFResourceOrLiteralOrReturnExisting(namedModel, "Named Graph");
+                ResourceOrLiteral resourceOrLiteralVNG = saveRDFResourceOrLiteralOrReturnExisting(
                         model.createResource(generateVersionedNamedGraph(namedModel.getURI(), version.getIndexVersion() - 1)),
                         "Named Graph"
                 );
                 saveRDFNamedGraphOrReturnExisting(
-                        rdfResourceOrLiteralVNG.getIdResourceOrLiteral(),
+                        resourceOrLiteralVNG.getIdResourceOrLiteral(),
                         version.getIndexVersion() - 1,
-                        rdfResourceOrLiteralNG.getIdResourceOrLiteral()
+                        resourceOrLiteralNG.getIdResourceOrLiteral()
                 );
 
                 model.listStatements().toList().parallelStream().forEach(statement -> {
                     RDFSavedTriple rdfSavedTriple = saveRDFTripleOrReturnExisting(statement);
 
-                    rdfVersionedQuadComponent.save(
+                    versionedQuadComponent.save(
                             rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
                             rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
                             rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                            rdfResourceOrLiteralNG.getIdResourceOrLiteral(),
+                            resourceOrLiteralNG.getIdResourceOrLiteral(),
                             version.getIndexVersion() - 1
                     );
                 });
@@ -210,9 +210,9 @@ public class QuadImportService implements IQuadImportService {
         RDFNode predicate = statement.getPredicate();
         RDFNode object = statement.getObject();
 
-        RDFResourceOrLiteral savedRDFSubject = saveRDFResourceOrLiteralOrReturnExisting(subject, "Subject");
-        RDFResourceOrLiteral savedRDFPredicate = saveRDFResourceOrLiteralOrReturnExisting(predicate, "Predicate");
-        RDFResourceOrLiteral savedRDFObject = saveRDFResourceOrLiteralOrReturnExisting(object, "Object");
+        ResourceOrLiteral savedRDFSubject = saveRDFResourceOrLiteralOrReturnExisting(subject, "Subject");
+        ResourceOrLiteral savedRDFPredicate = saveRDFResourceOrLiteralOrReturnExisting(predicate, "Predicate");
+        ResourceOrLiteral savedRDFObject = saveRDFResourceOrLiteralOrReturnExisting(object, "Object");
 
         log.debug("Insert or updated (S: {}, P: {}, O: {})",
                 savedRDFSubject.getName(),
@@ -233,7 +233,7 @@ public class QuadImportService implements IQuadImportService {
      */
     private RDFVersionedNamedGraph saveRDFNamedGraphOrReturnExisting(Integer idVersionedNamedGraph, Integer index, Integer idNamedGraph) {
         log.info("Upsert named graph: {} in version {}. versionedId : {}", idNamedGraph, index, idVersionedNamedGraph);
-        return rdfVersionedNamedGraphComponent.save(idVersionedNamedGraph, index, idNamedGraph);
+        return versionedNamedGraphComponent.save(idVersionedNamedGraph, index, idNamedGraph);
     }
 
     /**
@@ -243,7 +243,7 @@ public class QuadImportService implements IQuadImportService {
      * @param type The RDF node type (logging purpose)
      * @return The saved or existing RDFResourceOrLiteral element
      */
-    private RDFResourceOrLiteral saveRDFResourceOrLiteralOrReturnExisting(RDFNode spo, String type) {
+    private ResourceOrLiteral saveRDFResourceOrLiteralOrReturnExisting(RDFNode spo, String type) {
         if (spo.isLiteral()) {
             Literal literal = spo.asLiteral();
             String literalValue = literal.getString();

@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
+import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
 import fr.vcity.sparqltosql.services.IQuadImportService;
 import fr.vcity.sparqltosql.services.IQueryService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ class SparqlToSqlApplicationTests {
     @Order(0)
     void resetDatabase() {
         quadImportService.resetDatabase();
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
+        List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         assertEquals(0, quads.size());
     }
@@ -74,9 +74,9 @@ class SparqlToSqlApplicationTests {
                         .file(file))
                 .andExpect(status().isOk());
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
+        List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
-        for (RDFCompleteVersionedQuad quad : quads) {
+        for (CompleteVersionedQuad quad : quads) {
             assertEquals("1", new String(quad.getValidity(), StandardCharsets.UTF_8));
         }
     }
@@ -102,9 +102,9 @@ class SparqlToSqlApplicationTests {
                         .file(file))
                 .andExpect(status().isOk());
 
-        List<RDFCompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
+        List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
-        for (RDFCompleteVersionedQuad quad : quads) {
+        for (CompleteVersionedQuad quad : quads) {
             if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#Villeurbanne")) {
                 assertEquals("default", quad.getNamedGraph());
             } else {
@@ -128,9 +128,9 @@ class SparqlToSqlApplicationTests {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
+        List<CompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), CompleteVersionedQuad[].class));
 
-        for (RDFCompleteVersionedQuad resultQuad : resultQuads) {
+        for (CompleteVersionedQuad resultQuad : resultQuads) {
             assertNotNull(resultQuad.getS());
             assertNotNull(resultQuad.getP());
             assertNotNull(resultQuad.getO());
@@ -151,9 +151,9 @@ class SparqlToSqlApplicationTests {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
+        List<CompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), CompleteVersionedQuad[].class));
 
-        for (RDFCompleteVersionedQuad resultQuad : resultQuads) {
+        for (CompleteVersionedQuad resultQuad : resultQuads) {
             assertNotNull(resultQuad.getS());
             assertNotNull(resultQuad.getP());
             assertNotNull(resultQuad.getO());
@@ -174,9 +174,9 @@ class SparqlToSqlApplicationTests {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<RDFCompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), RDFCompleteVersionedQuad[].class));
+        List<CompleteVersionedQuad> resultQuads = List.of(new ObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), CompleteVersionedQuad[].class));
 
-        for (RDFCompleteVersionedQuad quad : resultQuads) {
+        for (CompleteVersionedQuad quad : resultQuads) {
             assertEquals('1', new String(quad.getValidity(), StandardCharsets.UTF_8).charAt(index));
         }
     }

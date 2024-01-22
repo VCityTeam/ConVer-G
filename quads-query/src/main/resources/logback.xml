@@ -11,9 +11,6 @@
         </encoder>
     </appender>
 
-    <root level="WARN">
-        <appender-ref ref="STDOUT"/>
-    </root>
     <logger name="fr.cnrs" level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </logger>

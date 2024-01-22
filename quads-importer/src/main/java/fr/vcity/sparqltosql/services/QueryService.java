@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.services;
 
 import fr.vcity.sparqltosql.dao.ScenarioVersion;
-import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
+import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
 import fr.vcity.sparqltosql.dto.Scenario;
 import fr.vcity.sparqltosql.dto.Space;
 import fr.vcity.sparqltosql.dto.Workspace;
@@ -26,26 +26,26 @@ import java.util.stream.Collectors;
 @Slf4j
 public class QueryService implements IQueryService {
 
-    IRDFResourceOrLiteralRepository rdfResourceRepository;
-    IRDFVersionedQuadRepository rdfVersionedQuadRepository;
-    IRDFVersionedNamedGraphRepository rdfNamedGraphRepository;
+    IResourceOrLiteralRepository rdfResourceRepository;
+    IVersionedQuadRepository rdfVersionedQuadRepository;
+    IVersionedNamedGraphRepository rdfNamedGraphRepository;
     IVersionedWorkspaceRepository versionedWorkspaceRepository;
     IVersionRepository versionRepository;
-    RDFVersionedQuadComponent rdfVersionedQuadComponent;
+    VersionedQuadComponent versionedQuadComponent;
 
     public QueryService(
-            IRDFResourceOrLiteralRepository rdfResourceRepository,
-            IRDFVersionedQuadRepository rdfVersionedQuadRepository,
-            IRDFVersionedNamedGraphRepository rdfNamedGraphRepository,
+            IResourceOrLiteralRepository rdfResourceRepository,
+            IVersionedQuadRepository rdfVersionedQuadRepository,
+            IVersionedNamedGraphRepository rdfNamedGraphRepository,
             IVersionRepository versionRepository,
-            RDFVersionedQuadComponent rdfVersionedQuadComponent,
+            VersionedQuadComponent versionedQuadComponent,
             IVersionedWorkspaceRepository versionedWorkspaceRepository
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.rdfNamedGraphRepository = rdfNamedGraphRepository;
         this.versionRepository = versionRepository;
-        this.rdfVersionedQuadComponent = rdfVersionedQuadComponent;
+        this.versionedQuadComponent = versionedQuadComponent;
         this.versionedWorkspaceRepository = versionedWorkspaceRepository;
     }
 
@@ -54,14 +54,14 @@ public class QueryService implements IQueryService {
      * @return the quads list filtered by requestedValidity
      */
     @Override
-    public List<RDFCompleteVersionedQuad> queryRequestedValidity(String requestedValidity) {
+    public List<CompleteVersionedQuad> queryRequestedValidity(String requestedValidity) {
         log.debug("Requested: {}", requestedValidity);
 
         if (requestedValidity.equals("*")) {
-            return rdfVersionedQuadComponent.findAll();
+            return versionedQuadComponent.findAll();
         }
 
-        return rdfVersionedQuadComponent
+        return versionedQuadComponent
                 .findAllByValidity(requestedValidity);
     }
 
@@ -70,10 +70,10 @@ public class QueryService implements IQueryService {
      * @return the quads list filtered by requestedVersion where the fact has to be truthy
      */
     @Override
-    public List<RDFCompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion) {
+    public List<CompleteVersionedQuad> queryRequestedVersion(Integer requestedVersion) {
         log.debug("Requested version: {}", requestedVersion);
 
-        return rdfVersionedQuadComponent.findAllByVersion(requestedVersion);
+        return versionedQuadComponent.findAllByVersion(requestedVersion);
     }
 
     /**
@@ -82,7 +82,7 @@ public class QueryService implements IQueryService {
      * @param queryString The given query string
      */
     @Override
-    public List<RDFCompleteVersionedQuad> querySPARQL(String queryString) {
+    public List<CompleteVersionedQuad> querySPARQL(String queryString) {
         getOperatorsFromQuery(queryString);
         return Collections.emptyList();
     }
@@ -93,7 +93,7 @@ public class QueryService implements IQueryService {
      * @param query The given query
      */
     @Override
-    public List<RDFCompleteVersionedQuad> getOperatorsFromQueryARQ(Query query) {
+    public List<CompleteVersionedQuad> getOperatorsFromQueryARQ(Query query) {
         try {
             switch (query.queryType()) {
                 case SELECT -> {

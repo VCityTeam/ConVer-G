@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.repository;
 
-import fr.vcity.sparqltosql.dao.RDFVersionedQuad;
-import fr.vcity.sparqltosql.dto.RDFCompleteVersionedQuad;
+import fr.vcity.sparqltosql.dao.VersionedQuad;
+import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class RDFVersionedQuadComponent {
+public class VersionedQuadComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public RDFVersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
-    public List<RDFCompleteVersionedQuad> findAll() {
+    public List<CompleteVersionedQuad> findAll() {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
@@ -29,7 +29,7 @@ public class RDFVersionedQuadComponent {
         );
     }
 
-    public List<RDFCompleteVersionedQuad> findAllByValidity(String validity) {
+    public List<CompleteVersionedQuad> findAllByValidity(String validity) {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
@@ -43,7 +43,7 @@ public class RDFVersionedQuadComponent {
         );
     }
 
-    public List<RDFCompleteVersionedQuad> findAllByVersion(Integer requestedVersion) {
+    public List<CompleteVersionedQuad> findAllByVersion(Integer requestedVersion) {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
@@ -57,7 +57,7 @@ public class RDFVersionedQuadComponent {
         );
     }
 
-    public RDFVersionedQuad save(
+    public VersionedQuad save(
             Integer idSubject,
             Integer idProperty,
             Integer idObject,
@@ -79,7 +79,7 @@ public class RDFVersionedQuadComponent {
                         .addValue("idObject", idObject)
                         .addValue("idNamedGraph", idNamedGraph)
                         .addValue("length", length),
-                (rs, i) -> new RDFVersionedQuad(
+                (rs, i) -> new VersionedQuad(
                         rs.getInt("id_subject"),
                         rs.getInt("id_property"),
                         rs.getInt("id_object"),
@@ -89,8 +89,8 @@ public class RDFVersionedQuadComponent {
         );
     }
 
-    private static RowMapper<RDFCompleteVersionedQuad> getRdfCompleteVersionedQuadRowMapper() {
-        return (rs, rowNum) -> new RDFCompleteVersionedQuad(
+    private static RowMapper<CompleteVersionedQuad> getRdfCompleteVersionedQuadRowMapper() {
+        return (rs, rowNum) -> new CompleteVersionedQuad(
                 rs.getString(1),
                 rs.getString(2),
                 rs.getString(3),

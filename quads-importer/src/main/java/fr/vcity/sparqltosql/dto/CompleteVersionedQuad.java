@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RDFCompleteVersionedQuad {
+public class CompleteVersionedQuad {
 
     @Schema(name = "The quad subject", example = "https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1")
     private String s;
@@ -23,7 +23,7 @@ public class RDFCompleteVersionedQuad {
     @Schema(name = "The quad validity", example = "1001")
     private byte[] validity;
 
-    public RDFCompleteVersionedQuad(
+    public CompleteVersionedQuad(
             String s,
             String p,
             String o,
@@ -37,7 +37,7 @@ public class RDFCompleteVersionedQuad {
         this.validity = validity;
     }
 
-    public RDFCompleteVersionedQuad() {
+    public CompleteVersionedQuad() {
     }
 
 }

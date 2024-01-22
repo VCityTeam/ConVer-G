@@ -1,15 +1,15 @@
 package fr.vcity.sparqltosql.model;
 
-import fr.vcity.sparqltosql.dao.RDFResourceOrLiteral;
+import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import lombok.Data;
 
 @Data
 public class RDFSavedTriple {
-    private RDFResourceOrLiteral savedRDFSubject;
-    private RDFResourceOrLiteral savedRDFPredicate;
-    private RDFResourceOrLiteral savedRDFObject;
+    private ResourceOrLiteral savedRDFSubject;
+    private ResourceOrLiteral savedRDFPredicate;
+    private ResourceOrLiteral savedRDFObject;
 
-    public RDFSavedTriple(RDFResourceOrLiteral savedRDFSubject, RDFResourceOrLiteral savedRDFPredicate, RDFResourceOrLiteral savedRDFObject) {
+    public RDFSavedTriple(ResourceOrLiteral savedRDFSubject, ResourceOrLiteral savedRDFPredicate, ResourceOrLiteral savedRDFObject) {
         this.savedRDFSubject = savedRDFSubject;
         this.savedRDFPredicate = savedRDFPredicate;
         this.savedRDFObject = savedRDFObject;

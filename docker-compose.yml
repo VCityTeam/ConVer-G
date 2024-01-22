@@ -51,6 +51,8 @@ services:
       - postgres
     environment:
       - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+      - "DATASOURCE_USERNAME=postgres"
+      - "DATASOURCE_PASSWORD=password"
     ports:
       - "8081:8081"
     container_name: sparql-to-sql-query

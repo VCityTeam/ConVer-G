@@ -1,13 +1,13 @@
 package fr.vcity.sparqltosql.repository;
 
-import fr.vcity.sparqltosql.dao.RDFVersionedQuad;
+import fr.vcity.sparqltosql.dao.VersionedQuad;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface IRDFVersionedQuadRepository extends CrudRepository<RDFVersionedQuad, Integer> {
+public interface IVersionedQuadRepository extends CrudRepository<VersionedQuad, Integer> {
 
     @Query(value = """
             UPDATE versioned_quad v

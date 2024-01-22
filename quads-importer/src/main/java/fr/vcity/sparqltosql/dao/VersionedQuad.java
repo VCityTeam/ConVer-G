@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @Table("versioned_quad")
-public class RDFVersionedQuad {
+public class VersionedQuad {
 
     @Schema(name = "Subject ID", example = "1")
     private Integer idSubject;
@@ -24,7 +24,7 @@ public class RDFVersionedQuad {
     @Schema(name = "Validity", example = "B'10001'")
     private byte[] validity;
 
-    public RDFVersionedQuad(Integer idSubject, Integer idProperty, Integer idObject, Integer idNamedGraph, byte[] validity) {
+    public VersionedQuad(Integer idSubject, Integer idProperty, Integer idObject, Integer idNamedGraph, byte[] validity) {
         this.idSubject = idSubject;
         this.idProperty = idProperty;
         this.idObject = idObject;

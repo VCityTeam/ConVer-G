@@ -6,10 +6,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RDFVersionedNamedGraphComponent {
+public class VersionedNamedGraphComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public RDFVersionedNamedGraphComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public VersionedNamedGraphComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 

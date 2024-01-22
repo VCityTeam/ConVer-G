@@ -1,6 +1,6 @@
 # SPARQL to SQL Project
 
-This project aims to create a Java Spring parser that can convert SPARQL queries into SQL queries.
+This project aims to create a Java parser that can convert SPARQL queries into SQL queries.
 The project is part of the BD team's research efforts within the [LIRIS](https://liris.cnrs.fr/)
 and [VCity project](https://projet.liris.cnrs.fr/vcity/).
 The aim of this POC is to query a set of city version and extract associated knowledge.
@@ -74,7 +74,8 @@ sdk use java 21.0.1-amzn
 
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
 
-### Maven dependencies
+### Maven
+#### Quads-importer
 
 This project uses:
 
@@ -84,25 +85,55 @@ This project uses:
 - a [Dockerized PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html), so the `postgresql` driver is
   installed too.
 
-### Maven plugins
-
 This project has been tested with:
 
 - `sonarqube`, assuring the code quality,
 - `JaCoCo`, testing the code coverage.
 
+#### Quads-query
+
+This project uses:
+
+- the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
+- the `hibernate-core` powerful object/relational mapping solution for Java,
+- a [Dockerized PostgreSQL 15 database](https://www.postgresql.org/docs/15/index.html), so the `postgresql` driver is
+  installed too.
+
+This project has been tested with: `junit-jupiter-engine`
+
 ### Start the application
 
-#### Dockerized database + Java Spring
+#### (Quads-importer) Dockerized database + Java Spring
 
 ```shell
 # at the root of the project
 # starts the database declared inside the docker-compose.yml file
 docker compose up -d
 
-# wait until the PostgreSQL database is up
-# starts the Java Spring application locally (http://localhost:8080/)
-mvn spring-boot:run 
+# if you want to hack the import program
+cd quads-importer
+
+## wait until the PostgreSQL database is up
+## starts the Java Spring application locally (http://localhost:8080/)
+mvn spring-boot:run
+```
+
+#### (Quads-importer) Dockerized database + Java Spring
+
+```shell
+# at the root of the project
+# starts the database declared inside the docker-compose.yml file
+docker compose up -d
+
+# if you want to hack the import program
+cd quads-query
+
+## wait until the PostgreSQL database is up
+# build the project
+mvn package
+
+## starts the Java Spring application locally (http://localhost:8081/)
+java -jar target/sparql-to-sql-query-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Implementation
@@ -333,21 +364,22 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 
 After some transformations, we have the following quads representing the theoretical model:
 
-| Subject                                                                   | Predicate                                                        | Object                                                            | Named Graph                                 | 
-|---------------------------------------------------------------------------|------------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------|
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Building                                  | http://example.edu/Named-Graph#Villeurbanne |
-| http://example.edu/Building#2                                             | a                                                                | http://example.edu/Type#Building                                  | http://example.edu/Named-Graph#Villeurbanne |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 | urn:x-rdflib:default                        |
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | http://example.edu/Named-Graph#GratteCiel   |
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | http://example.edu/Named-Graph#Villeurbanne |
-| http://example.edu/Building#3                                             | a                                                                | http://example.edu/Type#Building                                  | http://example.edu/Named-Graph#Villeurbanne |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         | urn:x-rdflib:default                        |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 | urn:x-rdflib:default                        |
+| Subject                                                                   | Predicate                                                        | Object                                                            | Named Graph                                                               | 
+|---------------------------------------------------------------------------|------------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------------------|
+| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#2                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
+| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#3                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
 
 ##### Implementation
 

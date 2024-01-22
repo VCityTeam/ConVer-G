@@ -9,6 +9,8 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+
 public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(VersioningSPARQLQueryProcessor.class);
@@ -18,7 +20,9 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
      */
     @Override
     protected void validateRequest(HttpAction action) {
-        log.info("Validating action {}, with context {}", action, action.getContext());
+        if (log.isDebugEnabled()) {
+            log.debug("Validating action {}, with context {}", action, action.getContext());
+        }
     }
 
     /**
@@ -27,7 +31,9 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
      */
     @Override
     protected void validateQuery(HttpAction action, Query query) {
-        log.info("Validating query {} in action {}", query, action);
+        if (log.isDebugEnabled()) {
+            log.debug("Validating query {} and action {}", query, action);
+        }
     }
 
     /**
@@ -38,14 +44,19 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
      */
     @Override
     protected Pair<DatasetGraph, Query> decideDataset(HttpAction action, Query query, String s) {
-        log.info("Creating dummy dataset for action {}, query {}, and s {}", action, query, s);
         DatasetGraph dsg = action.getActiveDSG();
         return new Pair<>(dsg, query);
     }
 
     @Override
     protected QueryExecution createQueryExecution(HttpAction action, Query query, DatasetGraph dataset) {
-        log.info("Creating queryExecution for action {}, query {}, and dataset {}", action, query, dataset);
+//        try {
+//            return new VersioningQueryExecution(query);
+//        } catch (SQLException e) {
+//            log.error(e.getMessage());
+//            return null;
+//        }
         return new VersioningQueryExecution(query);
+
     }
 }

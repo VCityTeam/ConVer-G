@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @Table("resource_or_literal")
-public class RDFResourceOrLiteral {
+public class ResourceOrLiteral {
     @Id
     @Schema(name = "Resource or literal ID", example = "1")
     private Integer idResourceOrLiteral;

@@ -2,7 +2,6 @@ package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 import org.apache.jena.fuseki.main.FusekiServer;
 import org.apache.jena.fuseki.server.Operation;
-import org.apache.jena.fuseki.servlets.SPARQLQueryProcessor;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.slf4j.Logger;
