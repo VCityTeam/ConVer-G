@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.dao.ResourceOrLiteral;
+import fr.cnrs.liris.jpugetgil.sparqltosql.dao.VersionedNamedGraph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_URI;
 import org.apache.jena.graph.Node_Variable;
@@ -34,8 +35,6 @@ public class SPARQLtoSQLTranslator {
 
     private final Map<String, Integer> uriToIdMap = new HashMap<>();
 
-    private final Map<Node, List<Occurence>> varOccurences = new HashMap<>();
-
     public SPARQLtoSQLTranslator(SessionFactory sessionFactory) {
         this.session = sessionFactory.openSession();
     }
@@ -49,7 +48,7 @@ public class SPARQLtoSQLTranslator {
         Op op = Algebra.compile(query);
 
         SQLQuery qu = buildSPARQLContext(op);
-        log.info(qu.sql);
+        log.info(qu.getSql());
 
         return null;
     }
@@ -60,103 +59,127 @@ public class SPARQLtoSQLTranslator {
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
 
-        switch (op) {
+        return switch (op) {
             case OpJoin opJoin -> {
                 buildSPARQLContext(opJoin.getLeft(), context);
                 buildSPARQLContext(opJoin.getRight(), context);
+                yield null;
             }
             case OpLeftJoin opLeftJoin -> {
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
+                yield null;
             }
             case OpUnion opUnion -> {
-                // TODO
 //                buildSelectSQL(opUnion.getLeft(), context);
 //                buildSelectSQL(opUnion.getRight(), context);
+                yield null;
             }
             case OpProject opProject -> {
 //                context.setProjections(opProject.getVars());
-                buildSPARQLContext(opProject.getSubOp(), context);
+                yield buildSPARQLContext(opProject.getSubOp(), context);
             }
             case OpTable opTable -> {
                 opTable.getTable().toString();
+                yield null;
             }
             case OpQuadPattern opQuadPattern -> {
                 opQuadPattern.getGraphNode().getURI();
+                yield null;
             }
             case OpExtend opExtend -> {
-                buildSPARQLContext(opExtend.getSubOp(), null);
+                yield buildSPARQLContext(opExtend.getSubOp(), null);
             }
             case OpDistinct opDistinct -> {
-                buildSPARQLContext(opDistinct.getSubOp(), null);
+                yield buildSPARQLContext(opDistinct.getSubOp(), null);
             }
             case OpFilter opFilter -> {
-                buildSPARQLContext(opFilter.getSubOp(), null);
+                yield buildSPARQLContext(opFilter.getSubOp(), null);
             }
             case OpOrder opOrder -> {
-                buildSPARQLContext(opOrder.getSubOp(), null);
+                yield buildSPARQLContext(opOrder.getSubOp(), null);
             }
             case OpGroup opGroup -> {
-                buildSPARQLContext(opGroup.getSubOp(), null);
+                yield buildSPARQLContext(opGroup.getSubOp(), null);
             }
             case OpSlice opSlice -> {
-                buildSPARQLContext(opSlice.getSubOp(), null);
+                yield buildSPARQLContext(opSlice.getSubOp(), null);
             }
             case OpTopN opTopN -> {
-                buildSPARQLContext(opTopN.getSubOp(), null);
+                yield buildSPARQLContext(opTopN.getSubOp(), null);
             }
             case OpPath opPath -> {
-                // TODO : implement
+                yield null;
             }
             case OpLabel opLabel -> {
-                buildSPARQLContext(opLabel.getSubOp(), null);
+                yield buildSPARQLContext(opLabel.getSubOp(), null);
             }
             case OpNull ignored -> {
-                buildSPARQLContext(null, context);
+                yield buildSPARQLContext(null, context);
             }
             case OpList opList -> {
-                buildSPARQLContext(opList.getSubOp(), null);
+                yield buildSPARQLContext(opList.getSubOp(), null);
             }
             case OpBGP opBGP -> {
-                setURIsInMap(opBGP);
+                SQLContext cont = setURIsInMap(opBGP, context);
                 getURIsIds();
 
-                if (context.graph() != null) {
-                    return buildContextBGPWithGraph(opBGP, context.setURI_ids(uriToIdMap));
+                if (cont.graph() != null) {
+                    yield buildContextBGPWithGraph(opBGP, cont);
                 } else {
-                    return buildContextBGPWorkspace(opBGP, context.setURI_ids(uriToIdMap));
+                    yield buildContextBGPWorkspace(opBGP, cont);
                 }
             }
             case OpGraph opGraph -> {
+                Map<Node, List<Occurence>> newVarOccurences = new HashMap<>(context.varOccurrences());
+
+                Integer count = newVarOccurences
+                        .keySet()
+                        .stream()
+                        .filter(
+                                node -> newVarOccurences.get(node).stream().anyMatch(occurence -> occurence.getType().equals("graph"))
+                        )
+                        .map(node -> 1)
+                        .reduce(0, Integer::sum, Integer::sum);
+
+                newVarOccurences
+                        .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
+                        .add(new Occurence("graph", count));
+
                 SQLContext cont = context.setGraph(opGraph.getNode());
-                buildSPARQLContext(opGraph.getSubOp(), cont);
+                cont = cont.setVarOccurrences(newVarOccurences);
+                yield buildSPARQLContext(opGraph.getSubOp(), cont);
+                // FIXME : Add the graph to the SQLQuery
             }
             case OpTriple opTriple -> {
 //                context.getTriples().add(opTriple.getTriple());
 //                return context.buildSQL();
+                yield null;
             }
-            default -> throw new IllegalArgumentException("TODO: Implementation of the operator "  + op.getClass().getName());
-        }
-
-        throw new IllegalArgumentException("TODO: Implementation of the operator " + op.getClass().getName());
+            default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
+        };
     }
 
-    private void setURIsInMap(OpBGP opBGP) {
+    private SQLContext setURIsInMap(OpBGP opBGP, SQLContext context) {
+        Map<Node, List<Occurence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
+
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
             Triple triple = opBGP.getPattern().getList().get(i);
             Node subject = triple.getSubject();
             Node predicate = triple.getPredicate();
             Node object = triple.getObject();
 
-            varOccurences
+            newVarOccurrences
                     .computeIfAbsent(subject, k -> new ArrayList<>())
                     .add(new Occurence("subject", i));
-            varOccurences
+            newVarOccurrences
                     .computeIfAbsent(predicate, k -> new ArrayList<>())
                     .add(new Occurence("predicate", i));
-            varOccurences
+            newVarOccurrences
                     .computeIfAbsent(object, k -> new ArrayList<>())
                     .add(new Occurence("object", i));
+
+            context = context.setVarOccurrences(newVarOccurrences);
 
             if (subject instanceof Node_URI) {
                 uriToIdMap.put(subject.getURI(), null);
@@ -168,6 +191,8 @@ public class SPARQLtoSQLTranslator {
                 uriToIdMap.put(object.getURI(), null);
             }
         }
+
+        return context;
     }
 
     /**
@@ -178,7 +203,7 @@ public class SPARQLtoSQLTranslator {
      * @return the SQL query
      */
     private SQLQuery buildContextBGPWorkspace(OpBGP opBGP, SQLContext context) {
-        String select = generateSelectWorkspace(opBGP);
+        String select = generateSelectWorkspace(context);
         String tables = generateFromTables(opBGP, true);
         String where = generateWhereWorkspace(opBGP);
 
@@ -198,7 +223,8 @@ public class SPARQLtoSQLTranslator {
                 .replace(
                         "{where}",
                         where
-                )
+                ),
+                context
         );
     }
 
@@ -210,86 +236,81 @@ public class SPARQLtoSQLTranslator {
      * @return the SQL query
      */
     private SQLQuery buildContextBGPWithGraph(OpBGP opBGP, SQLContext context) {
-        String select = generateSelect(opBGP);
+        String select = generateSelect(context);
         String tables = generateFromTables(opBGP, false);
+        String where = generateWhere(opBGP, context);
 
-        // FIXME: End implementation
-        switch (context.graph()) {
-            case Node_Variable nodeVariable -> {
-                String where = generateWhere(opBGP, nodeVariable);
-
-                return new SQLQuery("""
-                        SELECT {select}
-                        FROM {tables}
-                        WHERE {where}
-                        """
-                        .replace(
-                                "{select}",
-                                select
-                        )
-                        .replace(
-                                "{tables}",
-                                tables
-                        )
-                        .replace(
-                                "{where}",
-                                where
-                        )
-                );
-            }
-            case Node_URI nodeUri -> {
-                String where = generateWhere(opBGP, nodeUri);
-                return new SQLQuery("""
-                            SELECT {select}
-                            FROM {tables}
-                            WHERE {where}
-                        """
-                        .replace(
-                                "{select}",
-                                select
-                        )
-                        .replace(
-                                "{tables}",
-                                tables
-                        )
-                        .replace(
-                                "{where}",
-                                where
-                        )
-                );
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + context.graph());
-        }
+        return new SQLQuery("""
+                SELECT {select}
+                FROM {tables}
+                WHERE {where}
+                """
+                .replace(
+                        "{select}",
+                        select
+                )
+                .replace(
+                        "{tables}",
+                        tables
+                )
+                .replace(
+                        "{where}",
+                        where
+                ),
+                context
+        );
     }
 
     /**
      * Generate the SELECT clause of the SQL query
      *
-     * @param opBGP the BGP operator of the SPARQL query
+     * @param context the context of the SPARQL query
      * @return the SELECT clause of the SQL query
      */
-    private String generateSelect(OpBGP opBGP) {
-        return Streams.mapWithIndex(opBGP.getPattern().getList().stream(), (triple, index) ->
-                "t" + index + ".id_subject as v" + index + "$subject, " +
-                        "t" + index + ".id_property as v" + index + "$predicate, " +
-                        "t" + index + ".id_object as v" + index + "$object, " +
-                        "t" + index + ".id_named_graph as gn" + index + "$graph, " +
-                        "t" + index + ".validity & t" + index + ".validity as bs" + index + "$graph"
-        ).collect(Collectors.joining(",\n"));
+    private String generateSelect(SQLContext context) {
+        return Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
+            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+                return (
+                        "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                        ".id_named_graph as ng$" + node.getName() +
+                        ", t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                        ".validity as bs$" + node.getName()
+                );
+            }
+            return (
+                    "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                    "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
+                    " as v$" + node.getName()
+            );
+        }).collect(Collectors.joining(", \n"));
+    }
+
+    /**
+     * Return the column name of the SQL query according to the occurrence type
+     * @param occurrence the occurrence of the Node
+     * @return the column name of the versioned quad table
+     */
+    private String getColumnByOccurrence(Occurence occurrence) {
+        return switch (occurrence.getType()) {
+            case "subject" -> "id_subject";
+            case "predicate" -> "id_property";
+            case "object" -> "id_object";
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
      * Generate the SELECT clause of the SQL query in a workspace context
      *
-     * @param opBGP the BGP operator of the SPARQL query
+     * @param context the context of the SPARQL query
      * @return the SELECT clause of the SQL query
      */
-    private String generateSelectWorkspace(OpBGP opBGP) {
-        return Streams.mapWithIndex(opBGP.getPattern().getList().stream(), (triple, index) ->
-                "t" + index + ".id_subject as w" + index + "$subject, " +
-                        "t" + index + ".id_property as w" + index + "$predicate, " +
-                        "t" + index + ".id_object as w" + index + "$object "
-        ).collect(Collectors.joining(",\n"));
+    private String generateSelectWorkspace(SQLContext context) {
+        return Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) ->
+                "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
+                " as w$" + node.getName()
+        ).collect(Collectors.joining(", \n"));
     }
 
     /**
@@ -310,35 +331,51 @@ public class SPARQLtoSQLTranslator {
     }
 
     /**
-     * Generate the WHERE clause of the SQL query with a graph URI
-     *
-     * @param opBGP   the BGP operator of the SPARQL query
-     * @param nodeUri the graph URI of the SPARQL query
-     * @return the WHERE clause of the SQL query
-     */
-    private String generateWhere(OpBGP opBGP, Node_URI nodeUri) {
-        Integer idNamedGraph = uriToIdMap.get(nodeUri.getURI());
-        throw new IllegalArgumentException("TODO: Implementation of the function");
-    }
-
-    /**
      * Generate the WHERE clause of the SQL query with a graph variable
      *
      * @param opBGP   the BGP operator of the SPARQL query
-     * @param ignored the graph variable of the SPARQL query
+     * @param context the context of the SPARQL query
      * @return the WHERE clause of the SQL query
      */
-    private String generateWhere(OpBGP opBGP, Node_Variable ignored) {
+    private String generateWhere(OpBGP opBGP, SQLContext context) {
         StringBuilder where = new StringBuilder();
-        StringBuilder validity = new StringBuilder("(");
+        StringBuilder validity = new StringBuilder();
         StringBuilder idSelect = new StringBuilder();
         List<Triple> triples = opBGP.getPattern().getList();
 
-        for (int i = 0; i < triples.size() - 1; i++) {
-            where.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph AND ");
-            validity.append("t").append(i).append(".validity & t").append(i + 1).append(".validity");
-            if (i < opBGP.getPattern().getList().size() - 2) {
-                validity.append(" AND ");
+        for (int i = 0; i < triples.size(); i++) {
+            switch (context.graph()) {
+                case Node_Variable ignored -> {
+                    // where
+                    if (i < triples.size() - 1) {
+                        where.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph AND ");
+                    }
+                    // validity
+                    if (i == 0) {
+                        validity.append("(");
+                    }
+                    if (!validity.isEmpty() && i != 0 && i < triples.size() - 1) {
+                        validity.append(" & ");
+                    }
+
+                    if (i < triples.size() - 1) {
+                        validity.append("t").append(i).append(".validity & t").append(i + 1).append(".validity");
+                    }
+                    if (i < opBGP.getPattern().getList().size() - 2) {
+                        validity.append(" AND ");
+                    }
+                    if (i == opBGP.getPattern().size() - 1) {
+                        validity.append(") <> B'0' AND ");
+                    }
+                }
+                case Node_URI nodeUri -> {
+                    // where
+                    VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(nodeUri.getURI());
+                    where.append("t").append(i).append(".id_named_graph = ").append(versionedNamedGraph.getIdNamedGraph()).append(" AND ");
+                    // validity
+                    validity.append("get_bit(t").append(i).append(".validity,").append(versionedNamedGraph.getIndex()).append(") = 1 AND ");
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + context.graph());
             }
 
             Node subject = triples.get(i).getSubject();
@@ -347,21 +384,17 @@ public class SPARQLtoSQLTranslator {
 
             if (subject instanceof Node_URI) {
                 idSelect.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI())).append(" AND ");
-            } else {
-                idSelect.append("(1 = 1) AND ");
             }
             if (predicate instanceof Node_URI) {
                 idSelect.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI())).append(" AND ");
-            } else {
-                idSelect.append("(1 = 1) AND ");
             }
             if (object instanceof Node_URI) {
                 idSelect.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI())).append(" ");
-            } else {
-                idSelect.append("(1 = 1) ");
+            } else if (i == triples.size() - 1) {
+                idSelect.append("(1 = 1)");
             }
         }
-        validity.append(") <> B'0' AND ");
+
         where.append(validity);
 
         if (!idSelect.isEmpty()) {
@@ -372,13 +405,57 @@ public class SPARQLtoSQLTranslator {
         return where.toString();
     }
 
+    private VersionedNamedGraph getAssociatedVNG(String uri) {
+        Transaction tx = session.beginTransaction();
+        VersionedNamedGraph versionedNamedGraph = session.createQuery(
+                        "from VersionedNamedGraph vng join ResourceOrLiteral rl " +
+                        "on vng.idVersionedNamedGraph = rl.idResourceOrLiteral where rl.name = :uri",
+                        VersionedNamedGraph.class
+                )
+                .setParameter("uri", uri)
+                .getSingleResult();
+
+        tx.commit();
+
+        return versionedNamedGraph;
+    }
+
     /**
      * Generate the WHERE clause of the SQL query in a workspace context
+     *
      * @param opBGP the BGP operator of the SPARQL query
      * @return the WHERE clause of the SQL query
      */
     private String generateWhereWorkspace(OpBGP opBGP) {
-        throw new IllegalArgumentException("TODO: Implementation of the function");
+        StringBuilder where = new StringBuilder();
+        StringBuilder idSelect = new StringBuilder();
+        List<Triple> triples = opBGP.getPattern().getList();
+
+        for (int i = 0; i < triples.size(); i++) {
+            // where
+            Node subject = triples.get(i).getSubject();
+            Node predicate = triples.get(i).getPredicate();
+            Node object = triples.get(i).getObject();
+
+            if (subject instanceof Node_URI) {
+                idSelect.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI())).append(" AND ");
+            }
+            if (predicate instanceof Node_URI) {
+                idSelect.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI())).append(" AND ");
+            }
+            if (object instanceof Node_URI) {
+                idSelect.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI())).append(" ");
+            } else if (i == triples.size() - 1) {
+                idSelect.append("(1 = 1)");
+            }
+        }
+
+        if (!idSelect.isEmpty()) {
+            where.append(idSelect);
+        } else {
+            where.append("(1 = 1)");
+        }
+        return where.toString();
     }
 
     /**
@@ -393,9 +470,7 @@ public class SPARQLtoSQLTranslator {
                             .getResultList();
             tx.commit();
 
-            resourceOrLiterals.forEach(resourceOrLiteral -> {
-                uriToIdMap.put(resourceOrLiteral.getName(), resourceOrLiteral.getIdResourceOrLiteral());
-            });
+            resourceOrLiterals.forEach(resourceOrLiteral -> uriToIdMap.put(resourceOrLiteral.getName(), resourceOrLiteral.getIdResourceOrLiteral()));
         }
     }
 }
