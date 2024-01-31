@@ -24,6 +24,30 @@ public class ResourceOrLiteral {
         this.type = type;
     }
 
+    public Integer getIdResourceOrLiteral() {
+        return idResourceOrLiteral;
+    }
+
+    public void setIdResourceOrLiteral(Integer idResourceOrLiteral) {
+        this.idResourceOrLiteral = idResourceOrLiteral;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public ResourceOrLiteral() {
     }
 }
