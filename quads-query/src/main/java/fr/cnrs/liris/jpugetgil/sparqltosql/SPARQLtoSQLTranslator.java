@@ -3,10 +3,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql;
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.dao.ResourceOrLiteral;
 import fr.cnrs.liris.jpugetgil.sparqltosql.dao.VersionedNamedGraph;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Node_URI;
-import org.apache.jena.graph.Node_Variable;
-import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.*;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
@@ -190,6 +187,9 @@ public class SPARQLtoSQLTranslator {
             if (object instanceof Node_URI) {
                 uriToIdMap.put(object.getURI(), null);
             }
+            if (object instanceof Node_Literal) {
+                uriToIdMap.put(object.getLiteralLexicalForm(), null);
+            }
         }
 
         return context;
@@ -205,27 +205,7 @@ public class SPARQLtoSQLTranslator {
     private SQLQuery buildContextBGPWorkspace(OpBGP opBGP, SQLContext context) {
         String select = generateSelectWorkspace(context);
         String tables = generateFromTables(opBGP, true);
-        String where = generateWhereWorkspace(opBGP);
-
-        return new SQLQuery("""
-                SELECT {select}
-                FROM {tables}
-                WHERE {where}
-                """
-                .replace(
-                        "{select}",
-                        select
-                )
-                .replace(
-                        "{tables}",
-                        tables
-                )
-                .replace(
-                        "{where}",
-                        where
-                ),
-                context
-        );
+        return getSqlQuery(opBGP, context, select, tables, true);
     }
 
     /**
@@ -236,14 +216,15 @@ public class SPARQLtoSQLTranslator {
      * @return the SQL query
      */
     private SQLQuery buildContextBGPWithGraph(OpBGP opBGP, SQLContext context) {
-        String select = generateSelect(context);
+        String select = generateSelect(opBGP, context);
         String tables = generateFromTables(opBGP, false);
-        String where = generateWhere(opBGP, context);
+        return getSqlQuery(opBGP, context, select, tables, false);
+    }
 
-        return new SQLQuery("""
+    private SQLQuery getSqlQuery(OpBGP opBGP, SQLContext context, String select, String tables, boolean isWorkspace) {
+        StringBuilder query = new StringBuilder("""
                 SELECT {select}
                 FROM {tables}
-                WHERE {where}
                 """
                 .replace(
                         "{select}",
@@ -253,10 +234,24 @@ public class SPARQLtoSQLTranslator {
                         "{tables}",
                         tables
                 )
-                .replace(
-                        "{where}",
-                        where
-                ),
+        );
+
+        String where;
+        if (isWorkspace) {
+            where = generateWhereWorkspace(opBGP);
+        } else {
+            where = generateWhere(opBGP, context);
+
+        }
+        if (!where.isEmpty()) {
+            query.append("""
+                    WHERE {where}
+                    """
+                    .replace("{where}", where)
+            );
+        }
+
+        return new SQLQuery(query.toString(),
                 context
         );
     }
@@ -267,22 +262,23 @@ public class SPARQLtoSQLTranslator {
      * @param context the context of the SPARQL query
      * @return the SELECT clause of the SQL query
      */
-    private String generateSelect(SQLContext context) {
-        return Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
-            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
-                return (
-                        "t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                        ".id_named_graph as ng$" + node.getName() +
-                        ", t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                        ".validity as bs$" + node.getName()
-                );
-            }
-            return (
-                    "t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                    "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
-                    " as v$" + node.getName()
-            );
-        }).collect(Collectors.joining(", \n"));
+    private String generateSelect(OpBGP opBGP, SQLContext context) {
+        return "(" + Streams.mapWithIndex(opBGP.getPattern().getList().stream(), (triple, index) ->
+                "t" + index + ".validity"
+        ).collect(Collectors.joining(" & ")) + ") as bs$" + context.graph().getName() + ", " +
+               Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
+                   if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+                       return (
+                               "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                               ".id_named_graph as ng$" + node.getName()
+                       );
+                   }
+                   return (
+                           "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                           "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
+                           " as v$" + node.getName()
+                   );
+               }).collect(Collectors.joining(", \n"));
     }
 
     /**
@@ -348,11 +344,14 @@ public class SPARQLtoSQLTranslator {
                 case Node_Variable ignored -> {
                     // where
                     if (i < triples.size() - 1) {
-                        where.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph AND ");
+                        if (!where.isEmpty()) {
+                            where.append(" AND ");
+                        }
+                        where.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph");
                     }
                     // validity
                     if (i == 0) {
-                        validity.append("(");
+                        validity.append("bit_count(");
                     }
                     if (!validity.isEmpty() && i != 0 && i < triples.size() - 1) {
                         validity.append(" & ");
@@ -365,44 +364,68 @@ public class SPARQLtoSQLTranslator {
                         validity.append(" AND ");
                     }
                     if (i == opBGP.getPattern().size() - 1) {
-                        validity.append(") <> B'0' AND ");
+                        validity.append(") <> 0");
                     }
                 }
                 case Node_URI nodeUri -> {
                     // where
                     VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(nodeUri.getURI());
-                    where.append("t").append(i).append(".id_named_graph = ").append(versionedNamedGraph.getIdNamedGraph()).append(" AND ");
+                    where.append("t").append(i).append(".id_named_graph = ").append(versionedNamedGraph.getIdNamedGraph());
                     // validity
-                    validity.append("get_bit(t").append(i).append(".validity,").append(versionedNamedGraph.getIndex()).append(") = 1 AND ");
+                    validity.append("get_bit(t").append(i).append(".validity,").append(versionedNamedGraph.getIndex()).append(") = 1");
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + context.graph());
             }
 
-            Node subject = triples.get(i).getSubject();
-            Node predicate = triples.get(i).getPredicate();
-            Node object = triples.get(i).getObject();
-
-            if (subject instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI())).append(" AND ");
-            }
-            if (predicate instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI())).append(" AND ");
-            }
-            if (object instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI())).append(" ");
-            } else if (i == triples.size() - 1) {
-                idSelect.append("(1 = 1)");
-            }
+            buildFiltersOnIds(idSelect, triples, i);
         }
 
-        where.append(validity);
+        chainStringBuilders(where, validity);
+        chainStringBuilders(where, idSelect);
 
-        if (!idSelect.isEmpty()) {
-            where.append(idSelect);
-        } else {
-            where.append("(1 = 1)");
-        }
         return where.toString();
+    }
+
+    /**
+     * Chain the StringBuilders with AND operator
+     * @param sb the initial StringBuilder
+     * @param sbs the chained StringBuilders
+     */
+    private void chainStringBuilders(StringBuilder sb, StringBuilder... sbs) {
+        for (StringBuilder s : sbs) {
+            if (!sb.isEmpty() && !s.isEmpty()) {
+                sb.append(" AND ");
+            }
+            sb.append(s);
+        }
+    }
+
+    /**
+     * Build the filters on the IDs of the triple
+     * @param idSelect the StringBuilder of the ids
+     * @param triples the list of triples
+     * @param i the index of the current triple
+     */
+    private void buildFiltersOnIds(StringBuilder idSelect, List<Triple> triples, int i) {
+        Node subject = triples.get(i).getSubject();
+        Node predicate = triples.get(i).getPredicate();
+        Node object = triples.get(i).getObject();
+        StringBuilder idSelectSubject = new StringBuilder();
+        StringBuilder idSelectPredicate = new StringBuilder();
+        StringBuilder idSelectObject = new StringBuilder();
+
+        if (subject instanceof Node_URI) {
+            idSelectSubject.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI()));
+        }
+        if (predicate instanceof Node_URI) {
+            idSelectPredicate.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI()));
+        }
+        if (object instanceof Node_URI) {
+            idSelectObject.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI()));
+        } else if (object instanceof Node_Literal) {
+            idSelectObject.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getLiteralLexicalForm()));
+        }
+        chainStringBuilders(idSelect, idSelectSubject, idSelectPredicate, idSelectObject);
     }
 
     private VersionedNamedGraph getAssociatedVNG(String uri) {
@@ -414,7 +437,6 @@ public class SPARQLtoSQLTranslator {
                 )
                 .setParameter("uri", uri)
                 .getSingleResult();
-
         tx.commit();
 
         return versionedNamedGraph;
@@ -433,29 +455,11 @@ public class SPARQLtoSQLTranslator {
 
         for (int i = 0; i < triples.size(); i++) {
             // where
-            Node subject = triples.get(i).getSubject();
-            Node predicate = triples.get(i).getPredicate();
-            Node object = triples.get(i).getObject();
-
-            if (subject instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI())).append(" AND ");
-            }
-            if (predicate instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI())).append(" AND ");
-            }
-            if (object instanceof Node_URI) {
-                idSelect.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI())).append(" ");
-            } else if (i == triples.size() - 1) {
-                idSelect.append("(1 = 1)");
-            }
+            buildFiltersOnIds(idSelect, triples, i);
         }
+        chainStringBuilders(where, idSelect);
 
-        if (!idSelect.isEmpty()) {
-            where.append(idSelect);
-        } else {
-            where.append("(1 = 1)");
-        }
-        return where.toString();
+       return where.toString();
     }
 
     /**
