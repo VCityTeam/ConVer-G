@@ -241,7 +241,6 @@ public class SPARQLtoSQLTranslator {
             where = generateWhereWorkspace(opBGP);
         } else {
             where = generateWhere(opBGP, context);
-
         }
         if (!where.isEmpty()) {
             query.append("""
@@ -263,9 +262,7 @@ public class SPARQLtoSQLTranslator {
      * @return the SELECT clause of the SQL query
      */
     private String generateSelect(OpBGP opBGP, SQLContext context) {
-        return "(" + Streams.mapWithIndex(opBGP.getPattern().getList().stream(), (triple, index) ->
-                "t" + index + ".validity"
-        ).collect(Collectors.joining(" & ")) + ") as bs$" + context.graph().getName() + ", " +
+        return intersectionValidity(opBGP) + " as bs$" + context.graph().getName() + ", " +
                Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
                    if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
                        return (
@@ -279,6 +276,12 @@ public class SPARQLtoSQLTranslator {
                            " as v$" + node.getName()
                    );
                }).collect(Collectors.joining(", \n"));
+    }
+
+    private static String intersectionValidity(OpBGP opBGP) {
+        return "(" + Streams.mapWithIndex(opBGP.getPattern().getList().stream(), (triple, index) ->
+                "t" + index + ".validity"
+        ).collect(Collectors.joining(" & "))  + ")";
     }
 
     /**
@@ -305,7 +308,7 @@ public class SPARQLtoSQLTranslator {
         return Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) ->
                 "t" + context.varOccurrences().get(node).getFirst().getPosition() +
                 "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
-                " as w$" + node.getName()
+                " as t$" + node.getName()
         ).collect(Collectors.joining(", \n"));
     }
 
@@ -339,32 +342,18 @@ public class SPARQLtoSQLTranslator {
         StringBuilder idSelect = new StringBuilder();
         List<Triple> triples = opBGP.getPattern().getList();
 
+        if (context.graph() instanceof Node_Variable) {
+            validity.append("bit_count").append(intersectionValidity(opBGP)).append(" <> 0");
+        }
+
         for (int i = 0; i < triples.size(); i++) {
             switch (context.graph()) {
                 case Node_Variable ignored -> {
+                    StringBuilder temp = new StringBuilder();
                     // where
                     if (i < triples.size() - 1) {
-                        if (!where.isEmpty()) {
-                            where.append(" AND ");
-                        }
-                        where.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph");
-                    }
-                    // validity
-                    if (i == 0) {
-                        validity.append("bit_count(");
-                    }
-                    if (!validity.isEmpty() && i != 0 && i < triples.size() - 1) {
-                        validity.append(" & ");
-                    }
-
-                    if (i < triples.size() - 1) {
-                        validity.append("t").append(i).append(".validity & t").append(i + 1).append(".validity");
-                    }
-                    if (i < opBGP.getPattern().getList().size() - 2) {
-                        validity.append(" AND ");
-                    }
-                    if (i == opBGP.getPattern().size() - 1) {
-                        validity.append(") <> 0");
+                        temp.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph");
+                        chainStringBuilders(where, temp);
                     }
                 }
                 case Node_URI nodeUri -> {
