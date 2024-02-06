@@ -154,7 +154,7 @@ erDiagram
     }
     VersionedNamedGraph {
         text versioned_named_graph
-        int index
+        int index_version
         text named_graph
     }
     Version {
@@ -193,7 +193,7 @@ erDiagram
     }
     VersionedNamedGraph {
         int id_versioned_named_graph PK, FK
-        int index
+        int index_version
         int id_named_graph FK
     }
     ResourceOrLiteral {
