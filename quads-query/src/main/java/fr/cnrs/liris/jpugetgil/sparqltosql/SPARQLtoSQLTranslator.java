@@ -128,23 +128,23 @@ public class SPARQLtoSQLTranslator {
                 }
             }
             case OpGraph opGraph -> {
-                Map<Node, List<Occurence>> newVarOccurences = new HashMap<>(context.varOccurrences());
+                Map<Node, List<Occurrence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
 
-                Integer count = newVarOccurences
+                Integer count = newVarOccurrences
                         .keySet()
                         .stream()
                         .filter(
-                                node -> newVarOccurences.get(node).stream().anyMatch(occurence -> occurence.getType().equals("graph"))
+                                node -> newVarOccurrences.get(node).stream().anyMatch(occurrence -> occurrence.getType().equals("graph"))
                         )
                         .map(node -> 1)
                         .reduce(0, Integer::sum, Integer::sum);
 
-                newVarOccurences
+                newVarOccurrences
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
-                        .add(new Occurence("graph", count));
+                        .add(new Occurrence("graph", count));
 
                 SQLContext cont = context.setGraph(opGraph.getNode());
-                cont = cont.setVarOccurrences(newVarOccurences);
+                cont = cont.setVarOccurrences(newVarOccurrences);
                 yield buildSPARQLContext(opGraph.getSubOp(), cont);
                 // FIXME : Add the graph to the SQLQuery
             }
@@ -158,7 +158,7 @@ public class SPARQLtoSQLTranslator {
     }
 
     private SQLContext setURIsInMap(OpBGP opBGP, SQLContext context) {
-        Map<Node, List<Occurence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
+        Map<Node, List<Occurrence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
 
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
             Triple triple = opBGP.getPattern().getList().get(i);
@@ -168,13 +168,13 @@ public class SPARQLtoSQLTranslator {
 
             newVarOccurrences
                     .computeIfAbsent(subject, k -> new ArrayList<>())
-                    .add(new Occurence("subject", i));
+                    .add(new Occurrence("subject", i));
             newVarOccurrences
                     .computeIfAbsent(predicate, k -> new ArrayList<>())
-                    .add(new Occurence("predicate", i));
+                    .add(new Occurrence("predicate", i));
             newVarOccurrences
                     .computeIfAbsent(object, k -> new ArrayList<>())
-                    .add(new Occurence("object", i));
+                    .add(new Occurrence("object", i));
 
             context = context.setVarOccurrences(newVarOccurrences);
 
@@ -289,7 +289,7 @@ public class SPARQLtoSQLTranslator {
      * @param occurrence the occurrence of the Node
      * @return the column name of the versioned quad table
      */
-    private String getColumnByOccurrence(Occurence occurrence) {
+    private String getColumnByOccurrence(Occurrence occurrence) {
         return switch (occurrence.getType()) {
             case "subject" -> "id_subject";
             case "predicate" -> "id_property";

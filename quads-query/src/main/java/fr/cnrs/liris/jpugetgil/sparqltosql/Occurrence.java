@@ -1,10 +1,10 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-public class Occurence {
+public class Occurrence {
     private String type;
     private Integer position;
 
-    public Occurence(String type, Integer position) {
+    public Occurrence(String type, Integer position) {
         this.type = type;
         this.position = position;
     }
