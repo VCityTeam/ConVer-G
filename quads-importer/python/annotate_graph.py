@@ -3,6 +3,7 @@ import os
 import hashlib
 import rdflib
 from rdflib import Dataset, URIRef, Literal
+from rdflib.term import _is_valid_uri
 
 RDFLIB_INPUT_SUPPORTED_FORMATS = ['turtle', 'ttl', 'turtle2', 'xml',
                                   'pretty-xml', 'json-ld', 'ntriples', 'nt', 'nt11', 'n3', 'trig', 'trix']
@@ -66,13 +67,13 @@ class RdfConverter:
         for s, p, o in self.graph.query('''
                 SELECT ?s ?p ?o
                 WHERE { ?s ?p ?o . }'''):
-            # Définir un triple
-            subject = URIRef(s)
+            # check if s, p and o are URI or Literal
+            subject = self.create_uriref_or_literal(s)
             predicate = URIRef(p)
-            object_literal = Literal(o)
+            object = self.create_uriref_or_literal(o)
 
             # Ajouter le quadruplet au jeu de données
-            ds.add((subject, predicate, object_literal, named_graph))
+            ds.add((subject, predicate, object, named_graph))
         if self.annotation_type == 'theoretical':
             self.add_theoretical_annotation(named_graph)
         ds.serialize(destination=output_file,
@@ -90,26 +91,35 @@ class RdfConverter:
             for s, p, o in self.workspace_graph.query('''
                 SELECT ?s ?p ?o
                 WHERE { ?s ?p ?o . }'''):
-                subject = URIRef(s)
+                subject = self.create_uriref_or_literal(s)
                 predicate = URIRef(p)
-                object_literal = Literal(o)
-                workspace_ds.add((subject, predicate, object_literal))
+                object = self.create_uriref_or_literal(o)
+                workspace_ds.add((subject, predicate, object))
         workspace_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of'),
-                Literal(self.annotation)
+                URIRef(self.annotation)
             )
         )
         workspace_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version'),
-                Literal(self.version)
+                URIRef(self.version)
             )
         )
         workspace_ds.serialize(
             destination='theoretical_annotations.ttl', format='ttl', encoding='utf-8')
+
+    def create_uriref_or_literal(self, str):
+        """Create a URIRef with the same validation func used by URIRef
+            or a Literal if str is not an URI
+        """
+        if isinstance(str, URIRef):
+                return URIRef(str)
+        elif isinstance(str, Literal):
+            return Literal(str)
 
 
 if __name__ == "__main__":

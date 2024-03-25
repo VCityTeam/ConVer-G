@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.services;
 
-import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
+import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.Version;
 import fr.vcity.sparqltosql.model.RDFSavedTriple;
 import fr.vcity.sparqltosql.repository.*;
@@ -13,6 +13,7 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -160,11 +161,15 @@ public class QuadImportService implements IQuadImportService {
                 model.listStatements().toList().parallelStream().forEach(statement -> {
                     RDFSavedTriple rdfSavedTriple = saveRDFTripleOrReturnExisting(statement);
 
-                    workspaceComponent.save(
-                            rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                            rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                            rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral()
-                    );
+                    try {
+                        workspaceComponent.save(
+                                rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
+                                rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
+                                rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral()
+                        );
+                    } catch (DuplicateKeyException duplicate) {
+                        log.info(duplicate.getMessage());
+                    }
                 });
             }
 

@@ -46,7 +46,6 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
   It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL-to-SQL translation in
   the Ontop system.
-
 - **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
   This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
   techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL
@@ -240,12 +239,18 @@ flowchart BT
 ```mermaid
 flowchart TB
     CS[Computer Scientist] -->|Sends the files to the import endpoint| SE
+    SE -->|Returns the version number via HTTP| CS
+    
     subgraph Server
         SE -->|Sends files to import| RIOT[Jena RIOT]
         RIOT -->|Send the quads for insertion| JDBC[Java Database Connectivity]
+        
+        JDBC -->|Sends the version number| SE
     end
+    
     subgraph Database
         JDBC -->|Sends the SQL query to the database| DB[PostgreSQL]
+        DB -->|Sends the version information| JDBC
     end
 ```
 
@@ -283,12 +288,8 @@ sequenceDiagram
         participant Workspace Import API
     end
 
-    System ->> NextCloud: Query for the dataset
-    NextCloud ->> System: Download the dataset
-    loop For each downloaded version
-        System ->> System: Replace the all PREFIX data with a versionable PREFIX
-    end
-    loop For each Versionable version
+    System ->> BSBM: Generate a set of versions and their dataset
+    loop For each generated version
         System ->> Annotation: Send the versionable data to annotate
         Annotation ->> System: The annotated data with the version index
         System ->> Annotation: Send the versionable data to annotate
@@ -300,14 +301,10 @@ sequenceDiagram
         Version Import API ->> System: Returns the version index
     end
 
-    System ->> Workspace Import API: Sends the workspace to import
-    Workspace Import API ->> System: Returns the workspace index
-    System ->> Triple store: Sends the workspace to import
-
-    loop For each downloaded version transitions
+    loop For each generated version transitions
         System ->> Triple store: Sends the version transition to import
         System ->> Workspace Import API: Sends the version transitions to import
-        Workspace Import API ->> System: Returns the workspace index
+        Workspace Import API ->> System: Returns import status
     end
 ```
 
@@ -315,8 +312,6 @@ sequenceDiagram
 
 Before importing the dataset inside the triple store and the relational database, we transform the data to match the
 theoretical model and the implementation.
-
-##### TODO : Resolve the geospatial entity linking
 
 ##### Contextualization
 
@@ -347,18 +342,20 @@ tail -f allout.txt
 Let's assume that we have a dataset with 2 versions with the following quads:
 
 **Version 1 (buildings-2015.nq):**
-| Subject | Predicate | Object | Named Graph |
-| --- | --- | --- | --- |
-| http://example.edu/Building#1 | a | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne |
-| http://example.edu/Building#2 | a | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne |
-| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/Named-Graph#GratteCiel |
+
+| Subject                       | Predicate | Object | Named Graph                               |
+|-------------------------------|-----------|--------|-------------------------------------------|
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon |
+| http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon |
+| http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        |
 
 **Version 2 (buildings-2018.nq):**
-| Subject | Predicate | Object | Named Graph |
-| --- | --- | --- | --- |
-| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/Named-Graph#GratteCiel |
-| http://example.edu/Building#1 | a | http://example.edu/Type#Tower | http://example.edu/Named-Graph#Villeurbanne |
-| http://example.edu/Building#3 | a | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne |
+
+| Subject                       | Predicate | Object | Named Graph                               |
+|-------------------------------|-----------|--------|-------------------------------------------|
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#IGN        |
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon |
+| http://example.edu/Building#3 | height    | 15     | http://example.edu/Named-Graph#Grand-Lyon |
 
 ##### Theoretical model
 
@@ -366,29 +363,29 @@ After some transformations, we have the following quads representing the theoret
 
 | Subject                                                                   | Predicate                                                        | Object                                                            | Named Graph                                                               | 
 |---------------------------------------------------------------------------|------------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------------------|
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#2                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       |                                                                           |
+| http://example.edu/Building#1                                             | height                                                           | 10.5                                                              | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#2                                             | height                                                           | 9.1                                                               | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#1                                             | height                                                           | 11                                                                | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                         |                                                                           |
 | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#IGN                                |                                                                           |
 | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#3                                             | a                                                                | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#1                                             | a                                                                | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Villeurbanne                       |                                                                           |
+| http://example.edu/Building#1                                             | height                                                           | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#3                                             | height                                                           | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#1                                             | height                                                           | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                         |                                                                           |
 | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#GratteCiel                         |                                                                           |
+| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#IGN                                |                                                                           |
 | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
 
 ##### Implementation
 
 After the import inside the relational database, we have the following quads representing the implementation:
 
-| Subject                       | Predicate | Object                           | Named Graph                                 | Validity |
-|-------------------------------|-----------|----------------------------------|---------------------------------------------|----------|
-| http://example.edu/Building#1 | a         | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne | 10       |
-| http://example.edu/Building#2 | a         | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne | 10       |
-| http://example.edu/Building#1 | a         | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#GratteCiel   | 11       |
-| http://example.edu/Building#1 | a         | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#Villeurbanne | 01       |
-| http://example.edu/Building#3 | a         | http://example.edu/Type#Building | http://example.edu/Named-Graph#Villeurbanne | 01       |
+| Subject                       | Predicate | Object                           | Named Graph                               | Validity |
+|-------------------------------|-----------|----------------------------------|-------------------------------------------|----------|
+| http://example.edu/Building#1 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
+| http://example.edu/Building#2 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
+| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#IGN        | 11       |
+| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#Grand-Lyon | 01       |
+| http://example.edu/Building#3 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 01       |

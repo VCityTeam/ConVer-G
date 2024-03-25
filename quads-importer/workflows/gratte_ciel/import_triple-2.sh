@@ -4,11 +4,11 @@
 # Import the data inside the Triple Store
 ######################################################
 
-cd ../dataset || exit
+cd ../dataset/quads/theoretical || exit
 
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
-## Grand-Lyon tagged data
+## BSBM tagged data
 find . -type f -name "*.nq" -print0 | while IFS= read -r -d '' file
 do
     printf "%s\n$(date +%FT%T) - [Triple Store] $file."
@@ -18,5 +18,3 @@ do
 done
 
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import completed."
-
-

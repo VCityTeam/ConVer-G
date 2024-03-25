@@ -118,7 +118,8 @@ public class SPARQLtoSQLTranslator {
                 yield buildSPARQLContext(opList.getSubOp(), null);
             }
             case OpBGP opBGP -> {
-                SQLContext cont = setURIsInMap(opBGP, context);
+                SQLContext cont = addURIsToContext(opBGP, context);
+                addURIsToMap(opBGP);
                 getURIsIds();
 
                 if (cont.graph() != null) {
@@ -157,7 +158,13 @@ public class SPARQLtoSQLTranslator {
         };
     }
 
-    private SQLContext setURIsInMap(OpBGP opBGP, SQLContext context) {
+    /**
+     * Collect the occurrences of the variables in the BGP
+     * @param opBGP the current BGP
+     * @param context the current SQL context
+     * @return the modified SQL context
+     */
+    private SQLContext addURIsToContext(OpBGP opBGP, SQLContext context) {
         Map<Node, List<Occurrence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
 
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
@@ -177,6 +184,21 @@ public class SPARQLtoSQLTranslator {
                     .add(new Occurrence("object", i));
 
             context = context.setVarOccurrences(newVarOccurrences);
+        }
+
+        return context;
+    }
+
+    /**
+     * Add URI to the idMap and retrieve ids later
+     * @param opBGP the current BGP
+     */
+    private void addURIsToMap(OpBGP opBGP) {
+        for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
+            Triple triple = opBGP.getPattern().getList().get(i);
+            Node subject = triple.getSubject();
+            Node predicate = triple.getPredicate();
+            Node object = triple.getObject();
 
             if (subject instanceof Node_URI) {
                 uriToIdMap.put(subject.getURI(), null);
@@ -191,8 +213,6 @@ public class SPARQLtoSQLTranslator {
                 uriToIdMap.put(object.getLiteralLexicalForm(), null);
             }
         }
-
-        return context;
     }
 
     /**

@@ -1,6 +1,7 @@
 package fr.vcity.sparqltosql.repository;
 
 import fr.vcity.sparqltosql.dao.Workspace;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class WorkspaceComponent {
             Integer idSubject,
             Integer idProperty,
             Integer idObject
-    ) {
+    ) throws DuplicateKeyException {
         return namedParameterJdbcTemplate.queryForObject("""
                         INSERT INTO workspace (id_subject, id_property, id_object)
                         VALUES (:idSubject, :idProperty, :idObject)

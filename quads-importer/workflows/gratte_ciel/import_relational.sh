@@ -8,8 +8,8 @@ cd ../dataset || exit
 
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Dataset import started."
 
-## Villeurbanne tagged data
-### Import the versions of Villeurbanne workspace
+## Grand-Lyon tagged data
+### Import the versions of Grand-Lyon workspace
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Versions import started."
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version GratteCiel_2018_split."
 curl --location 'http://localhost:8080/import/version' \

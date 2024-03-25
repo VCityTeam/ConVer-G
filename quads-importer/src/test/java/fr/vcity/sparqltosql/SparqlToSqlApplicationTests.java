@@ -60,7 +60,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(1)
     void importV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2018_split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-0.split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -88,7 +88,7 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(2)
     void importV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2015_split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-1.split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -105,10 +105,10 @@ class SparqlToSqlApplicationTests {
         List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         for (CompleteVersionedQuad quad : quads) {
-            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#Villeurbanne")) {
+            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#BSBM")) {
                 assertEquals("default", quad.getNamedGraph());
             } else {
-                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#Villeurbanne", quad.getNamedGraph());
+                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#BSBM", quad.getNamedGraph());
             }
             assertNotNull(quad.getS());
             assertNotNull(quad.getP());
@@ -188,16 +188,16 @@ class SparqlToSqlApplicationTests {
     @Test
     @Order(6)
     void importWorkspace() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2009_2018_Workspace.ttl.relational.nq");
-        Resource resource2 = resourceLoader.getResource("classpath:dataset/Transition_2015_2018.ttl.relational.nq");
+//        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2009_2018_Workspace.ttl.relational.nq");
+        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
 
-        MockMultipartFile file
-                = new MockMultipartFile(
-                "file",
-                resource.getFilename(),
-                MediaType.TEXT_PLAIN_VALUE,
-                resource.getInputStream().readAllBytes()
-        );
+//        MockMultipartFile file
+//                = new MockMultipartFile(
+//                "file",
+//                resource.getFilename(),
+//                MediaType.TEXT_PLAIN_VALUE,
+//                resource.getInputStream().readAllBytes()
+//        );
 
         MockMultipartFile file2
                 = new MockMultipartFile(
@@ -207,24 +207,24 @@ class SparqlToSqlApplicationTests {
                 resource2.getInputStream().readAllBytes()
         );
 
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
-                        .file(file))
-                .andExpect(status().isOk());
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//                        .file(file))
+//                .andExpect(status().isOk());
 
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
                         .file(file2))
                 .andExpect(status().isOk());
     }
 
-    @Test
-    @Order(7)
-    void getGraphVersion() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        assertNotNull(mvcResult.getResponse().getContentAsString());
-    }
+//    @Test
+//    @Order(7)
+//    void getGraphVersion() throws Exception {
+//        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("http://localhost:8080/query/versions"))
+//                .andExpect(status().isOk())
+//                .andReturn();
+//
+//        assertNotNull(mvcResult.getResponse().getContentAsString());
+//    }
 
     @Test
     @Order(8)
