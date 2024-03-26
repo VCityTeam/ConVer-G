@@ -122,8 +122,10 @@ public class SPARQLtoSQLTranslator {
                 addURIsToMap(opBGP);
                 getURIsIds();
 
-                if (cont.graph() != null) {
+                if (cont.graph() != null && cont.graph() instanceof Node_Variable) {
                     yield buildContextBGPWithGraph(opBGP, cont);
+                } else if (cont.graph() != null && cont.graph() instanceof Node_URI) {
+                    yield buildContextBGPWithGraphURI(opBGP, cont);
                 } else {
                     yield buildContextBGPWorkspace(opBGP, cont);
                 }
@@ -146,8 +148,16 @@ public class SPARQLtoSQLTranslator {
 
                 SQLContext cont = context.setGraph(opGraph.getNode());
                 cont = cont.setVarOccurrences(newVarOccurrences);
-                yield buildSPARQLContext(opGraph.getSubOp(), cont);
-                // FIXME : Add the graph to the SQLQuery
+                SQLQuery sqlQuery = buildSPARQLContext(opGraph.getSubOp(), cont);
+                if (cont.graph() instanceof Node_URI) {
+                    VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(cont.graph().getURI());
+                    sqlQuery = buildSQLQueryWithGraphURI(sqlQuery, versionedNamedGraph, count);
+                    // FIXME : Filter by versioned graph
+                } else {
+                    // FIXME : BS + NG
+                }
+
+                yield sqlQuery;
             }
             case OpTriple opTriple -> {
 //                context.getTriples().add(opTriple.getTriple());
@@ -156,6 +166,12 @@ public class SPARQLtoSQLTranslator {
             }
             default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
         };
+    }
+
+    private SQLQuery buildContextBGPWithGraphURI(OpBGP opBGP, SQLContext context) {
+        String select = generateSelect(opBGP, context);
+        String tables = generateFromTables(opBGP, false);
+        return getSqlQuery(opBGP, context, select, tables, false);
     }
 
     /**
@@ -241,20 +257,38 @@ public class SPARQLtoSQLTranslator {
         return getSqlQuery(opBGP, context, select, tables, false);
     }
 
-    private SQLQuery getSqlQuery(OpBGP opBGP, SQLContext context, String select, String tables, boolean isWorkspace) {
-        StringBuilder query = new StringBuilder("""
-                SELECT {select}
-                FROM {tables}
-                """
-                .replace(
-                        "{select}",
-                        select
-                )
-                .replace(
-                        "{tables}",
-                        tables
-                )
+    /**
+     * Build the SQL query with the graph URI
+     * @param sqlQuery the SQL query
+     * @param versionedNamedGraph the graph URI
+     * @param position the position of the graph URI
+     * @return the SQL query with the graph URI
+     */
+    private SQLQuery buildSQLQueryWithGraphURI(SQLQuery sqlQuery, VersionedNamedGraph versionedNamedGraph, Integer position) {
+        return new SQLQuery(
+                "(" + sqlQuery.getSql() +
+                        ") sq" + position +
+                        "\n JOIN versioned_named_graph vng" + position +
+                        " ON sq" + position + ".gn$g = vng" + position +
+                        ".id_named_graph AND get_bit(sq" + position +
+                        ".bs$g, vng" + position + ".index_version) = 1 AND vng" + position + ".index_version = " + versionedNamedGraph.getIndex() +
+                        " AND vng" + position + ".id_named_graph = " + versionedNamedGraph.getIdNamedGraph(),
+                sqlQuery.getContext()
         );
+    }
+
+
+    /**
+     * Get the SQL query
+     * @param opBGP the BGP operator of the SPARQL query
+     * @param context the context of the SQL query
+     * @param select the SELECT clause of the SQL query
+     * @param tables the FROM clause of the SQL query
+     * @param isWorkspace true if the query is in a workspace context, false otherwise
+     * @return the SQL query
+     */
+    private SQLQuery getSqlQuery(OpBGP opBGP, SQLContext context, String select, String tables, boolean isWorkspace) {
+        StringBuilder query = new StringBuilder("SELECT " + select + " FROM " + tables);
 
         String where;
         if (isWorkspace) {
@@ -263,11 +297,7 @@ public class SPARQLtoSQLTranslator {
             where = generateWhere(opBGP, context);
         }
         if (!where.isEmpty()) {
-            query.append("""
-                    WHERE {where}
-                    """
-                    .replace("{where}", where)
-            );
+            query.append(" WHERE ").append(where);
         }
 
         return new SQLQuery(query.toString(),
@@ -278,24 +308,39 @@ public class SPARQLtoSQLTranslator {
     /**
      * Generate the SELECT clause of the SQL query
      *
+     * @param opBGP   the BGP operator of the SPARQL query
      * @param context the context of the SPARQL query
      * @return the SELECT clause of the SQL query
      */
     private String generateSelect(OpBGP opBGP, SQLContext context) {
-        return intersectionValidity(opBGP) + " as bs$" + context.graph().getName() + ", " +
-               Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
-                   if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
-                       return (
-                               "t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                               ".id_named_graph as ng$" + node.getName()
-                       );
-                   }
-                   return (
-                           "t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                           "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
-                           " as v$" + node.getName()
-                   );
-               }).collect(Collectors.joining(", \n"));
+        if (context.graph() instanceof Node_Variable) {
+            return intersectionValidity(opBGP) + " as bs$" + context.graph().getName() + ", " +
+                    getSelectVariables(context);
+        } else {
+            return intersectionValidity(opBGP) + " as bs$graph, t0.id_named_graph as ng$graph, " + // Error: graph can be an IRI: need to get the id of the graph
+                    getSelectVariables(context);
+        }
+    }
+
+    /**
+     * Get the SELECT clause of the SQL query
+     * @param context the context of the SPARQL query
+     * @return the SELECT clause of the SQL query
+     */
+    private String getSelectVariables(SQLContext context) {
+        return Streams.mapWithIndex(context.varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable), (node, index) -> {
+            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+                return (
+                        "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                                ".id_named_graph as ng$" + node.getName()
+                );
+            }
+            return (
+                    "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                            "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
+                            " as v$" + node.getName()
+            );
+        }).collect(Collectors.joining(", \n"));
     }
 
     private static String intersectionValidity(OpBGP opBGP) {
@@ -367,6 +412,7 @@ public class SPARQLtoSQLTranslator {
         }
 
         for (int i = 0; i < triples.size(); i++) {
+            // FIXME : Fix ANDs in the WHERE clause
             switch (context.graph()) {
                 case Node_Variable ignored -> {
                     StringBuilder temp = new StringBuilder();

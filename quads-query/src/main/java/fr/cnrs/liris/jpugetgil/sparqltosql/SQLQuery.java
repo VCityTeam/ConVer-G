@@ -18,4 +18,12 @@ public class SQLQuery {
     public void setSql(String sql) {
         this.sql = sql;
     }
+
+    public SQLContext getContext() {
+        return context;
+    }
+
+    public void setContext(SQLContext context) {
+        this.context = context;
+    }
 }

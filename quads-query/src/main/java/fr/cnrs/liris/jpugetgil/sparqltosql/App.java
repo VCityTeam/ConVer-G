@@ -4,6 +4,7 @@ import org.apache.jena.fuseki.main.FusekiServer;
 import org.apache.jena.fuseki.server.Operation;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.sparql.core.DatasetGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,12 @@ public class App {
 
     public static void main(String[] args) {
         log.info("Building Fuseki server...");
-        Dataset ds = DatasetFactory.createTxnMem();
+        DatasetGraph dsg = DatasetFactory.createGeneral().asDatasetGraph();
+        Dataset ds = DatasetFactory.wrap(dsg);
+
         FusekiServer server = FusekiServer.create()
                 .port(8081)
-                .add("/rdf", ds.asDatasetGraph())
+                .add("/rdf", ds)
                 .registerOperation(Operation.Query, new VersioningSPARQLQueryProcessor())
                 .build();
         log.info("Fuseki server is built, starting...");
