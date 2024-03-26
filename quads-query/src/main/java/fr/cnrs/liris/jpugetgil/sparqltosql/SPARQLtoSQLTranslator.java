@@ -3,6 +3,9 @@ package fr.cnrs.liris.jpugetgil.sparqltosql;
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.dao.ResourceOrLiteral;
 import fr.cnrs.liris.jpugetgil.sparqltosql.dao.VersionedNamedGraph;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLClause;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.EqualToOperator;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.NotEqualToOperator;
 import org.apache.jena.graph.*;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Algebra;
@@ -402,85 +405,84 @@ public class SPARQLtoSQLTranslator {
      * @return the WHERE clause of the SQL query
      */
     private String generateWhere(OpBGP opBGP, SQLContext context) {
-        StringBuilder where = new StringBuilder();
-        StringBuilder validity = new StringBuilder();
-        StringBuilder idSelect = new StringBuilder();
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+        String validity = "";
+        String idSelect = "";
         List<Triple> triples = opBGP.getPattern().getList();
 
         if (context.graph() instanceof Node_Variable) {
-            validity.append("bit_count").append(intersectionValidity(opBGP)).append(" <> 0");
+            NotEqualToOperator notEqualToOperator = new NotEqualToOperator();
+            validity += notEqualToOperator.buildComparisonOperatorSQL("bit_count" + intersectionValidity(opBGP), "0");
         }
 
         for (int i = 0; i < triples.size(); i++) {
             // FIXME : Fix ANDs in the WHERE clause
             switch (context.graph()) {
                 case Node_Variable ignored -> {
-                    StringBuilder temp = new StringBuilder();
+                    String temp;
                     // where
                     if (i < triples.size() - 1) {
-                        temp.append("t").append(i).append(".id_named_graph = t").append(i + 1).append(".id_named_graph");
-                        chainStringBuilders(where, temp);
+                        EqualToOperator equalToOperator = new EqualToOperator();
+                        temp = equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_named_graph", "t" + (i + 1) + ".id_named_graph");
+                        sqlClauseBuilder = sqlClauseBuilder.and(temp);
                     }
                 }
                 case Node_URI nodeUri -> {
                     // where
                     VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(nodeUri.getURI());
-                    where.append("t").append(i).append(".id_named_graph = ").append(versionedNamedGraph.getIdNamedGraph());
+                    EqualToOperator equalToOperator = new EqualToOperator();
+                    sqlClauseBuilder = sqlClauseBuilder.and(equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_named_graph", String.valueOf(versionedNamedGraph.getIdNamedGraph())));
+
+                    EqualToOperator equalToOperator2 = new EqualToOperator();
+                    equalToOperator2.buildComparisonOperatorSQL("get_bit(t" + i + ".validity," + versionedNamedGraph.getIndex() + ")", "1");
+
                     // validity
-                    validity.append("get_bit(t").append(i).append(".validity,").append(versionedNamedGraph.getIndex()).append(") = 1");
+                    validity += "get_bit(t" + i + ".validity," + versionedNamedGraph.getIndex() + ") = 1";
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + context.graph());
             }
 
-            buildFiltersOnIds(idSelect, triples, i);
+            idSelect = buildFiltersOnIds(triples, i);
         }
 
-        chainStringBuilders(where, validity);
-        chainStringBuilders(where, idSelect);
-
-        return where.toString();
-    }
-
-    /**
-     * Chain the StringBuilders with AND operator
-     * @param sb the initial StringBuilder
-     * @param sbs the chained StringBuilders
-     */
-    private void chainStringBuilders(StringBuilder sb, StringBuilder... sbs) {
-        for (StringBuilder s : sbs) {
-            if (!sb.isEmpty() && !s.isEmpty()) {
-                sb.append(" AND ");
-            }
-            sb.append(s);
-        }
+        return sqlClauseBuilder.and(validity).and(idSelect).build().clause;
     }
 
     /**
      * Build the filters on the IDs of the triple
-     * @param idSelect the StringBuilder of the ids
      * @param triples the list of triples
      * @param i the index of the current triple
+     * @return the filters on the IDs of the triple
      */
-    private void buildFiltersOnIds(StringBuilder idSelect, List<Triple> triples, int i) {
+    private String buildFiltersOnIds(List<Triple> triples, int i) {
         Node subject = triples.get(i).getSubject();
         Node predicate = triples.get(i).getPredicate();
         Node object = triples.get(i).getObject();
-        StringBuilder idSelectSubject = new StringBuilder();
-        StringBuilder idSelectPredicate = new StringBuilder();
-        StringBuilder idSelectObject = new StringBuilder();
+        String idSelectSubject = "";
+        String idSelectPredicate = "";
+        String idSelectObject = "";
 
         if (subject instanceof Node_URI) {
-            idSelectSubject.append("t").append(i).append(".id_subject = ").append(uriToIdMap.get(subject.getURI()));
+            EqualToOperator equalToOperator = new EqualToOperator();
+            idSelectSubject += equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_subject", String.valueOf(uriToIdMap.get(subject.getURI())));
         }
         if (predicate instanceof Node_URI) {
-            idSelectPredicate.append("t").append(i).append(".id_property = ").append(uriToIdMap.get(predicate.getURI()));
+            EqualToOperator equalToOperator = new EqualToOperator();
+            idSelectPredicate += equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_property", String.valueOf(uriToIdMap.get(predicate.getURI())));
         }
         if (object instanceof Node_URI) {
-            idSelectObject.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getURI()));
+            EqualToOperator equalToOperator = new EqualToOperator();
+            idSelectObject += equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_object", String.valueOf(uriToIdMap.get(object.getURI())));
         } else if (object instanceof Node_Literal) {
-            idSelectObject.append("t").append(i).append(".id_object = ").append(uriToIdMap.get(object.getLiteralLexicalForm()));
+            EqualToOperator equalToOperator = new EqualToOperator();
+            idSelectObject += equalToOperator.buildComparisonOperatorSQL("t" + i + ".id_object", String.valueOf(uriToIdMap.get(object.getLiteralLexicalForm())));
         }
-        chainStringBuilders(idSelect, idSelectSubject, idSelectPredicate, idSelectObject);
+
+        return new SQLClause.SQLClauseBuilder(idSelectSubject)
+                .and(idSelectPredicate)
+                .and(idSelectObject)
+                .build()
+                .clause;
     }
 
     private VersionedNamedGraph getAssociatedVNG(String uri) {
@@ -504,17 +506,17 @@ public class SPARQLtoSQLTranslator {
      * @return the WHERE clause of the SQL query
      */
     private String generateWhereWorkspace(OpBGP opBGP) {
-        StringBuilder where = new StringBuilder();
-        StringBuilder idSelect = new StringBuilder();
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+
+        String idSelect = "";
         List<Triple> triples = opBGP.getPattern().getList();
 
         for (int i = 0; i < triples.size(); i++) {
             // where
-            buildFiltersOnIds(idSelect, triples, i);
+            idSelect += buildFiltersOnIds(triples, i);
         }
-        chainStringBuilders(where, idSelect);
 
-       return where.toString();
+        return sqlClauseBuilder.and(idSelect).build().clause;
     }
 
     /**
