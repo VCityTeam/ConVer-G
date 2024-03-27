@@ -14,15 +14,14 @@ public class SQLClause {
             this.clause = "";
         }
 
-        public SQLClauseBuilder(String clause) {
-            this.clause = clause;
-        }
-
-
 
         public SQLClauseBuilder and(String clause) {
             if (this.clause.isEmpty()) {
                 this.clause = clause;
+                return this;
+            }
+
+            if (clause.isEmpty()) {
                 return this;
             }
 
@@ -36,13 +35,17 @@ public class SQLClause {
                 return this;
             }
 
+            if (clause.isEmpty()) {
+                return this;
+            }
+
             this.clause += " OR " + clause;
             return this;
         }
 
-        public SQLClauseBuilder parenthesis(String clause) {
+        public SQLClauseBuilder parenthesis() {
             if (!this.clause.isEmpty()) {
-                this.clause += "(" + clause + ")";
+                this.clause += "(" + this.clause + ")";
                 return this;
             }
             return this;
