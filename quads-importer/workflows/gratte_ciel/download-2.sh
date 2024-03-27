@@ -28,12 +28,15 @@ echo "------- Generating $n versions -------"
 # Run the command n times
 for ((i=0;i<n;i++)); do
     echo "Generating version $i"
-    docker run -v "$PWD:/data" vcity/bsbm generate -s ttl -pc $((500 + i)) -tc $((10*i)) -ud -ppt 10
+    docker run --name "bsbm-$i" -v "$PWD:/data" vcity/bsbm generate -s ttl -pc $((500 + i)) -tc $((10*i)) -ud -ppt 10
     mv dataset.ttl "save/version-$i.split.ttl"
     mv dataset_update.nt "save/transition-$i.nt"
 done
 
 cp save/* .
 rm -rf save
+
+# Cleaning workspace
+docker ps --filter name=bsbm-* -aq | xargs docker stop | xargs docker rm
 
 printf "\n%s$(date +%FT%T) - [Copy] Dataset generation completed."
