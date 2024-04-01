@@ -53,7 +53,7 @@ public class SPARQLtoSQLTranslator {
     }
 
     private SQLQuery buildSPARQLContext(Op op) {
-        return buildSPARQLContext(op, new SQLContext(null, new HashMap<>()));
+        return buildSPARQLContext(op, new SQLContext(null, new HashMap<>(), null));
     }
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
@@ -148,7 +148,7 @@ public class SPARQLtoSQLTranslator {
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
                         .add(new Occurrence("graph", count));
 
-                SQLContext cont = context.setGraph(opGraph.getNode());
+                SQLContext cont = context.setGraph(opGraph.getNode(), "sq" + count);
                 cont = cont.setVarOccurrences(newVarOccurrences);
                 SQLQuery sqlQuery = buildSPARQLContext(opGraph.getSubOp(), cont);
 
@@ -266,16 +266,16 @@ public class SPARQLtoSQLTranslator {
      */
     private SQLQuery buildSQLQueryWithGraph(SQLQuery sqlQuery, Integer position) {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
-        String from = " FROM (" + sqlQuery.getSql() + ") sq" + position;
+        String from = " FROM (" + sqlQuery.getSql() + ") " + sqlQuery.getContext().tableName();
 
         if (sqlQuery.getContext().graph() instanceof Node_Variable) {
             String select = "SELECT " + sqlQuery.getContext().varOccurrences().keySet() // FIXME: Hardcoded
                     .stream()
                     .filter(node -> node instanceof Node_Variable)
                     .filter(node -> !node.equals(sqlQuery.getContext().graph()))
-                    .map(node -> "sq" + position + ".v$" + node.getName())
+                    .map(node -> sqlQuery.getContext().tableName() + ".v$" + node.getName())
                     .collect(Collectors.joining(", ")) +
-                    ", sq" + position + ".ng$" + sqlQuery.getContext().graph().getName() + ", sq" + position + ".bs$" +
+                    ", " + sqlQuery.getContext().tableName() + ".ng$" + sqlQuery.getContext().graph().getName() + ", " + sqlQuery.getContext().tableName() + ".bs$" +
                     sqlQuery.getContext().graph().getName();
 
             return new SQLQuery(
@@ -283,11 +283,11 @@ public class SPARQLtoSQLTranslator {
                     sqlQuery.getContext()
             );
         } else {
-            String select = "SELECT sq" + position + ".ng$graph, sq" + position + ".bs$graph," + // FIXME: Hardcoded
+            String select = "SELECT " + sqlQuery.getContext().tableName() + ".ng$graph, " + sqlQuery.getContext().tableName() + ".bs$graph," + // FIXME: Hardcoded
                     sqlQuery.getContext().varOccurrences().keySet()
                             .stream()
                             .filter(node -> node instanceof Node_Variable)
-                            .map(node -> "sq" + position + ".v$" + node.getName())
+                            .map(node -> sqlQuery.getContext().tableName() + ".v$" + node.getName())
                             .collect(Collectors.joining(", "));
 
             VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(sqlQuery.getContext().graph().getURI());
@@ -297,13 +297,13 @@ public class SPARQLtoSQLTranslator {
                             sqlClauseBuilder.and(
                                     new EqualToOperator()
                                             .buildComparisonOperatorSQL(
-                                                    "sq" + position + ".ng$graph",
+                                                    sqlQuery.getContext().tableName() + ".ng$graph",
                                                     "vng" + position + ".id_named_graph"
                                             )
                             ).and(
                                     new EqualToOperator()
                                             .buildComparisonOperatorSQL(
-                                                    "get_bit(sq" + position + ".bs$graph, vng" + position + ".index_version)",
+                                                    "get_bit(" + sqlQuery.getContext().tableName() + ".bs$graph, vng" + position + ".index_version)",
                                                     "1"
                                             )
                             ).and(
@@ -325,7 +325,6 @@ public class SPARQLtoSQLTranslator {
     }
 
 
-
     /**
      * Build the SQL query with the join
      *
@@ -335,15 +334,45 @@ public class SPARQLtoSQLTranslator {
      */
     private SQLQuery buildSQLQueryJoin(SQLQuery leftSQLQuery, SQLQuery rightSQLQuery) {
         List<Node> commonNodes = new ArrayList<>();
-        leftSQLQuery.getContext().varOccurrences().keySet().stream().filter(node -> node instanceof Node_Variable).forEach(node -> {
-            if (rightSQLQuery.getContext().varOccurrences().containsKey(node)) {
-                commonNodes.add(node);
-            }
-        });
+        leftSQLQuery.getContext().varOccurrences().keySet().stream()
+                .filter(node -> node instanceof Node_Variable).forEach(node -> {
+                    if (rightSQLQuery.getContext().varOccurrences().containsKey(node) &&
+                            rightSQLQuery.getContext().varOccurrences().get(node).stream()
+                                    .noneMatch(occurrence -> occurrence.getType().equals("graph"))
+                    ) {
+                        commonNodes.add(node);
+                    }
+                });
 
-        // TODO : Handle JOINs
-        String sql = "SELECT * FROM (" + leftSQLQuery.getSql() + ") left1, (" + rightSQLQuery.getSql() + ") right1";
-        return new SQLQuery(sql, null);
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+        commonNodes.forEach(node -> sqlClauseBuilder.and(
+                new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                "lj." + (leftSQLQuery.getContext().graph() == null ? "t$" : "v$") + node.getName(),
+                                "rj." + (rightSQLQuery.getContext().graph() == null ? "t$" : "v$") + node.getName()
+                        )
+        ));
+
+        if (leftSQLQuery.getContext().graph() != null && rightSQLQuery.getContext().graph() != null) {
+            // TODO : Handle JOINs between graph and graph
+            sqlClauseBuilder.and(
+                    new NotEqualToOperator()
+                            .buildComparisonOperatorSQL(
+                                    "bit_count(lj.ng$" + leftSQLQuery.getContext().graph().getName() +
+                                            "& rj.ng$" + rightSQLQuery.getContext().graph().getName() + ")",
+                                    "0"
+                            )
+            );
+        }
+
+        String sql = "SELECT * FROM (" + leftSQLQuery.getSql() + ") lj" +
+                " JOIN (" + rightSQLQuery.getSql() + ") rj ON " + sqlClauseBuilder.build().clause;
+
+        Map<Node, List<Occurrence>> mergedOccurrences = new HashMap<>(leftSQLQuery.getContext().varOccurrences());
+        mergedOccurrences.putAll(rightSQLQuery.getContext().varOccurrences());
+
+        SQLContext context = new SQLContext(null, mergedOccurrences, "join1");
+        return new SQLQuery(sql, context);
     }
 
 

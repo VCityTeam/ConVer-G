@@ -1,4 +1,4 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql.hibernate;
+package fr.cnrs.liris.jpugetgil.sparqltosql.connection;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.VersioningQueryExecution;
 import org.slf4j.Logger;
