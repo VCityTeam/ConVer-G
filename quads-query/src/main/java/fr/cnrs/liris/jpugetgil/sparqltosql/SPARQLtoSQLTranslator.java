@@ -333,19 +333,27 @@ public class SPARQLtoSQLTranslator {
      * @return the SQL query with the joined terms
      */
     private SQLQuery buildSQLQueryJoin(SQLQuery leftSQLQuery, SQLQuery rightSQLQuery) {
-        List<Node> commonNodes = new ArrayList<>();
+        List<Node> commonNodesWithoutGraph = new ArrayList<>();
+        List<Node> graphVariables = new ArrayList<>();
         leftSQLQuery.getContext().varOccurrences().keySet().stream()
                 .filter(node -> node instanceof Node_Variable).forEach(node -> {
                     if (rightSQLQuery.getContext().varOccurrences().containsKey(node) &&
                             rightSQLQuery.getContext().varOccurrences().get(node).stream()
                                     .noneMatch(occurrence -> occurrence.getType().equals("graph"))
                     ) {
-                        commonNodes.add(node);
+                        commonNodesWithoutGraph.add(node);
+                    }
+
+                    if (rightSQLQuery.getContext().varOccurrences().containsKey(node) &&
+                            rightSQLQuery.getContext().varOccurrences().get(node).stream()
+                                    .anyMatch(occurrence -> occurrence.getType().equals("graph"))
+                    ) {
+                        graphVariables.add(node);
                     }
                 });
 
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
-        commonNodes.forEach(node -> sqlClauseBuilder.and(
+        commonNodesWithoutGraph.forEach(node -> sqlClauseBuilder.and(
                 new EqualToOperator()
                         .buildComparisonOperatorSQL(
                                 "lj." + (leftSQLQuery.getContext().graph() == null ? "t$" : "v$") + node.getName(),
@@ -353,7 +361,15 @@ public class SPARQLtoSQLTranslator {
                         )
         ));
 
+        String select = "";
+
         if (leftSQLQuery.getContext().graph() != null && rightSQLQuery.getContext().graph() != null) {
+            // FIXME : Complete the select clause
+            select = "SELECT lj.bs$" + leftSQLQuery.getContext().graph().getName() +
+                    " & rj.bs$" + rightSQLQuery.getContext().graph().getName() + " as bs$"
+                    + leftSQLQuery.getContext().graph().getName() + ", "
+                    ;
+
             // TODO : Handle JOINs between graph and graph
             sqlClauseBuilder.and(
                     new NotEqualToOperator()
@@ -365,14 +381,29 @@ public class SPARQLtoSQLTranslator {
             );
         }
 
-        String sql = "SELECT * FROM (" + leftSQLQuery.getSql() + ") lj" +
+        String sql = "SELECT " + select + " FROM (" + leftSQLQuery.getSql() + ") lj" +
                 " JOIN (" + rightSQLQuery.getSql() + ") rj ON " + sqlClauseBuilder.build().clause;
 
-        Map<Node, List<Occurrence>> mergedOccurrences = new HashMap<>(leftSQLQuery.getContext().varOccurrences());
-        mergedOccurrences.putAll(rightSQLQuery.getContext().varOccurrences());
+        Map<Node, List<Occurrence>> mergedOccurrences = mergeMapOccurrences(
+                leftSQLQuery.getContext().varOccurrences(),
+                rightSQLQuery.getContext().varOccurrences()
+        );
 
         SQLContext context = new SQLContext(null, mergedOccurrences, "join1");
         return new SQLQuery(sql, context);
+    }
+
+    private Map<Node, List<Occurrence>> mergeMapOccurrences(
+            Map<Node, List<Occurrence>> leftMapOccurrences,
+            Map<Node, List<Occurrence>> rightMapOccurrences
+    ) {
+        Map<Node, List<Occurrence>> mergedOccurrences = new HashMap<>(leftMapOccurrences);
+
+        rightMapOccurrences.forEach((node, occurrences) -> {
+            mergedOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences);
+        });
+
+        return mergedOccurrences;
     }
 
 
@@ -420,6 +451,7 @@ public class SPARQLtoSQLTranslator {
 
     /**
      * Get the SELECT clause of the SQL query
+     *
      *
      * @param context the context of the SPARQL query
      * @return the SELECT clause of the SQL query
