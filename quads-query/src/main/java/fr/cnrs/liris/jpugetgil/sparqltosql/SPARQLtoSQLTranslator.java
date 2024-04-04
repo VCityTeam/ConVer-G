@@ -73,13 +73,23 @@ public class SPARQLtoSQLTranslator {
                 yield buildSQLQueryJoin(leftSQLQuery, rightSQLQuery);
             }
             case OpLeftJoin opLeftJoin -> {
+                // Jointure avec un/des var qui sont dans un optional
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
                 yield null;
             }
             case OpUnion opUnion -> {
-//                buildSelectSQL(opUnion.getLeft(), context); buildSelectSQL(opUnion.getRight(), context);
-                yield null;
+                SQLQuery leftQuery = buildSPARQLContext(opUnion.getLeft(), context);
+                SQLQuery rightQuery = buildSPARQLContext(opUnion.getRight(), context);
+
+                // TODO : merge leftQuery.getContext() and rightQuery.getContext()
+                SQLContext sqlContext = new SQLContext(null, null, null, null);
+
+                yield new SQLQuery(
+                        "SELECT * FROM (" + leftQuery.getSql() + ") UNION (" + rightQuery.getSql() + ")" +
+                        sqlContext.tableName() + sqlContext.tableIndex(),
+                        leftQuery.getContext()
+                );
             }
             case OpProject opProject -> {
                 SQLQuery sqlQuery = buildSPARQLContext(opProject.getSubOp(), context);
@@ -87,7 +97,7 @@ public class SPARQLtoSQLTranslator {
                 yield new SQLQuery(
                         getSqlProjectionsQuery(opProject.getVars(), sqlQuery) + " FROM (" + sqlQuery.getSql() + ") " +
                                 sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex(),
-                        context
+                        sqlQuery.getContext()
                 );
             }
             case OpTable opTable -> {
@@ -102,7 +112,18 @@ public class SPARQLtoSQLTranslator {
                 yield buildSPARQLContext(opExtend.getSubOp(), null);
             }
             case OpDistinct opDistinct -> {
-                yield buildSPARQLContext(opDistinct.getSubOp(), null);
+                SQLQuery sqlQuery = buildSPARQLContext(opDistinct.getSubOp(), context);
+                SQLContext sqlContext = new SQLContext(
+                        sqlQuery.getContext().graph(),
+                        sqlQuery.getContext().varOccurrences(),
+                        "distinct_table",
+                        sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1
+                );
+
+                yield new SQLQuery(
+                        "SELECT DISTINCT * FROM (" + sqlQuery.getSql() + ") " + sqlContext.tableName() + sqlContext.tableIndex(),
+                        sqlContext
+                );
             }
             case OpFilter opFilter -> {
                 yield buildSPARQLContext(opFilter.getSubOp(), null);
@@ -111,6 +132,7 @@ public class SPARQLtoSQLTranslator {
                 yield buildSPARQLContext(opOrder.getSubOp(), null);
             }
             case OpGroup opGroup -> {
+                // TODO : GROUP BY
                 yield buildSPARQLContext(opGroup.getSubOp(), null);
             }
             case OpSlice opSlice -> {
