@@ -4,9 +4,12 @@ public class Occurrence {
     private String type;
     private Integer position;
 
-    public Occurrence(String type, Integer position) {
+    private ContextType contextType;
+
+    public Occurrence(String type, Integer position, ContextType contextType) {
         this.type = type;
         this.position = position;
+        this.contextType = contextType;
     }
 
     public String getType() {
@@ -23,5 +26,13 @@ public class Occurrence {
 
     public void setPosition(Integer position) {
         this.position = position;
+    }
+
+    public ContextType getContextType() {
+        return contextType;
+    }
+
+    public void setContextType(ContextType contextType) {
+        this.contextType = contextType;
     }
 }

@@ -1,7 +1,7 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.hibernate.HibernateSessionSingleton;
-import fr.cnrs.liris.jpugetgil.sparqltosql.hibernate.JdbcConnection;
+import fr.cnrs.liris.jpugetgil.sparqltosql.connection.HibernateSessionSingleton;
+import fr.cnrs.liris.jpugetgil.sparqltosql.connection.JdbcConnection;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.graph.Node;
