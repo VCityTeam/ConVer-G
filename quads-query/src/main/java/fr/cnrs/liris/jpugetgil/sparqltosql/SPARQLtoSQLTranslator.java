@@ -11,6 +11,7 @@ import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
+import org.apache.jena.sparql.core.Var;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -60,7 +61,7 @@ public class SPARQLtoSQLTranslator {
                 SQLQuery leftSQLQuery = buildSPARQLContext(opJoin.getLeft(), context);
                 SQLContext leftContext = leftSQLQuery.getContext()
                         .setTableName("left_table")
-                        .setTableIndex(leftSQLQuery.getContext().tableIndex() + 1);
+                        .setTableIndex(leftSQLQuery.getContext().tableIndex() == null ? 0 : leftSQLQuery.getContext().tableIndex() + 1);
                 leftSQLQuery.setContext(leftContext);
 
                 SQLQuery rightSQLQuery = buildSPARQLContext(opJoin.getRight(), context);
@@ -81,8 +82,13 @@ public class SPARQLtoSQLTranslator {
                 yield null;
             }
             case OpProject opProject -> {
-//                context.setProjections(opProject.getVars());
-                yield buildSPARQLContext(opProject.getSubOp(), context);
+                SQLQuery sqlQuery = buildSPARQLContext(opProject.getSubOp(), context);
+
+                yield new SQLQuery(
+                        getSqlProjectionsQuery(opProject.getVars(), sqlQuery) + " FROM (" + sqlQuery.getSql() + ") " +
+                                sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex(),
+                        context
+                );
             }
             case OpTable opTable -> {
 //                opTable.getTable().toString();
@@ -145,7 +151,8 @@ public class SPARQLtoSQLTranslator {
                         .keySet()
                         .stream()
                         .filter(
-                                node -> newVarOccurrences.get(node).stream().anyMatch(occurrence -> occurrence.getType().equals("graph"))
+                                node -> newVarOccurrences.get(node).stream()
+                                        .anyMatch(occurrence -> occurrence.getType().equals("graph"))
                         )
                         .map(node -> 1)
                         .reduce(0, Integer::sum, Integer::sum);
@@ -170,6 +177,21 @@ public class SPARQLtoSQLTranslator {
         };
     }
 
+    private static String getSqlProjectionsQuery(List<Var> variables, SQLQuery sqlQuery) {
+        Map<Node, List<Occurrence>> varOccurrences = sqlQuery.getContext().varOccurrences();
+        return "SELECT " + variables.stream()
+                .map((node) -> {
+                    if (varOccurrences.get(node).stream().anyMatch(occurrence -> occurrence.getType().equals("graph"))) {
+                        return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
+                                ".ng$" + node.getName();
+                    } else {
+                        return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
+                                ".v$" + node.getName();
+                    }
+                })
+                .collect(Collectors.joining(", "));
+    }
+
     /**
      * Build the SQL query in a URI graph context
      *
@@ -180,7 +202,7 @@ public class SPARQLtoSQLTranslator {
     private SQLQuery buildContextBGPWithGraphURI(OpBGP opBGP, SQLContext context) {
         String select = generateSelect(opBGP, context);
         String tables = generateFromTables(opBGP, false);
-        return getSqlQuery(opBGP, context, select, tables, false);
+        return getSqlProjectionsQuery(opBGP, context, select, tables, false);
     }
 
     /**
@@ -200,9 +222,12 @@ public class SPARQLtoSQLTranslator {
             Node predicate = triple.getPredicate();
             Node object = triple.getObject();
 
-            newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>()).add(new Occurrence("subject", i, contextType));
-            newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>()).add(new Occurrence("predicate", i, contextType));
-            newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>()).add(new Occurrence("object", i, contextType));
+            newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
+                    .add(new Occurrence("subject", i, contextType));
+            newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
+                    .add(new Occurrence("predicate", i, contextType));
+            newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
+                    .add(new Occurrence("object", i, contextType));
 
             context = context.setVarOccurrences(newVarOccurrences);
         }
@@ -247,7 +272,7 @@ public class SPARQLtoSQLTranslator {
     private SQLQuery buildContextBGPWorkspace(OpBGP opBGP, SQLContext context) {
         String select = generateSelectWorkspace(context);
         String tables = generateFromTables(opBGP, true);
-        return getSqlQuery(opBGP, context, select, tables, true);
+        return getSqlProjectionsQuery(opBGP, context, select, tables, true);
     }
 
     /**
@@ -260,7 +285,7 @@ public class SPARQLtoSQLTranslator {
     private SQLQuery buildContextBGPWithGraph(OpBGP opBGP, SQLContext context) {
         String select = generateSelect(opBGP, context);
         String tables = generateFromTables(opBGP, false);
-        return getSqlQuery(opBGP, context, select, tables, false);
+        return getSqlProjectionsQuery(opBGP, context, select, tables, false);
     }
 
     /**
@@ -363,15 +388,17 @@ public class SPARQLtoSQLTranslator {
         ));
 
         if (graphRightVariable != null && graphLeftVariable != null) {
-            // FIXME : & operator on bitsets
+            select += ", (" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
+                    ".ng$" + leftSQLQuery.getContext().graph().getName() + " & " +
+                    rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
+                    ".ng$" + rightSQLQuery.getContext().graph().getName() + ") as ng$" + graphVariable.getName();
 
-            // TODO : Handle JOINs between graph and graph
             sqlClauseBuilder.and(
                     new NotEqualToOperator()
                             .buildComparisonOperatorSQL(
                                     "bit_count(" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex()
                                             + ".bs$" + leftSQLQuery.getContext().graph().getName() +
-                                            "& " + rightSQLQuery.getContext().tableName() +
+                                            " & " + rightSQLQuery.getContext().tableName() +
                                             rightSQLQuery.getContext().tableIndex() + ".bs$" +
                                             rightSQLQuery.getContext().graph().getName() + ")",
                                     "0"
@@ -384,11 +411,7 @@ public class SPARQLtoSQLTranslator {
                         leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() + ".bs$" +
                         leftSQLQuery.getContext().graph().getName();
             }
-
-
-            // TODO
         } else if (graphRightVariable != null) {
-            // TODO
             if (rightSQLQuery.getContext().graph() != null) {
                 select += ", " + rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
                         ".ng$" + rightSQLQuery.getContext().graph().getName() + ", " +
@@ -407,7 +430,6 @@ public class SPARQLtoSQLTranslator {
                 rightSQLQuery.getContext().varOccurrences()
         );
 
-        // FIXME : Handle graph variable
         SQLContext context = new SQLContext(
                 graphVariable,
                 mergedOccurrences,
@@ -469,7 +491,7 @@ public class SPARQLtoSQLTranslator {
      * @param isWorkspace true if the query is in a workspace context, false otherwise
      * @return the SQL query
      */
-    private SQLQuery getSqlQuery(OpBGP opBGP, SQLContext context, String select, String tables, boolean isWorkspace) {
+    private SQLQuery getSqlProjectionsQuery(OpBGP opBGP, SQLContext context, String select, String tables, boolean isWorkspace) {
         StringBuilder query = new StringBuilder("SELECT " + select + " FROM " + tables);
 
         String where;
