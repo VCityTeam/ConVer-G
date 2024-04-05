@@ -87,20 +87,32 @@ public class VersioningQueryExecution implements QueryExecution {
 
             while (Objects.requireNonNull(rs).next()) {
                 ResultSetMetaData rsmd = rs.getMetaData();
+                List<String> variables = new ArrayList<>();
                 int nbColumns = rsmd.getColumnCount();
                 for (int i = 1; i <= nbColumns; i++) {
                     String columnName = rsmd.getColumnName(i);
-                    Var variable = Var.alloc(columnName);
-                    Node variableValue;
-                    if (rs.getString(columnName) != null) {
-                        // FIXME : Handle resource or literal type
-                        variableValue = NodeFactory.createLiteral(rs.getString(columnName));
-                        if (!vars.contains(variable)) {
-                            vars.add(variable);
-                        }
-                        Binding binding = Binding.builder().add(variable, variableValue).build();
-                        bindings.add(binding);
+                    if (columnName.startsWith("name$")) {
+                        variables.add(columnName.substring(5));
                     }
+                }
+
+                for (String var : variables) {
+                    Var variable = Var.alloc(var);
+                    Node variableValue;
+                    if (rs.getString("name$" + var) != null) {
+                        String value = rs.getString("name$" + var);
+                        String valueType = rs.getString("type$" + var);
+                        variableValue = valueType == null ?
+                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, valueType);
+                    } else {
+                        variableValue = null;
+                    }
+
+                    if (!vars.contains(variable)) {
+                        vars.add(variable);
+                    }
+                    Binding binding = Binding.builder().add(variable, variableValue).build();
+                    bindings.add(binding);
                 }
             }
 

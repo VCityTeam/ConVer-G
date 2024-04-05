@@ -47,9 +47,27 @@ public class SPARQLtoSQLTranslator {
         Op op = Algebra.compile(query);
 
         SQLQuery qu = buildSPARQLContext(op);
-        log.info(qu.getSql());
 
-        return qu.getSql();
+        SQLContext sqlContext = new SQLContext(
+                qu.getContext().graph(),
+                qu.getContext().varOccurrences(),
+                "indexes_table",
+                qu.getContext().tableIndex() == null ? 0 : qu.getContext().tableIndex() + 1
+        );
+
+        // Join with resource or literal table for each variable
+        String select = "SELECT " + getSelectVariablesResourceOrLiteral(sqlContext);
+        String from = " FROM (" + qu.getSql() + ") " + sqlContext.tableName() + sqlContext.tableIndex();
+        String join = getJoinVariablesResourceOrLiteral(sqlContext);
+
+        SQLQuery finalQuery = new SQLQuery(
+                select + from + join,
+                sqlContext
+        );
+
+        log.info(finalQuery.getSql());
+
+        return finalQuery.getSql();
     }
 
     private SQLQuery buildSPARQLContext(Op op) {
@@ -99,7 +117,7 @@ public class SPARQLtoSQLTranslator {
 
                 yield new SQLQuery(
                         "SELECT * FROM (" + leftQuery.getSql() + ") UNION (" + rightQuery.getSql() + ")" +
-                        sqlContext.tableName() + sqlContext.tableIndex(),
+                                sqlContext.tableName() + sqlContext.tableIndex(),
                         leftQuery.getContext()
                 );
             }
@@ -244,6 +262,13 @@ public class SPARQLtoSQLTranslator {
         };
     }
 
+    /**
+     * Get the SELECT clause of the SQL query with the resource or literal table
+     *
+     * @param variables the variables of the SQL query
+     * @param sqlQuery  the SQL query
+     * @return the SELECT projections of the SQL query
+     */
     private static String getSqlProjectionsQuery(List<Var> variables, SQLQuery sqlQuery) {
         Map<Node, List<Occurrence>> varOccurrences = sqlQuery.getContext().varOccurrences();
         return "SELECT " + variables.stream()
@@ -605,6 +630,40 @@ public class SPARQLtoSQLTranslator {
                             " as v$" + node.getName()
             );
         }).collect(Collectors.joining(", \n"));
+    }
+
+    /**
+     * Get the SELECT clause of the SQL query with the resource or literal table
+     *
+     * @param context the context of the SPARQL query
+     * @return the SELECT clause of the SQL query
+     */
+    private String getSelectVariablesResourceOrLiteral(SQLContext context) {
+        // FIXME : deal with the graph variable ?
+        return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
+                .filter(node -> node instanceof Node_Variable), (node, index) -> (
+                "rl" + index + ".name as name$" + node.getName() + ", rl" + index + ".type as type$" + node.getName()
+        )).collect(Collectors.joining(", "));
+    }
+
+
+    private String getJoinVariablesResourceOrLiteral(SQLContext context) {
+        // FIXME : deal with the graph variable ?
+        return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
+                .filter(node -> node instanceof Node_Variable), (node, index) -> {
+            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+                return (
+                        " JOIN resource_or_literal rl" + index + " ON " + context.tableName() +
+                                context.tableIndex() + ".ng$" + node.getName() +
+                                " = rl" + index + ".id_resource_or_literal"
+                );
+            }
+            return (
+                    " JOIN resource_or_literal rl" + index + " ON " +
+                            context.tableName() + context.tableIndex() + ".v$" + node.getName() +
+                            " = rl" + index + ".id_resource_or_literal"
+            );
+        }).collect(Collectors.joining(" \n"));
     }
 
     private static String intersectionValidity(OpBGP opBGP) {
