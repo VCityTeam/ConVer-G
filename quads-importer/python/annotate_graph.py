@@ -21,13 +21,10 @@ def main():
     parser.add_argument('annotation', help='Specify the graph name annotation')
     args = parser.parse_args()
 
-    if args.annotation_type == 'version':
-        print(f'version annotation to input file: {args.input_file}')
-    else:
-        if args.annotation is None:
-            print('Graph name annotation is missing')
-            exit(1)
-        print(f'({args.annotation_type} annotation) - file: {args.input_file} with {args.annotation}')
+    if args.annotation is None:
+        print('Graph name annotation is missing')
+        exit(1)
+    print(f'({args.annotation_type} annotation) - file: {args.input_file} with {args.annotation}')
 
     converter = RdfConverter(args)
     converter.convert(args.input_file, args.input_format, args.output_file)
@@ -36,8 +33,7 @@ def main():
 class RdfConverter:
     def __init__(self, args):
         self.args = args
-        self.filename = '.'.join(os.path.split(
-            args.input_file)[-1].split('.')[:-1])
+        self.filename = '.'.join(os.path.split(args.input_file)[-1].split('.')[:-1])
         self.graph = rdflib.Graph()
         self.workspace_graph = rdflib.Graph()
         self.version = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}'
@@ -45,7 +41,10 @@ class RdfConverter:
 
         if args.annotation_type == 'theoretical':
             self.graph_name = ('https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#'
-                               + hashlib.sha256(self.filename.encode("utf-8")).hexdigest()
+                               + hashlib.sha256(
+                                        (
+                                            self.annotation + self.filename.split('.')[0]).encode("utf-8")
+                                    ).hexdigest()
                                )
         else:
             self.graph_name = f'https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#{args.annotation}'
@@ -117,7 +116,7 @@ class RdfConverter:
             or a Literal if str is not an URI
         """
         if isinstance(str, URIRef):
-                return URIRef(str)
+            return URIRef(str)
         elif isinstance(str, Literal):
             return Literal(str)
 

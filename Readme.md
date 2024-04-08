@@ -332,7 +332,7 @@ pip install -r python/requirements.txt
 
 # run the program
 cd workflows
-/bin/bash workflow-gratte_ciel.sh > allout.txt 2>&1
+/bin/bash workflow-gratte_ciel.sh 5 > allout.txt 2>&1
 
 # in another terminal
 cd workflows

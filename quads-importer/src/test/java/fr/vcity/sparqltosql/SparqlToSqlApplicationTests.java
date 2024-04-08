@@ -55,12 +55,13 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the import of the first version and check if the validity is set to 1
+     *
      * @throws Exception a input stream or MVC exception
      */
     @Test
     @Order(1)
     void importV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/version-0.split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-1.split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -83,12 +84,13 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the import of a second version and check the metadata and the data is well annotated
+     *
      * @throws Exception a input stream or MVC exception
      */
     @Test
     @Order(2)
     void importV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/version-1.split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-2.split.ttl.relational.nq");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -118,6 +120,7 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the query of all the versions and check that the data is not empty
+     *
      * @throws Exception a MVC exception
      */
     @Test
@@ -141,6 +144,7 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the query of a specific validity pattern and check the associated data and validity
+     *
      * @throws Exception a MVC exception
      */
     @Test
@@ -164,6 +168,7 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the query of all the versions and check that the data is not empty
+     *
      * @throws Exception a MVC exception
      */
     @Test
@@ -183,33 +188,21 @@ class SparqlToSqlApplicationTests {
 
     /**
      * Tests the import of the workspace
+     *
      * @throws Exception a input stream or MVC exception
      */
     @Test
     @Order(6)
     void importWorkspace() throws Exception {
-//        Resource resource = resourceLoader.getResource("classpath:dataset/GratteCiel_2009_2018_Workspace.ttl.relational.nq");
-        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
-
-//        MockMultipartFile file
-//                = new MockMultipartFile(
-//                "file",
-//                resource.getFilename(),
-//                MediaType.TEXT_PLAIN_VALUE,
-//                resource.getInputStream().readAllBytes()
-//        );
+        Resource resource = resourceLoader.getResource("classpath:dataset/theoretical_annotations.ttl.relational.nq");
 
         MockMultipartFile file2
                 = new MockMultipartFile(
                 "file",
-                resource2.getFilename(),
+                resource.getFilename(),
                 MediaType.TEXT_PLAIN_VALUE,
-                resource2.getInputStream().readAllBytes()
+                resource.getInputStream().readAllBytes()
         );
-
-//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
-//                        .file(file))
-//                .andExpect(status().isOk());
 
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
                         .file(file2))
@@ -266,29 +259,5 @@ class SparqlToSqlApplicationTests {
         mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
                         .file(file))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @Order(11)
-    void querySPARQL0() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:queries/sparql-0.rq");
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content(new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8)))
-                .andExpect(status().isOk())
-                .andReturn();
-        // TODO : Ajouter les tests sur le résultat retourné lorsque le parser SPARQL sera réalisé
-    }
-
-    @Test
-    @Order(12)
-    void querySPARQL1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:queries/sparql-1.rq");
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/query/sparql")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content(new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8)))
-                .andExpect(status().isOk())
-                .andReturn();
-        // TODO : Ajouter les tests sur le résultat retourné lorsque le parser SPARQL sera réalisé
     }
 }

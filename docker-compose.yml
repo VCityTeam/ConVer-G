@@ -47,6 +47,10 @@ services:
     build:
       context: quads-query
       dockerfile: Dockerfile
+      args:
+        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql
+        - DATASOURCE_USERNAME=postgres
+        - DATASOURCE_PASSWORD=password
     depends_on:
       - postgres
     environment:

@@ -18,9 +18,12 @@ public class JdbcConnection {
     private static JdbcConnection jdbcConnection;
     private Connection connection;
     private Statement statement;
-    private static final String CONNECTION_URL = "jdbc:postgresql://localhost:5432/sparqltosql";
-    private static final String CONNECTION_USERNAME = "postgres";
-    private static final String CONNECTION_PASSWORD = "password";
+    private static final String CONNECTION_URL = System.getenv("DATASOURCE_URL") == null ?
+            "jdbc:postgresql://localhost:5432/sparqltosql" : System.getenv("DATASOURCE_URL");
+    private static final String CONNECTION_USERNAME = System.getenv("DATASOURCE_USERNAME") == null ?
+            "postgres" : System.getenv("DATASOURCE_USERNAME");
+    private static final String CONNECTION_PASSWORD = System.getenv("DATASOURCE_PASSWORD") == null ?
+            "password" : System.getenv("DATASOURCE_PASSWORD");
 
     /**
      * Constructor method in order to create db connection & statement
@@ -28,6 +31,7 @@ public class JdbcConnection {
      * @throws SQLException exception can be thrown during DB transaction
      */
     private JdbcConnection() throws SQLException {
+        log.info(CONNECTION_URL);
         try {
             connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USERNAME, CONNECTION_PASSWORD);
             statement = connection.createStatement();

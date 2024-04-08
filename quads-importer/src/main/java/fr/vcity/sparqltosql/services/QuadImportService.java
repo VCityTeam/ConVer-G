@@ -6,6 +6,8 @@ import fr.vcity.sparqltosql.dao.Version;
 import fr.vcity.sparqltosql.model.RDFSavedTriple;
 import fr.vcity.sparqltosql.repository.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.*;
@@ -19,6 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 
@@ -83,7 +88,7 @@ public class QuadImportService implements IQuadImportService {
                 log.info("Name Graph : {}", namedModel.getURI());
                 ResourceOrLiteral resourceOrLiteralNG = saveRDFResourceOrLiteralOrReturnExisting(namedModel, "Named Graph");
                 ResourceOrLiteral resourceOrLiteralVNG = saveRDFResourceOrLiteralOrReturnExisting(
-                        model.createResource(generateVersionedNamedGraph(namedModel.getURI(), version.getIndexVersion() - 1)),
+                        model.createResource(generateVersionedNamedGraph(namedModel.getURI(), file.getOriginalFilename())),
                         "Named Graph"
                 );
                 saveRDFNamedGraphOrReturnExisting(
@@ -266,10 +271,13 @@ public class QuadImportService implements IQuadImportService {
      * Generates the versioned named graph URI
      *
      * @param namedGraphURI The named graph URI
-     * @param versionIndex  The current version index
+     * @param filename    The filename
      * @return The versioned graph URI
      */
-    private String generateVersionedNamedGraph(String namedGraphURI, Integer versionIndex) {
-        return namedGraphURI + "_" + versionIndex;
+    private String generateVersionedNamedGraph(String namedGraphURI, String filename) {
+        return "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#" +
+                DigestUtils.sha256Hex(
+                        StringUtils.getBytesUtf8(namedGraphURI + filename.split("\\.")[0])
+                );
     }
 }
