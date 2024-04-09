@@ -10,7 +10,7 @@ cd ../dataset/triples || exit
 ### Use the find command to locate all files ending with "split.ttl"
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 
-find . -type f -name "*split.ttl" -print0 | while IFS= read -r -d '' file
+find . -type f -name "version*split.ttl" -print0 | while IFS= read -r -d '' file
 do
     python3 ../../python/annotate_graph.py "$file" ttl "$file.theoretical.nq" theoretical BSBM
 done
