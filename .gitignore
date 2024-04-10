@@ -37,3 +37,6 @@ build/
 
 ### venv ###
 **/venv
+
+### envrc ###
+.envrc
