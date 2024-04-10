@@ -82,6 +82,8 @@ public class VersioningQueryExecution implements QueryExecution {
         String sqlQuery = translator.translate(query);
 
         try (ResultSet rs = jdbcConnection.executeSQL(sqlQuery)) {
+
+            // Change the List implementation to the Iterator one (heap space)
             List<Var> vars = new ArrayList<>();
             List<Binding> bindings = new ArrayList<>();
 

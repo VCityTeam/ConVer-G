@@ -124,10 +124,28 @@ public class SPARQLtoSQLTranslator {
             case OpProject opProject -> {
                 SQLQuery sqlQuery = buildSPARQLContext(opProject.getSubOp(), context);
 
+                Map<Node, List<Occurrence>> varOccurrences = new HashMap<>();
+                for (Var var : opProject.getVars()) {
+                    // check if var is linked to a graph
+                    if (sqlQuery.getContext().varOccurrences().get(var).stream()
+                            .anyMatch(occurrence -> occurrence.getType().equals("graph"))) {
+                        varOccurrences.put(var, Collections.singletonList(new Occurrence("graph", 0, ContextType.GRAPH_NAME)));
+                    } else {
+                        varOccurrences.put(var, Collections.singletonList(new Occurrence("project", 0, ContextType.DATASET)));
+                    }
+                }
+
+                SQLContext sqlContext = new SQLContext(
+                        sqlQuery.getContext().graph(),
+                        varOccurrences,
+                        "project_table",
+                        sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1
+                );
+
                 yield new SQLQuery(
                         getSqlProjectionsQuery(opProject.getVars(), sqlQuery) + " FROM (" + sqlQuery.getSql() + ") " +
                                 sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex(),
-                        sqlQuery.getContext()
+                        sqlContext
                 );
             }
             case OpTable opTable -> {
@@ -244,7 +262,7 @@ public class SPARQLtoSQLTranslator {
 
                 newVarOccurrences
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
-                        .add(new Occurrence("graph", count, ContextType.GRAPH));
+                        .add(new Occurrence("graph", count, ContextType.GRAPH_NAME));
 
                 SQLContext cont = context.setGraph(opGraph.getNode(), "sq")
                         .setVarOccurrences(newVarOccurrences)
@@ -306,7 +324,7 @@ public class SPARQLtoSQLTranslator {
      */
     private SQLContext addURIsToContext(OpBGP opBGP, SQLContext context) {
         Map<Node, List<Occurrence>> newVarOccurrences = new HashMap<>(context.varOccurrences());
-        ContextType contextType = context.graph() == null ? ContextType.WORKSPACE : ContextType.GRAPH;
+        ContextType contextType = context.graph() == null ? ContextType.WORKSPACE : ContextType.DATASET;
 
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
             Triple triple = opBGP.getPattern().getList().get(i);
