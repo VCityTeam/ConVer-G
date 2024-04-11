@@ -29,9 +29,10 @@ public class AppTest {
     @Test
     @Order(1)
     void querySPARQL0() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-0.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-0.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-0.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }
@@ -39,9 +40,10 @@ public class AppTest {
     @Test
     @Order(2)
     void querySPARQL1() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-1.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-1.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-1.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }
@@ -49,9 +51,10 @@ public class AppTest {
     @Test
     @Order(3)
     void querySPARQL2() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-2.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-2.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-2.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }
@@ -59,9 +62,10 @@ public class AppTest {
     @Test
     @Order(4)
     void querySPARQL3() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-3.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-3.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-3.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }
@@ -69,9 +73,10 @@ public class AppTest {
     @Test
     @Order(5)
     void querySPARQL4() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-4.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-4.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-4.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }
@@ -79,9 +84,32 @@ public class AppTest {
     @Test
     @Order(6)
     void querySPARQL5() throws Exception {
-        Path path = Path.of("src/test/resources/queries/sparql-4.rq");
-        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", path);
-        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", path);
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-5.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-5.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
+
+        sendRequestAndCompareResults(requestStS, requestBlazegraph);
+    }
+
+    @Test
+    @Order(7)
+    void querySPARQL6() throws Exception {
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-6.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-6.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
+
+        sendRequestAndCompareResults(requestStS, requestBlazegraph);
+    }
+
+    @Test
+    @Order(8)
+    void querySPARQL7() throws Exception {
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-7.rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-7.rq");
+        HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
         sendRequestAndCompareResults(requestStS, requestBlazegraph);
     }

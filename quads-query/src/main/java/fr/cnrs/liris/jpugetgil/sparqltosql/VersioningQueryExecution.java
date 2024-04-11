@@ -108,7 +108,7 @@ public class VersioningQueryExecution implements QueryExecution {
                         String value = rs.getString("name$" + var);
                         String valueType = rs.getString("type$" + var);
                         variableValue = valueType == null ?
-                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, valueType);
+                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
                         variableValue = null;
                     }

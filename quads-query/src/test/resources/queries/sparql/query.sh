@@ -6,7 +6,7 @@
 
 printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query started."
 
-find . -type f -name "sparql*" -print0 | while IFS= read -r -d '' file
+find . -type f -name "sts*" -print0 | while IFS= read -r -d '' file
 do
     printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query $file"
     name=$(basename "$file")
@@ -22,7 +22,7 @@ printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query completed."
 
 printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query started."
 
-find . -type f -name "sparql*" -print0 | while IFS= read -r -d '' file
+find . -type f -name "blazegraph*" -print0 | while IFS= read -r -d '' file
 do
     printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query $file"
     name=$(basename "$file")

@@ -10,14 +10,14 @@ cd ../dataset/triples || exit
 ### Use the find command to locate all files ending with "split.ttl"
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 
-find . -type f -name "version*split.ttl" -print0 | while IFS= read -r -d '' file
-do
-    python3 ../../python/annotate_graph.py "$file" ttl "$file.theoretical.nq" theoretical BSBM
-done
-
 find . -type f -name "*.ttl" -print0 | while IFS= read -r -d '' file
 do
     python3 ../../python/annotate_graph.py "$file" ttl "$file.relational.nq" relational BSBM
+done
+
+find . -type f -name "version*split.ttl" -print0 | while IFS= read -r -d '' file
+do
+    python3 ../../python/annotate_graph.py "$file" ttl "$file.theoretical.nq" theoretical BSBM
 done
 
 find . -type f -name "*.nt" -print0 | while IFS= read -r -d '' file
@@ -33,8 +33,10 @@ mkdir -p ../quads/theoretical
 mkdir -p ../quads/relational
 
 cp *.theoretical.nq ../quads/theoretical
-cp *.relational.nq ../quads/theoretical
 cp *.relational.nq ../quads/relational
+cp theoretical_annotations.nq ../quads/theoretical
+rm *.theoretical.nq
+rm *.relational.nq
 printf "\n%s$(date +%FT%T) - [Transformations] Moving quads completed."
 
 ## Adds data in test workspace

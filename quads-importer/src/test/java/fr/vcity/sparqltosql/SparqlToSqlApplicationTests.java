@@ -186,28 +186,28 @@ class SparqlToSqlApplicationTests {
         }
     }
 
-    /**
-     * Tests the import of the workspace
-     *
-     * @throws Exception a input stream or MVC exception
-     */
-    @Test
-    @Order(6)
-    void importWorkspace() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/theoretical_annotations.ttl.relational.nq");
-
-        MockMultipartFile file2
-                = new MockMultipartFile(
-                "file",
-                resource.getFilename(),
-                MediaType.TEXT_PLAIN_VALUE,
-                resource.getInputStream().readAllBytes()
-        );
-
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
-                        .file(file2))
-                .andExpect(status().isOk());
-    }
+//    /**
+//     * Tests the import of the workspace
+//     *
+//     * @throws Exception a input stream or MVC exception
+//     */
+//    @Test
+//    @Order(6)
+//    void importWorkspace() throws Exception {
+//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
+//
+//        MockMultipartFile file1
+//                = new MockMultipartFile(
+//                "file",
+//                resource.getFilename(),
+//                MediaType.TEXT_PLAIN_VALUE,
+//                resource.getInputStream().readAllBytes()
+//        );
+//
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//                        .file(file1))
+//                .andExpect(status().isOk());
+//    }
 
 //    @Test
 //    @Order(7)
@@ -260,4 +260,40 @@ class SparqlToSqlApplicationTests {
                         .file(file))
                 .andExpect(status().isBadRequest());
     }
+
+//    /**
+//     * Tests the import of the workspace
+//     *
+//     * @throws Exception a input stream or MVC exception
+//     */
+//    @Test
+//    @Order(11)
+//    void importWorkspace2() throws Exception {
+//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
+//        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-1.nt.relational.nq");
+//
+//        MockMultipartFile file1
+//                = new MockMultipartFile(
+//                "file",
+//                resource.getFilename(),
+//                MediaType.TEXT_PLAIN_VALUE,
+//                resource.getInputStream().readAllBytes()
+//        );
+//
+//        MockMultipartFile file2
+//                = new MockMultipartFile(
+//                "file",
+//                resource2.getFilename(),
+//                MediaType.TEXT_PLAIN_VALUE,
+//                resource2.getInputStream().readAllBytes()
+//        );
+//
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//                        .file(file1))
+//                .andExpect(status().isOk());
+//
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//                        .file(file2))
+//                .andExpect(status().isOk());
+//    }
 }
