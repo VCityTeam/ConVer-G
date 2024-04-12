@@ -1,16 +1,13 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.op.AbstractFunction;
 import org.apache.jena.sparql.expr.ExprFunction;
 
-import java.util.List;
-
-public class AbstractDirectApplication<E extends ExprFunction> extends AbstractExpression<E> {
+public abstract class AbstractDirectApplication<E extends ExprFunction> extends AbstractFunction<E> {
     protected String sqlFunction;
-    protected List<Expression> args;
 
-    public AbstractDirectApplication(E expr, String sqlFunction) {
-        super(expr);
-        args = expr.getArgs().stream().map(Expression::fromJenaExpr).toList();
+    protected AbstractDirectApplication(E expr, boolean requiresValue, String sqlFunction) {
+        super(expr, requiresValue);
         this.sqlFunction = sqlFunction;
     }
 }

@@ -2,15 +2,14 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.constants.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.op.*;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
 import org.apache.jena.sparql.expr.*;
 import org.apache.jena.sparql.expr.nodevalue.*;
 
 public interface Expression {
+
     public static Expression fromJenaExpr(Expr expr) {
         return switch (expr) {
-//              , , , , , , , , , , , , , , , , , , , , , , , , , , , , ,
-//            , , , , , , , , , , , , , , , , , , ,
-
             case E_Add add -> new Add(add);
             case E_Bound bound -> new Bound(bound);
             case E_Divide divide -> new Divide(divide);
@@ -29,9 +28,9 @@ public interface Expression {
             case E_NotExists nex -> new NotExists(nex);
             case E_Now eNow -> new Now(eNow);
             case E_NumAbs numAbs -> new NumAbs(numAbs);
-            case E_NumCeiling eNumCeiling -> new DirectApplication1(eNumCeiling, "ceil");
-            case E_NumFloor eNumFloor -> new DirectApplication1(eNumFloor, "floor");
-            case E_NumRound eNumRound -> new DirectApplication1(eNumRound, "round");
+            case E_NumCeiling eNumCeiling -> new DirectApplication1(eNumCeiling, true, "ceil");
+            case E_NumFloor eNumFloor -> new DirectApplication1(eNumFloor, true, "floor");
+            case E_NumRound eNumRound -> new DirectApplication1(eNumRound, true, "round");
             case E_OpNumericIntegerDivide eOpNumericIntegerDivide ->
                     new OpNumericIntegerDivide(eOpNumericIntegerDivide);
             case E_OpNumericMod eOpNumericMod -> new OpNumericMod(eOpNumericMod);
@@ -40,11 +39,11 @@ public interface Expression {
             case E_StrBefore eStrBefore -> new StrBefore(eStrBefore);
             case E_StrContains eStrContains -> new StrContains(eStrContains);
             case E_StrEndsWith eStrEndsWith -> new StrEndsWith(eStrEndsWith);
-            case E_StrLength eStrLength -> new DirectApplication1(eStrLength, "character_length");
-            case E_StrLowerCase eStrLowerCase -> new DirectApplication1(eStrLowerCase, "lower");
-            case E_StrStartsWith eStrStartsWith -> new DirectApplication2(eStrStartsWith, "starts_with");
-            case E_StrSubstring eStrSubstring -> new DirectApplicationN(eStrSubstring, "substr");
-            case E_StrUpperCase eStrUpperCase -> new DirectApplication1(eStrUpperCase, "upper");
+            case E_StrLength eStrLength -> new DirectApplication1(eStrLength, true, "character_length");
+            case E_StrLowerCase eStrLowerCase -> new DirectApplication1(eStrLowerCase, true, "lower");
+            case E_StrStartsWith eStrStartsWith -> new DirectApplication2(eStrStartsWith, true, "starts_with");
+            case E_StrSubstring eStrSubstring -> new DirectApplicationN(eStrSubstring, true, "substr");
+            case E_StrUpperCase eStrUpperCase -> new DirectApplication1(eStrUpperCase, true, "upper");
             case E_Subtract eSubtract -> new Subtract(eSubtract);
             case E_UnaryMinus eUnaryMinus -> new UnaryMinus(eUnaryMinus);
             case E_UnaryPlus eUnaryPlus -> new UnaryPlus(eUnaryPlus);
@@ -89,4 +88,12 @@ public interface Expression {
      * @return expression represented in jena algebra
      */
     Expr getJenaExpr();
+
+    /**
+     * Updates the filter configuration to take this expression's variables into account
+     *
+     * @param configuration the configuration to update
+     * @param requiresValue true if the value is required, false if the int representation is sufficient
+     */
+    void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue);
 }
