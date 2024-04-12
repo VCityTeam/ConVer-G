@@ -16,6 +16,7 @@ import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingBuilder;
 import org.apache.jena.sparql.util.Context;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -98,14 +99,16 @@ public class VersioningQueryExecution implements QueryExecution {
                     }
                 }
 
+                BindingBuilder bindingBuilder = Binding.builder();
                 for (String var : variables) {
                     Var variable = Var.alloc(var);
                     Node variableValue;
+
                     if (rs.getString("name$" + var) != null) {
                         String value = rs.getString("name$" + var);
                         String valueType = rs.getString("type$" + var);
                         variableValue = valueType == null ?
-                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, valueType);
+                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
                         variableValue = null;
                     }
@@ -113,9 +116,11 @@ public class VersioningQueryExecution implements QueryExecution {
                     if (!vars.contains(variable)) {
                         vars.add(variable);
                     }
-                    Binding binding = Binding.builder().add(variable, variableValue).build();
-                    bindings.add(binding);
+
+                    bindingBuilder.add(variable, variableValue);
                 }
+
+                bindings.add(bindingBuilder.build());
             }
 
             return ResultSetStream.create(vars, bindings.iterator());

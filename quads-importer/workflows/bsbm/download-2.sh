@@ -30,9 +30,8 @@ echo "------- Generating $versions_number versions -------"
 for ((i=0;i<versions_number;i++)); do
     echo "Generating version $i"
     echo "Generating $((products_number + i)) products"
-    docker run --name "bsbm-$i" -v "$PWD:/data" vcity/bsbm generate -s ttl -pc $((products_number + i)) -tc $((i)) -ud -ppt $((i))
+    docker run --name "bsbm-$i" -v "$PWD:/data" vcity/bsbm generate -s ttl -pc $((products_number + i)) -tc $((i)) -ppt $((i))
     mv dataset.ttl "save/version-$i.split.ttl"
-    mv dataset_update.nt "save/transition-$i.nt"
 done
 
 cp save/* .

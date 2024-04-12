@@ -84,32 +84,37 @@ class RdfConverter:
         :param named_graph: The named graph to be annotated
         """
         workspace_ds = Dataset()
-        if os.path.exists('theoretical_annotations.ttl'):
+        workspace_uri = URIRef('https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace')
+        if os.path.exists('theoretical_annotations.nq'):
             self.workspace_graph.parse(
-                'theoretical_annotations.ttl', format='ttl')
+                'theoretical_annotations.nq', format='nquads')
             for s, p, o in self.workspace_graph.query('''
-                SELECT ?s ?p ?o
-                WHERE { ?s ?p ?o . }'''):
+                SELECT ?s ?p ?o WHERE { 
+                    ?s ?p ?o . 
+                }
+                '''):
                 subject = self.create_uriref_or_literal(s)
                 predicate = URIRef(p)
                 object = self.create_uriref_or_literal(o)
-                workspace_ds.add((subject, predicate, object))
+                workspace_ds.add((subject, predicate, object, workspace_uri))
         workspace_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of'),
-                URIRef(self.annotation)
+                URIRef(self.annotation),
+                workspace_uri
             )
         )
         workspace_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version'),
-                URIRef(self.version)
+                URIRef(self.version),
+                workspace_uri
             )
         )
         workspace_ds.serialize(
-            destination='theoretical_annotations.ttl', format='ttl', encoding='utf-8')
+            destination='theoretical_annotations.nq', format='nquads', encoding='utf-8')
 
     def create_uriref_or_literal(self, str):
         """Create a URIRef with the same validation func used by URIRef

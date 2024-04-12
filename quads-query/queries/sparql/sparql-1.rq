@@ -1,4 +1,0 @@
-# Query the workspace (default graph) for all triples
-SELECT ?s ?p ?o WHERE {
-      ?s ?p ?o .
-}

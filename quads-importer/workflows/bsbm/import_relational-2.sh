@@ -31,13 +31,5 @@ printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Workspace cleaning completed."
 
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import started."
 
-find . -type f -name "*.nt.relational.nq" -print0 | while IFS= read -r -d '' file
-do
-    printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions $file"
-    curl --location 'http://localhost:8080/import/workspace' \
-      --header 'Content-Type: multipart/form-data' \
-      --form file=@"$file"
-done
-
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import completed."
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Dataset import completed."

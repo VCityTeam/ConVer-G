@@ -23,6 +23,7 @@ public class App {
                 .port(8081)
                 .add("/rdf", ds)
                 .registerOperation(Operation.Query, new VersioningSPARQLQueryProcessor())
+                // understand how to add static serving of fuseki ui files
                 .build();
         log.info("Fuseki server is built, starting...");
         server.start();

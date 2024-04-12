@@ -1,22 +1,22 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 public class Occurrence {
-    private String type;
+    private SPARQLPositionType type;
     private Integer position;
 
     private ContextType contextType;
 
-    public Occurrence(String type, Integer position, ContextType contextType) {
+    public Occurrence(SPARQLPositionType type, Integer position, ContextType contextType) {
         this.type = type;
         this.position = position;
         this.contextType = contextType;
     }
 
-    public String getType() {
+    public SPARQLPositionType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(SPARQLPositionType type) {
         this.type = type;
     }
 

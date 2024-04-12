@@ -1,0 +1,4 @@
+# Query for all triples (includes quads)
+SELECT ?s ?p ?o WHERE {
+      ?s ?p ?o .
+}

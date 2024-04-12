@@ -126,12 +126,15 @@ public class SPARQLtoSQLTranslator {
 
                 Map<Node, List<Occurrence>> varOccurrences = new HashMap<>();
                 for (Var var : opProject.getVars()) {
-                    // check if var is linked to a graph
+                    Occurrence occ = sqlQuery.getContext().varOccurrences().get(var).stream()
+                            .findFirst()
+                            .orElse(null);
+
                     if (sqlQuery.getContext().varOccurrences().get(var).stream()
-                            .anyMatch(occurrence -> occurrence.getType().equals("graph"))) {
-                        varOccurrences.put(var, Collections.singletonList(new Occurrence("graph", 0, ContextType.GRAPH_NAME)));
+                            .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
+                        varOccurrences.put(var, Collections.singletonList(new Occurrence(SPARQLPositionType.GRAPH_NAME, 0, occ.getContextType())));
                     } else {
-                        varOccurrences.put(var, Collections.singletonList(new Occurrence("project", 0, ContextType.DATASET)));
+                        varOccurrences.put(var, Collections.singletonList(new Occurrence(occ.getType(), 0, occ.getContextType())));
                     }
                 }
 
@@ -199,7 +202,7 @@ public class SPARQLtoSQLTranslator {
                 String groupBy = vars.stream()
                         .map(var -> {
                             if (sqlQuery.getContext().varOccurrences().get(var).stream()
-                                    .anyMatch(occurrence -> occurrence.getType().equals("graph"))) {
+                                    .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
                                 return sqlContext.tableName() + sqlContext.tableIndex() +
                                         ".ng$" + var.getName();
                             } else {
@@ -255,14 +258,14 @@ public class SPARQLtoSQLTranslator {
                         .stream()
                         .filter(
                                 node -> newVarOccurrences.get(node).stream()
-                                        .anyMatch(occurrence -> occurrence.getType().equals("graph"))
+                                        .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)
                         )
                         .map(node -> 1)
                         .reduce(0, Integer::sum, Integer::sum);
 
                 newVarOccurrences
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
-                        .add(new Occurrence("graph", count, ContextType.GRAPH_NAME));
+                        .add(new Occurrence(SPARQLPositionType.GRAPH_NAME, count, ContextType.DATASET));
 
                 SQLContext cont = context.setGraph(opGraph.getNode(), "sq")
                         .setVarOccurrences(newVarOccurrences)
@@ -291,9 +294,10 @@ public class SPARQLtoSQLTranslator {
         Map<Node, List<Occurrence>> varOccurrences = sqlQuery.getContext().varOccurrences();
         return "SELECT " + variables.stream()
                 .map((node) -> {
-                    if (varOccurrences.get(node).stream().anyMatch(occurrence -> occurrence.getType().equals("graph"))) {
+                    if (varOccurrences.get(node).stream().anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
                         return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
-                                ".ng$" + node.getName();
+                                ".ng$" + node.getName() + ", " + sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
+                                ".bs$" + node.getName();
                     } else {
                         return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
                                 ".v$" + node.getName();
@@ -333,11 +337,11 @@ public class SPARQLtoSQLTranslator {
             Node object = triple.getObject();
 
             newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
-                    .add(new Occurrence("subject", i, contextType));
+                    .add(new Occurrence(SPARQLPositionType.SUBJECT, i, contextType));
             newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
-                    .add(new Occurrence("predicate", i, contextType));
+                    .add(new Occurrence(SPARQLPositionType.PROPERTY, i, contextType));
             newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
-                    .add(new Occurrence("object", i, contextType));
+                    .add(new Occurrence(SPARQLPositionType.OBJECT, i, contextType));
 
             context = context.setVarOccurrences(newVarOccurrences);
         }
@@ -446,7 +450,7 @@ public class SPARQLtoSQLTranslator {
         leftSQLQuery.getContext().varOccurrences().keySet().forEach(node -> {
             if (rightSQLQuery.getContext().varOccurrences().containsKey(node)
                     && rightSQLQuery.getContext().varOccurrences().get(node).stream()
-                    .anyMatch(occurrence -> !occurrence.getType().equals("graph"))) {
+                    .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
                 commonNodesWithoutGraph.add(node);
             }
         });
@@ -454,7 +458,7 @@ public class SPARQLtoSQLTranslator {
         // for loop rightSQLQuery varOccurrences
         for (Node node : rightSQLQuery.getContext().varOccurrences().keySet()) {
             if (node instanceof Node_Variable && rightSQLQuery.getContext().varOccurrences().get(node).stream()
-                    .anyMatch(occurrence -> occurrence.getType().equals("graph"))
+                    .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)
             ) {
                 graphRightVariable = node;
                 graphVariable = node;
@@ -465,7 +469,7 @@ public class SPARQLtoSQLTranslator {
         // for loop leftSQLQuery varOccurrences
         for (Node node : leftSQLQuery.getContext().varOccurrences().keySet()) {
             if (node instanceof Node_Variable && leftSQLQuery.getContext().varOccurrences().get(node).stream()
-                    .anyMatch(occurrence -> occurrence.getType().equals("graph"))
+                    .anyMatch(occurrence -> occurrence.getType() == SPARQLPositionType.GRAPH_NAME)
             ) {
                 graphLeftVariable = node;
                 graphVariable = node;
@@ -636,7 +640,7 @@ public class SPARQLtoSQLTranslator {
     private String getSelectVariables(SQLContext context) {
         return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
                 .filter(node -> node instanceof Node_Variable), (node, index) -> {
-            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+            if (context.varOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
                 return (
                         "t" + context.varOccurrences().get(node).getFirst().getPosition() +
                                 ".id_named_graph as ng$" + node.getName()
@@ -657,7 +661,6 @@ public class SPARQLtoSQLTranslator {
      * @return the SELECT clause of the SQL query
      */
     private String getSelectVariablesResourceOrLiteral(SQLContext context) {
-        // FIXME : deal with the graph variable ?
         return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
                 .filter(node -> node instanceof Node_Variable), (node, index) -> (
                 "rl" + index + ".name as name$" + node.getName() + ", rl" + index + ".type as type$" + node.getName()
@@ -666,14 +669,16 @@ public class SPARQLtoSQLTranslator {
 
 
     private String getJoinVariablesResourceOrLiteral(SQLContext context) {
-        // FIXME : deal with the graph variable ?
         return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
                 .filter(node -> node instanceof Node_Variable), (node, index) -> {
-            if (context.varOccurrences().get(node).getFirst().getType().equals("graph")) {
+            if (context.varOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
                 return (
-                        " JOIN resource_or_literal rl" + index + " ON " + context.tableName() +
-                                context.tableIndex() + ".ng$" + node.getName() +
-                                " = rl" + index + ".id_resource_or_literal"
+                        " JOIN versioned_named_graph vng" + index + " ON " + context.tableName() +
+                                context.tableIndex() + ".ng$" + node.getName() + " = vng" + index +
+                                ".id_named_graph AND get_bit(" + context.tableName() + context.tableIndex() +
+                                ".bs$" + node.getName() + ", vng" + index + ".index_version) = 1 \n" +
+                                " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
+                                index + ".id_resource_or_literal"
                 );
             }
             return (
@@ -698,9 +703,9 @@ public class SPARQLtoSQLTranslator {
      */
     private String getColumnByOccurrence(Occurrence occurrence) {
         return switch (occurrence.getType()) {
-            case "subject" -> "id_subject";
-            case "predicate" -> "id_property";
-            case "object" -> "id_object";
+            case SUBJECT -> "id_subject";
+            case PROPERTY -> "id_property";
+            case OBJECT -> "id_object";
             default -> throw new IllegalArgumentException();
         };
     }
