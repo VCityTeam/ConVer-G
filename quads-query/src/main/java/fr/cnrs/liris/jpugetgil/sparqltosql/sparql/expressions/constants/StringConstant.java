@@ -1,8 +1,8 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.constants;
 
 import org.apache.jena.sparql.expr.nodevalue.NodeValueString;
 
-public class StringConstant extends Constant {
+public class StringConstant extends Constant<NodeValueString> {
     private final String value;
 
     public StringConstant(NodeValueString expr) {
