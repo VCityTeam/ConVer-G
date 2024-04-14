@@ -1,39 +1,24 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.context;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
-import fr.cnrs.liris.jpugetgil.sparqltosql.Occurrence;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SPARQLPositionType;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLContext;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.sparqltosql.dao.VersionedNamedGraph;
+import fr.cnrs.liris.jpugetgil.sparqltosql.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLClause;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.EqualToOperator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.NotEqualToOperator;
 import org.apache.jena.graph.*;
 import org.apache.jena.sparql.algebra.op.OpBGP;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StSBGPOperator extends StSOperator {
-    private OpBGP op;
+    private final OpBGP op;
 
-    private SQLContext context;
+    private final SQLContext context;
 
-    private final Map<String, Integer> uriToIdMap;
-
-    // remove later
-    private final Session session;
-
-
-    public StSBGPOperator(OpBGP op, SQLContext context, Map<String, Integer> uriToIdMap, Session session) {
+    public StSBGPOperator(OpBGP op, SQLContext context) {
         this.op = op;
         this.context = context;
-        this.uriToIdMap = uriToIdMap;
-        this.session = session;
     }
 
     @Override
@@ -87,6 +72,7 @@ public class StSBGPOperator extends StSOperator {
      */
     private String generateSelect() {
         if (context.graph() instanceof Node_Variable) {
+            this.sqlVariables.add(new SQLVariable(SQLVarType.BIT_STRING, context.graph().getName()));
             return intersectionValidity() + " as bs$" + context.graph().getName() + ", " + getSelectVariables();
         } else {
             return getSelectVariables();
@@ -99,12 +85,15 @@ public class StSBGPOperator extends StSOperator {
      * @return the SELECT clause of the SQL query
      */
     private String generateSelectWorkspace() {
-        return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
-                .filter(node -> node instanceof Node_Variable), (node, index) ->
-                "t" + context.varOccurrences().get(node).getFirst().getPosition() +
-                        "." + getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
-                        " as v$" + node.getName()
-        ).collect(Collectors.joining(", \n"));
+        return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
+                        .filter(node -> node instanceof Node_Variable), (node, index) -> {
+                    this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
+
+                    return "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
+                            "." + getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst()) +
+                            " as v$" + node.getName();
+                })
+                .collect(Collectors.joining(", \n"));
     }
 
     /**
@@ -130,17 +119,21 @@ public class StSBGPOperator extends StSOperator {
      * @return the SELECT clause of the SQL query
      */
     private String getSelectVariables() {
-        return Streams.mapWithIndex(context.varOccurrences().keySet().stream()
+        return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
                 .filter(node -> node instanceof Node_Variable), (node, index) -> {
-            if (context.varOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
+            if (context.sparqlVarOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
+                this.sqlVariables.add(new SQLVariable(SQLVarType.GRAPH_NAME, node.getName()));
+
                 return (
-                        "t" + context.varOccurrences().get(node).getFirst().getPosition() +
+                        "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
                                 ".id_named_graph as ng$" + node.getName()
                 );
             }
+
+            this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
             return (
-                    "t" + context.varOccurrences().get(node).getFirst().getPosition() + "." +
-                            getColumnByOccurrence(context.varOccurrences().get(node).getFirst()) +
+                    "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() + "." +
+                            getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst()) +
                             " as v$" + node.getName()
             );
         }).collect(Collectors.joining(", \n"));
@@ -149,11 +142,11 @@ public class StSBGPOperator extends StSOperator {
     /**
      * Return the column name of the SQL query according to the occurrence type
      *
-     * @param occurrence the occurrence of the Node
+     * @param SPARQLOccurrence the occurrence of the Node
      * @return the column name of the versioned quad table
      */
-    private String getColumnByOccurrence(Occurrence occurrence) {
-        return switch (occurrence.getType()) {
+    private String getColumnByOccurrence(SPARQLOccurrence SPARQLOccurrence) {
+        return switch (SPARQLOccurrence.getType()) {
             case SUBJECT -> "id_subject";
             case PROPERTY -> "id_property";
             case OBJECT -> "id_object";
@@ -177,7 +170,9 @@ public class StSBGPOperator extends StSOperator {
             query += " WHERE " + where;
         }
 
-        return new SQLQuery(query, context);
+        SQLContext newContext = context.setSQLVariables(sqlVariables);
+
+        return new SQLQuery(query, newContext);
     }
 
     /**
@@ -231,16 +226,27 @@ public class StSBGPOperator extends StSOperator {
                 }
                 case Node_URI nodeUri -> {
                     // where
-                    VersionedNamedGraph versionedNamedGraph = getAssociatedVNG(nodeUri.getURI());
                     sqlClauseBuilder = sqlClauseBuilder.and(
                             new EqualToOperator().buildComparisonOperatorSQL(
                                     "t" + i + ".id_named_graph",
-                                    String.valueOf(versionedNamedGraph.getIdNamedGraph())
+                                    """
+                                            (
+                                                SELECT vng.id_named_graph
+                                                FROM versioned_named_graph vng JOIN resource_or_literal rl ON 
+                                                vng.id_versioned_named_graph = rl.id_resource_or_literal
+                                                WHERE rl.name = '""" + nodeUri.getURI() + "')"
                             )
                     ).and(
                             new EqualToOperator()
                                     .buildComparisonOperatorSQL(
-                                            "get_bit(t" + i + ".validity," + versionedNamedGraph.getIndex() + ")",
+                                            "get_bit(t" + i + ".validity," +
+                                                    """
+                                                            (
+                                                                SELECT vng.index_version
+                                                                FROM versioned_named_graph vng JOIN resource_or_literal rl ON 
+                                                                vng.id_versioned_named_graph = rl.id_resource_or_literal
+                                                                WHERE rl.name = '""" + nodeUri.getURI() + "')"
+                                                    + ")",
                                             "1"
                                     )
                     );
@@ -272,7 +278,11 @@ public class StSBGPOperator extends StSOperator {
                     new EqualToOperator()
                             .buildComparisonOperatorSQL(
                                     "t" + i + ".id_subject",
-                                    String.valueOf(uriToIdMap.get(subject.getURI()))
+                                    """
+                                            (
+                                                SELECT id_resource_or_literal
+                                                FROM resource_or_literal
+                                                WHERE name = '""" + subject.getURI() + "')"
                             )
             );
         }
@@ -281,23 +291,36 @@ public class StSBGPOperator extends StSOperator {
                     new EqualToOperator()
                             .buildComparisonOperatorSQL(
                                     "t" + i + ".id_property",
-                                    String.valueOf(uriToIdMap.get(predicate.getURI()))
+                                    """
+                                            (
+                                                SELECT id_resource_or_literal
+                                                FROM resource_or_literal
+                                                WHERE name = '""" + predicate.getURI() + "')"
                             )
             );
         }
         if (object instanceof Node_URI) {
             sqlClauseBuilder.and(
-                    new EqualToOperator().buildComparisonOperatorSQL(
-                            "t" + i + ".id_object",
-                            String.valueOf(uriToIdMap.get(object.getURI()))
-                    )
+                    new EqualToOperator()
+                            .buildComparisonOperatorSQL(
+                                    "t" + i + ".id_object",
+                                    """
+                                            (
+                                                SELECT id_resource_or_literal
+                                                FROM resource_or_literal
+                                                WHERE name = '""" + object.getURI() + "')"
+                            )
             );
         } else if (object instanceof Node_Literal) {
             sqlClauseBuilder.and(
                     new EqualToOperator()
                             .buildComparisonOperatorSQL(
                                     "t" + i + ".id_object",
-                                    String.valueOf(uriToIdMap.get(object.getLiteralLexicalForm()))
+                                    """
+                                            (
+                                                SELECT id_resource_or_literal
+                                                FROM resource_or_literal
+                                                WHERE name = '""" + object.getLiteralLexicalForm() + "' AND type IS NOT NULL)"
                             )
             );
         }
@@ -309,19 +332,5 @@ public class StSBGPOperator extends StSOperator {
         return "(" + Streams.mapWithIndex(op.getPattern().getList().stream(), (triple, index) ->
                 "t" + index + ".validity"
         ).collect(Collectors.joining(" & ")) + ")";
-    }
-
-    private VersionedNamedGraph getAssociatedVNG(String uri) {
-        Transaction tx = session.beginTransaction();
-        VersionedNamedGraph versionedNamedGraph = session.createQuery(
-                        "from VersionedNamedGraph vng join ResourceOrLiteral rl " +
-                                "on vng.idVersionedNamedGraph = rl.idResourceOrLiteral where rl.name = :uri",
-                        VersionedNamedGraph.class
-                )
-                .setParameter("uri", uri)
-                .getSingleResult();
-        tx.commit();
-
-        return versionedNamedGraph;
     }
 }

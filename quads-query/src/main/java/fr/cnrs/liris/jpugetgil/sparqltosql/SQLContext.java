@@ -8,25 +8,31 @@ import java.util.Map;
 /**
  * This class represents the context of a SQL query.
  *
- * @param graph          The graph of the context
- * @param varOccurrences The occurrences of the variables in the context
- * @param tableName      The name of the table in the context
- * @param tableIndex     The index of the table in the context
+ * @param graph                The graph of the context
+ * @param sparqlVarOccurrences The occurrences of the variables in the context
+ * @param tableName            The name of the table in the context
+ * @param tableIndex           The index of the table in the context
+ * @param sqlVariables         The variables of the SQL query made by the context
  */
-public record SQLContext(Node graph, Map<Node, List<Occurrence>> varOccurrences, String tableName, Integer tableIndex) {
+public record SQLContext(Node graph, Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences, String tableName,
+                         Integer tableIndex, List<SQLVariable> sqlVariables) {
     public SQLContext setGraph(Node newGraph, String tableName) {
-        return new SQLContext(newGraph, varOccurrences, tableName, tableIndex);
+        return new SQLContext(newGraph, sparqlVarOccurrences, tableName, tableIndex, sqlVariables);
     }
 
-    public SQLContext setVarOccurrences(Map<Node, List<Occurrence>> newVarOccurrences) {
-        return new SQLContext(graph, newVarOccurrences, tableName, tableIndex);
+    public SQLContext setVarOccurrences(Map<Node, List<SPARQLOccurrence>> newVarOccurrences) {
+        return new SQLContext(graph, newVarOccurrences, tableName, tableIndex, sqlVariables);
     }
 
     public SQLContext setTableName(String newTableName) {
-        return new SQLContext(graph, varOccurrences, newTableName, tableIndex);
+        return new SQLContext(graph, sparqlVarOccurrences, newTableName, tableIndex, sqlVariables);
     }
 
     public SQLContext setTableIndex(Integer newTableIndex) {
-        return new SQLContext(graph, varOccurrences, tableName, newTableIndex);
+        return new SQLContext(graph, sparqlVarOccurrences, tableName, newTableIndex, sqlVariables);
+    }
+
+    public SQLContext setSQLVariables(List<SQLVariable> newSQLVariables) {
+        return new SQLContext(graph, sparqlVarOccurrences, tableName, tableIndex, newSQLVariables);
     }
 }

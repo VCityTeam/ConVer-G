@@ -1,12 +1,12 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-public class Occurrence {
+public class SPARQLOccurrence {
     private SPARQLPositionType type;
     private Integer position;
 
     private ContextType contextType;
 
-    public Occurrence(SPARQLPositionType type, Integer position, ContextType contextType) {
+    public SPARQLOccurrence(SPARQLPositionType type, Integer position, ContextType contextType) {
         this.type = type;
         this.position = position;
         this.contextType = contextType;

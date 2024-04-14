@@ -1,6 +1,5 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.connection.HibernateSessionSingleton;
 import fr.cnrs.liris.jpugetgil.sparqltosql.connection.JdbcConnection;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
@@ -18,7 +17,6 @@ import org.apache.jena.sparql.engine.ResultSetStream;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingBuilder;
 import org.apache.jena.sparql.util.Context;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +35,10 @@ public class VersioningQueryExecution implements QueryExecution {
 
     private final Query query;
 
-    private final SessionFactory sessionFactory;
-
     private final JdbcConnection jdbcConnection;
 
     public VersioningQueryExecution(Query query) {
         this.query = query;
-        this.sessionFactory = HibernateSessionSingleton.getInstance().getSessionFactory();
         this.jdbcConnection = JdbcConnection.getInstance();
     }
 
@@ -79,7 +74,7 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public org.apache.jena.query.ResultSet execSelect() {
-        SPARQLtoSQLTranslator translator = new SPARQLtoSQLTranslator(sessionFactory);
+        SPARQLtoSQLTranslator translator = new SPARQLtoSQLTranslator();
         String sqlQuery = translator.translate(query);
 
         try (ResultSet rs = jdbcConnection.executeSQL(sqlQuery)) {
