@@ -33,16 +33,13 @@ public class StSProjectOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 sqlQuery.getContext().graph(),
                 sqlQuery.getContext().sparqlVarOccurrences(),
-                "project_table",
-                sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1,
                 sqlVariables
         );
 
         SQLQuery newSQLQuery = new SQLQuery(sqlQuery.getSql(), sqlContext);
 
         return new SQLQuery(
-                getSqlProjectionsQuery(newSQLQuery) + " FROM (" + sqlQuery.getSql() + ") " +
-                        newSQLQuery.getContext().tableName() + newSQLQuery.getContext().tableIndex(),
+                getSqlProjectionsQuery(newSQLQuery) + " FROM (" + sqlQuery.getSql() + ") project_table",
                 sqlContext
         );
     }
@@ -57,17 +54,13 @@ public class StSProjectOperator extends StSOperator {
         return "SELECT " + sqlQuery.getContext().sqlVariables().stream()
                 .map(sqlVariable -> switch (sqlVariable.getSqlVarType()) {
                     case DATA:
-                        yield sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
-                                ".v$" + sqlVariable.getSqlVarName();
+                        yield "project_table.v$" + sqlVariable.getSqlVarName();
                     case BIT_STRING:
-                        yield sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
-                                ".bs$" + sqlVariable.getSqlVarName();
+                        yield "project_table.bs$" + sqlVariable.getSqlVarName();
                     case GRAPH_NAME:
-                        yield sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
-                                ".ng$" + sqlVariable.getSqlVarName();
+                        yield "project_table.ng$" + sqlVariable.getSqlVarName();
                     case VERSIONED_NAMED_GRAPH:
-                        yield sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() +
-                                ".vng$" + sqlVariable.getSqlVarName();
+                        yield "project_table.vng$" + sqlVariable.getSqlVarName();
                 })
                 .collect(Collectors.joining(", "));
     }

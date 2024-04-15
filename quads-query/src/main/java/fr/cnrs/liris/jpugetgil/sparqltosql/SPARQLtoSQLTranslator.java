@@ -7,6 +7,7 @@ import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.*;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -43,34 +44,23 @@ public class SPARQLtoSQLTranslator {
      */
     public String translate(Query query) {
         Op op = Algebra.compile(query);
-
         SQLQuery qu = buildSPARQLContext(op);
 
-        SQLContext sqlContext = new SQLContext(
-                qu.getContext().graph(),
-                qu.getContext().sparqlVarOccurrences(),
-                "indexes_table",
-                qu.getContext().tableIndex() == null ? 0 : qu.getContext().tableIndex() + 1,
-                qu.getContext().sqlVariables()
-        );
-
-        // Join with resource or literal table for each variable
-        String select = "SELECT " + getSelectVariablesResourceOrLiteral(sqlContext);
-        String from = " FROM (" + qu.getSql() + ") " + sqlContext.tableName() + sqlContext.tableIndex();
-        String join = getJoinVariablesResourceOrLiteral(sqlContext);
+        String select = "SELECT " + getSelectVariablesResourceOrLiteral(qu.getContext().sqlVariables());
+        String from = " FROM (" + qu.getSql() + ") indexes_table";
+        String join = getJoinVariablesResourceOrLiteral(qu.getContext().sqlVariables());
 
         SQLQuery finalQuery = new SQLQuery(
                 select + from + join,
-                sqlContext
+                qu.getContext()
         );
 
         log.info(finalQuery.getSql());
-
         return finalQuery.getSql();
     }
 
     private SQLQuery buildSPARQLContext(Op op) {
-        return buildSPARQLContext(op, new SQLContext(null, new HashMap<>(), null, null, new ArrayList<>()));
+        return buildSPARQLContext(op, new SQLContext(null, new HashMap<>(), new ArrayList<>()));
     }
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
@@ -96,7 +86,6 @@ public class SPARQLtoSQLTranslator {
             }
             case OpProject opProject -> {
                 SQLQuery sqlQuery = buildSPARQLContext(opProject.getSubOp(), context);
-
                 yield new StSProjectOperator(opProject, sqlQuery)
                         .buildSQLQuery();
             }
@@ -130,8 +119,6 @@ public class SPARQLtoSQLTranslator {
                 SQLContext sqlContext = new SQLContext(
                         sqlQuery.getContext().graph(),
                         sqlQuery.getContext().sparqlVarOccurrences(),
-                        "group_table",
-                        sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1,
                         sqlQuery.getContext().sqlVariables() // FIXME
                 );
 
@@ -143,11 +130,9 @@ public class SPARQLtoSQLTranslator {
                         .map(var -> {
                             if (sqlQuery.getContext().sparqlVarOccurrences().get(var).stream()
                                     .anyMatch(SPARQLOccurrence -> SPARQLOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                                return sqlContext.tableName() + sqlContext.tableIndex() +
-                                        ".ng$" + var.getName();
+                                return "group_table.ng$" + var.getName();
                             } else {
-                                return sqlContext.tableName() + sqlContext.tableIndex() +
-                                        ".v$" + var.getName();
+                                return "group_table.v$" + var.getName();
                             }
                         })
                         .collect(Collectors.joining(", "));
@@ -199,9 +184,8 @@ public class SPARQLtoSQLTranslator {
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
                         .add(new SPARQLOccurrence(SPARQLPositionType.GRAPH_NAME, count, SPARQLContextType.DATASET));
 
-                SQLContext cont = context.setGraph(opGraph.getNode(), "sq")
-                        .setVarOccurrences(newVarOccurrences)
-                        .setTableIndex(count);
+                SQLContext cont = context.setGraph(opGraph.getNode())
+                        .setVarOccurrences(newVarOccurrences);
 
                 SQLQuery sqlQuery = buildSPARQLContext(opGraph.getSubOp(), cont);
                 yield new StSGraphOperator(opGraph, sqlQuery)
@@ -249,34 +233,34 @@ public class SPARQLtoSQLTranslator {
     /**
      * Get the SELECT clause of the SQL query with the resource or literal table
      *
-     * @param context the context of the SPARQL query
+     * @param sqlVariables the list of SQL variables
      * @return the SELECT clause of the SQL query
      */
-    private String getSelectVariablesResourceOrLiteral(SQLContext context) {
-        return Streams.mapWithIndex(context.sqlVariables().stream()
+    private String getSelectVariablesResourceOrLiteral(List<SQLVariable> sqlVariables) {
+        return Streams.mapWithIndex(sqlVariables.stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> (
                 "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
         )).collect(Collectors.joining(", "));
     }
 
-    private String getJoinVariablesResourceOrLiteral(SQLContext context) {
-        return Streams.mapWithIndex(context.sqlVariables().stream()
+    private String getJoinVariablesResourceOrLiteral(List<SQLVariable> sqlVariables) {
+        return Streams.mapWithIndex(sqlVariables.stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) ->
                 switch (sqlVariable.getSqlVarType()) {
                     case DATA:
-                        yield " JOIN resource_or_literal rl" + index + " ON " +
-                                context.tableName() + context.tableIndex() + ".v$" + sqlVariable.getSqlVarName() +
+                        yield " JOIN resource_or_literal rl" + index + " ON indexes_table.v$" +
+                                sqlVariable.getSqlVarName() +
                                 " = rl" + index + ".id_resource_or_literal";
                     case GRAPH_NAME:
-                        yield " JOIN versioned_named_graph vng" + index + " ON " + context.tableName() +
-                                context.tableIndex() + ".ng$" + sqlVariable.getSqlVarName() + " = vng" + index +
-                                ".id_named_graph AND get_bit(" + context.tableName() + context.tableIndex() +
-                                ".bs$" + sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
+                        yield " JOIN versioned_named_graph vng" + index + " ON indexes_table.ng$" +
+                                sqlVariable.getSqlVarName() + " = vng" + index +
+                                ".id_named_graph AND get_bit(indexes_table.bs$" +
+                                sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
                                 " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
                                 index + ".id_resource_or_literal";
                     case VERSIONED_NAMED_GRAPH:
                         yield " JOIN resource_or_literal rl" + index + " ON " +
-                                context.tableName() + context.tableIndex() + ".vng$" + sqlVariable.getSqlVarName() +
+                                "indexes_table.vng$" + sqlVariable.getSqlVarName() +
                                 " = rl" + index + ".id_resource_or_literal";
                     default:
                         yield "";

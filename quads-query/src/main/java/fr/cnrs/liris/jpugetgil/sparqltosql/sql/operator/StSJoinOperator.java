@@ -22,15 +22,6 @@ public class StSJoinOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
-        SQLContext leftContext = leftSQLQuery.getContext()
-                .setTableName("left_table")
-                .setTableIndex(leftSQLQuery.getContext().tableIndex() == null ? 0 : leftSQLQuery.getContext().tableIndex() + 1);
-        leftSQLQuery.setContext(leftContext);
-        SQLContext rightContext = rightSQLQuery.getContext()
-                .setTableName("right_table")
-                .setTableIndex(rightSQLQuery.getContext().tableIndex() == null ? 0 : rightSQLQuery.getContext().tableIndex() + 1);
-        rightSQLQuery.setContext(rightContext);
-
         List<SQLVariable> commonVariablesWithoutGraph = new ArrayList<>();
         Node graphLeftVariable = null;
         Node graphRightVariable = null;
@@ -74,53 +65,48 @@ public class StSJoinOperator extends StSOperator {
                                                         rightSQLVar.getSqlVarType() == commonNodeWithoutGraph.getSqlVarType()
                                         ).findFirst()
                                         .orElse(null),
-                                leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex(),
-                                rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex()
+                                "left_table",
+                                "right_table"
                         )
                 )
         );
 
 //        String select = buildSelectVariables(leftSQLQuery.getContext(), rightSQLQuery.getContext(), commonVariables);
         String select = buildSelectVariablesWithoutGraph(leftSQLQuery.getContext(), rightSQLQuery.getContext());
-        if (graphLeftVariable != null && graphRightVariable != null && graphRightVariable.getName().equals(graphLeftVariable.getName())) {
-            select += ", (" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                    ".bs$" + leftSQLQuery.getContext().graph().getName() + " & " +
-                    rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
-                    ".bs$" + rightSQLQuery.getContext().graph().getName() + ") as bs$" + graphVariable.getName() + ", " +
-                    leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() + ".ng$" + graphLeftVariable.getName();
+        if (
+                graphLeftVariable != null && graphRightVariable != null &&
+                        graphRightVariable.getName().equals(graphLeftVariable.getName())
+        ) {
+            select += ", (left_table.bs$" + leftSQLQuery.getContext().graph().getName() + " & right_table.bs$" +
+                    rightSQLQuery.getContext().graph().getName() + ") as bs$" + graphVariable.getName() + ", left_table.ng$" +
+                    graphLeftVariable.getName();
 
             sqlJoinClauseBuilder.and(
                     new NotEqualToOperator()
                             .buildComparisonOperatorSQL(
-                                    "bit_count(" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex()
-                                            + ".bs$" + leftSQLQuery.getContext().graph().getName() +
-                                            " & " + rightSQLQuery.getContext().tableName() +
-                                            rightSQLQuery.getContext().tableIndex() + ".bs$" +
+                                    "bit_count(left_table.bs$" + leftSQLQuery.getContext().graph().getName() +
+                                            " & right_table.bs$" +
                                             rightSQLQuery.getContext().graph().getName() + ")",
                                     "0"
                             )
             ).and(
                     new EqualToOperator()
                             .buildComparisonOperatorSQL(
-                                    leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                                            ".ng$" + leftSQLQuery.getContext().graph().getName(),
-                                    rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
-                                            ".ng$" + rightSQLQuery.getContext().graph().getName()
+                                    "left_table.ng$" + leftSQLQuery.getContext().graph().getName(),
+                                    "right_table.ng$" + rightSQLQuery.getContext().graph().getName()
                             )
             );
         } else if (graphLeftVariable != null && graphRightVariable != null) {
-            select += getContextSelectGraphVariable(leftSQLQuery.getContext()) +
-                    getContextSelectGraphVariable(rightSQLQuery.getContext());
+            select += getContextSelectGraphVariable(leftSQLQuery.getContext(), "left_table") +
+                    getContextSelectGraphVariable(rightSQLQuery.getContext(), "right_table");
         } else if (graphLeftVariable != null) {
-            select += getContextSelectGraphVariable(leftSQLQuery.getContext());
+            select += getContextSelectGraphVariable(leftSQLQuery.getContext(), "left_table");
         } else if (graphRightVariable != null) {
-            select += getContextSelectGraphVariable(rightSQLQuery.getContext());
+            select += getContextSelectGraphVariable(rightSQLQuery.getContext(), "right_table");
         }
 
-        String sql = "SELECT " + select + " FROM (" + leftSQLQuery.getSql() + ") " +
-                leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                " JOIN (" + rightSQLQuery.getSql() + ") " + rightSQLQuery.getContext().tableName() +
-                rightSQLQuery.getContext().tableIndex() + " ON " + sqlJoinClauseBuilder.build().clause;
+        String sql = "SELECT " + select + " FROM (" + leftSQLQuery.getSql() + ") left_table JOIN (" +
+                rightSQLQuery.getSql() + ") right_table ON " + sqlJoinClauseBuilder.build().clause;
 
         Map<Node, List<SPARQLOccurrence>> mergedOccurrences = mergeMapOccurrences(
                 leftSQLQuery.getContext().sparqlVarOccurrences(),
@@ -139,17 +125,15 @@ public class StSJoinOperator extends StSOperator {
         SQLContext context = new SQLContext(
                 graphVariable,
                 mergedOccurrences,
-                "join",
-                leftSQLQuery.getContext().tableIndex() + 1,
                 this.sqlVariables
         );
         return new SQLQuery(sql, context);
     }
 
-    private String getContextSelectGraphVariable(SQLContext context) {
-        return ", " + context.tableName() + context.tableIndex() +
+    private String getContextSelectGraphVariable(SQLContext context, String tableName) {
+        return ", " + tableName +
                 ".ng$" + context.graph().getName() + ", " +
-                context.tableName() + context.tableIndex() + ".bs$" +
+                tableName + ".bs$" +
                 context.graph().getName();
     }
 
@@ -175,9 +159,9 @@ public class StSJoinOperator extends StSOperator {
 
         return unionSelect.stream().map(var -> {
             if (leftSelect.contains(var)) {
-                return leftContext.tableName() + leftContext.tableIndex() + var;
+                return "left_table" + var;
             }
-            return rightContext.tableName() + rightContext.tableIndex() + var;
+            return "right_table" + var;
         }).collect(Collectors.joining(", "));
     }
 

@@ -63,17 +63,15 @@ public class StSGraphOperator extends StSOperator {
         String select = "SELECT " + context.sqlVariables().stream()
                 .map(sqlVariable -> {
                     if (sqlVariable.getSqlVarType() == SQLVarType.BIT_STRING) {
-                        return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() + ".bs$" +
-                                sqlQuery.getContext().graph().getName();
+                        return "graph.bs$" + sqlQuery.getContext().graph().getName();
                     } else if (sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME) {
-                        return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() + ".ng$" +
-                                sqlQuery.getContext().graph().getName();
+                        return "graph.ng$" + sqlQuery.getContext().graph().getName();
                     } else {
-                        return sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex() + ".v$" + sqlVariable.getSqlVarName();
+                        return "graph.v$" + sqlVariable.getSqlVarName();
                     }
                 }).collect(Collectors.joining(", "));
 
-        String from = " FROM (" + sqlQuery.getSql() + ") " + sqlQuery.getContext().tableName() + sqlQuery.getContext().tableIndex();
+        String from = " FROM (" + sqlQuery.getSql() + ") graph";
 
         return select + from;
     }

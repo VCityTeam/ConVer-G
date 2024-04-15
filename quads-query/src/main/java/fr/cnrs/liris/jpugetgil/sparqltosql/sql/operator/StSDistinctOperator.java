@@ -16,14 +16,12 @@ public class StSDistinctOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 sqlQuery.getContext().graph(),
                 sqlQuery.getContext().sparqlVarOccurrences(),
-                "distinct_table",
-                sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1,
                 sqlQuery.getContext().sqlVariables()
         );
 
         return new SQLQuery(
                 "SELECT DISTINCT * FROM (" + sqlQuery.getSql() +
-                        ") " + sqlContext.tableName() + sqlContext.tableIndex(),
+                        ") distinct_table",
                 sqlContext
         );
     }

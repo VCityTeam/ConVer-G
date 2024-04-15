@@ -41,13 +41,11 @@ public class StSUnionOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 graph,
                 varOccurrences,
-                "union_table",
-                leftQuery.getContext().tableIndex() == null ? 0 : leftQuery.getContext().tableIndex() + 1,
                 this.sqlVariables
         );
 
         return new SQLQuery(
-                "SELECT * FROM (" + leftQuery.getSql() + ") UNION (" + rightQuery.getSql() + ")",
+                "SELECT * FROM (" + leftQuery.getSql() + ") UNION (" + rightQuery.getSql() + ") union_table",
                 sqlContext
         );
     }
