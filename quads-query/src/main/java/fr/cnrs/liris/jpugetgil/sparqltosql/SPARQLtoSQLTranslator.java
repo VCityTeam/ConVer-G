@@ -74,22 +74,10 @@ public class SPARQLtoSQLTranslator {
     }
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
-
         return switch (op) {
             case OpJoin opJoin -> {
                 SQLQuery leftSQLQuery = buildSPARQLContext(opJoin.getLeft(), context);
-                SQLContext leftContext = leftSQLQuery.getContext()
-                        .setTableName("left_table")
-                        .setTableIndex(leftSQLQuery.getContext().tableIndex() == null ? 0 : leftSQLQuery.getContext().tableIndex() + 1);
-                leftSQLQuery.setContext(leftContext);
-
                 SQLQuery rightSQLQuery = buildSPARQLContext(opJoin.getRight(), context);
-                SQLContext rightContext = rightSQLQuery.getContext()
-                        .setTableName("right_table")
-                        .setTableIndex(rightSQLQuery.getContext().tableIndex() == null ? 0 : rightSQLQuery.getContext().tableIndex() + 1);
-                rightSQLQuery.setContext(rightContext);
-
-                // FIXME : Need to be fixed because the refactoring broke the code
                 yield new StSJoinOperator(leftSQLQuery, rightSQLQuery)
                         .buildSQLQuery();
             }
@@ -128,19 +116,8 @@ public class SPARQLtoSQLTranslator {
             }
             case OpDistinct opDistinct -> {
                 SQLQuery sqlQuery = buildSPARQLContext(opDistinct.getSubOp(), context);
-                SQLContext sqlContext = new SQLContext(
-                        sqlQuery.getContext().graph(),
-                        sqlQuery.getContext().sparqlVarOccurrences(),
-                        "distinct_table",
-                        sqlQuery.getContext().tableIndex() == null ? 0 : sqlQuery.getContext().tableIndex() + 1,
-                        sqlQuery.getContext().sqlVariables()
-                );
-
-                yield new SQLQuery(
-                        "SELECT DISTINCT * FROM (" + sqlQuery.getSql() +
-                                ") " + sqlContext.tableName() + sqlContext.tableIndex(),
-                        sqlContext
-                );
+                yield new StSDistinctOperator(sqlQuery)
+                        .buildSQLQuery();
             }
             case OpFilter opFilter -> {
                 yield buildSPARQLContext(opFilter.getSubOp(), null);
@@ -202,7 +179,6 @@ public class SPARQLtoSQLTranslator {
             }
             case OpBGP opBGP -> {
                 SQLContext cont = addURIsToContext(opBGP, context);
-
                 yield new StSBGPOperator(opBGP, cont)
                         .buildSQLQuery();
             }

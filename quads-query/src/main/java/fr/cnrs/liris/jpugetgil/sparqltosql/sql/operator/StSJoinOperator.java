@@ -1,11 +1,7 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLClause;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.EqualToOperator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.NotEqualToOperator;
 import org.apache.jena.graph.Node;
@@ -26,27 +22,29 @@ public class StSJoinOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
-        List<String> commonVariables = new ArrayList<>();
-        List<Node> commonNodesWithoutGraph = new ArrayList<>();
+        SQLContext leftContext = leftSQLQuery.getContext()
+                .setTableName("left_table")
+                .setTableIndex(leftSQLQuery.getContext().tableIndex() == null ? 0 : leftSQLQuery.getContext().tableIndex() + 1);
+        leftSQLQuery.setContext(leftContext);
+        SQLContext rightContext = rightSQLQuery.getContext()
+                .setTableName("right_table")
+                .setTableIndex(rightSQLQuery.getContext().tableIndex() == null ? 0 : rightSQLQuery.getContext().tableIndex() + 1);
+        rightSQLQuery.setContext(rightContext);
+
+        List<SQLVariable> commonVariablesWithoutGraph = new ArrayList<>();
         Node graphLeftVariable = null;
         Node graphRightVariable = null;
         Node graphVariable = null;
 
-        leftSQLQuery.getContext().sqlVariables().forEach(leftSQLVar -> {
-            if (rightSQLQuery.getContext().sqlVariables().stream()
-                    .anyMatch(rightSQLVar -> rightSQLVar.getSqlVarName().equals(leftSQLVar.getSqlVarName()))) {
-                commonVariables.add(leftSQLVar.getSqlVarName());
-            }
-        });
-
-        // build commonNodesWithoutGraph
-        leftSQLQuery.getContext().sparqlVarOccurrences().keySet().forEach(node -> {
-            if (rightSQLQuery.getContext().sparqlVarOccurrences().containsKey(node)
-                    && rightSQLQuery.getContext().sparqlVarOccurrences().get(node).stream()
-                    .anyMatch(SPARQLOccurrence -> SPARQLOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                commonNodesWithoutGraph.add(node);
-            }
-        });
+        leftSQLQuery.getContext().sqlVariables().stream()
+                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.DATA)
+                .forEach(leftSQLVar -> {
+                    if (rightSQLQuery.getContext().sqlVariables().stream()
+                            .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.DATA)
+                            .anyMatch(rightSQLVar -> rightSQLVar.getSqlVarName().equals(leftSQLVar.getSqlVarName()))) {
+                        commonVariablesWithoutGraph.add(leftSQLVar);
+                    }
+                });
 
         // for loop rightSQLQuery sparqlVarOccurrences
         if (rightSQLQuery.getContext().graph() instanceof Node_Variable) {
@@ -59,27 +57,39 @@ public class StSJoinOperator extends StSOperator {
             graphVariable = leftSQLQuery.getContext().graph();
         }
 
-        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+        SQLClause.SQLClauseBuilder sqlJoinClauseBuilder = new SQLClause.SQLClauseBuilder();
 
-        commonNodesWithoutGraph.forEach(node -> sqlClauseBuilder.and(
-                new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                                        ".v$" + node.getName(),
-                                rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
-                                        ".v$" + node.getName()
+        commonVariablesWithoutGraph.forEach(commonNodeWithoutGraph ->
+                sqlJoinClauseBuilder.and(
+                        Objects.requireNonNull(leftSQLQuery.getContext().sqlVariables().stream()
+                                .filter(leftSQLVar ->
+                                        leftSQLVar.getSqlVarName().equals(commonNodeWithoutGraph.getSqlVarName()) &&
+                                                leftSQLVar.getSqlVarType() == commonNodeWithoutGraph.getSqlVarType()
+                                ).findFirst()
+                                .orElse(null)
+                        ).join(
+                                rightSQLQuery.getContext().sqlVariables().stream()
+                                        .filter(rightSQLVar ->
+                                                rightSQLVar.getSqlVarName().equals(commonNodeWithoutGraph.getSqlVarName()) &&
+                                                        rightSQLVar.getSqlVarType() == commonNodeWithoutGraph.getSqlVarType()
+                                        ).findFirst()
+                                        .orElse(null),
+                                leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex(),
+                                rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex()
                         )
-        ));
+                )
+        );
 
 //        String select = buildSelectVariables(leftSQLQuery.getContext(), rightSQLQuery.getContext(), commonVariables);
         String select = buildSelectVariablesWithoutGraph(leftSQLQuery.getContext(), rightSQLQuery.getContext());
-        if (graphRightVariable != null && graphLeftVariable != null) {
+        if (graphLeftVariable != null && graphRightVariable != null && graphRightVariable.getName().equals(graphLeftVariable.getName())) {
             select += ", (" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                    ".ng$" + leftSQLQuery.getContext().graph().getName() + " & " +
+                    ".bs$" + leftSQLQuery.getContext().graph().getName() + " & " +
                     rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
-                    ".ng$" + rightSQLQuery.getContext().graph().getName() + ") as ng$" + graphVariable.getName();
+                    ".bs$" + rightSQLQuery.getContext().graph().getName() + ") as bs$" + graphVariable.getName() + ", " +
+                    leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() + ".ng$" + graphLeftVariable.getName();
 
-            sqlClauseBuilder.and(
+            sqlJoinClauseBuilder.and(
                     new NotEqualToOperator()
                             .buildComparisonOperatorSQL(
                                     "bit_count(" + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex()
@@ -89,27 +99,28 @@ public class StSJoinOperator extends StSOperator {
                                             rightSQLQuery.getContext().graph().getName() + ")",
                                     "0"
                             )
+            ).and(
+                    new EqualToOperator()
+                            .buildComparisonOperatorSQL(
+                                    leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
+                                            ".ng$" + leftSQLQuery.getContext().graph().getName(),
+                                    rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
+                                            ".ng$" + rightSQLQuery.getContext().graph().getName()
+                            )
             );
+        } else if (graphLeftVariable != null && graphRightVariable != null) {
+            select += getContextSelectGraphVariable(leftSQLQuery.getContext()) +
+                    getContextSelectGraphVariable(rightSQLQuery.getContext());
         } else if (graphLeftVariable != null) {
-            if (leftSQLQuery.getContext().graph() != null) {
-                select += ", " + leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
-                        ".ng$" + leftSQLQuery.getContext().graph().getName() + ", " +
-                        leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() + ".bs$" +
-                        leftSQLQuery.getContext().graph().getName();
-            }
+            select += getContextSelectGraphVariable(leftSQLQuery.getContext());
         } else if (graphRightVariable != null) {
-            if (rightSQLQuery.getContext().graph() != null) {
-                select += ", " + rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() +
-                        ".ng$" + rightSQLQuery.getContext().graph().getName() + ", " +
-                        rightSQLQuery.getContext().tableName() + rightSQLQuery.getContext().tableIndex() + ".bs$" +
-                        rightSQLQuery.getContext().graph().getName();
-            }
+            select += getContextSelectGraphVariable(rightSQLQuery.getContext());
         }
 
         String sql = "SELECT " + select + " FROM (" + leftSQLQuery.getSql() + ") " +
                 leftSQLQuery.getContext().tableName() + leftSQLQuery.getContext().tableIndex() +
                 " JOIN (" + rightSQLQuery.getSql() + ") " + rightSQLQuery.getContext().tableName() +
-                rightSQLQuery.getContext().tableIndex() + " ON " + sqlClauseBuilder.build().clause;
+                rightSQLQuery.getContext().tableIndex() + " ON " + sqlJoinClauseBuilder.build().clause;
 
         Map<Node, List<SPARQLOccurrence>> mergedOccurrences = mergeMapOccurrences(
                 leftSQLQuery.getContext().sparqlVarOccurrences(),
@@ -118,7 +129,9 @@ public class StSJoinOperator extends StSOperator {
 
         this.sqlVariables = leftSQLQuery.getContext().sqlVariables();
         for (SQLVariable sqlVariable : rightSQLQuery.getContext().sqlVariables()) {
-            if (!this.sqlVariables.contains(sqlVariable)) {
+            if (this.sqlVariables.stream()
+                    .noneMatch(sqlVar -> sqlVar.getSqlVarName().equals(sqlVariable.getSqlVarName()))
+            ) {
                 this.sqlVariables.add(sqlVariable);
             }
         }
@@ -133,88 +146,12 @@ public class StSJoinOperator extends StSOperator {
         return new SQLQuery(sql, context);
     }
 
-//    private String buildSelectVariables(SQLContext leftContext, SQLContext rightContext, List<String> commonVariables) {
-//        for (String commonVariable : commonVariables) {
-//            SQLVariable leftSQLVar = leftContext.sqlVariables().stream()
-//                    .filter(sqlVariable -> sqlVariable.getSqlVarName().equals(commonVariable))
-//                    .findFirst()
-//                    .orElse(null);
-//            SQLVariable rightSQLVar = rightContext.sqlVariables().stream()
-//                    .filter(sqlVariable -> sqlVariable.getSqlVarName().equals(commonVariable))
-//                    .findFirst()
-//                    .orElse(null);
-//            String common = buildSelectVariable(leftSQLVar, rightSQLVar);
-//        }
-//        return "";
-//    }
-
-//    private String buildSelectVariable(SQLVariable leftSQLVar, SQLVariable rightSQLVar) {
-//        return switch (leftSQLVar.getSqlVarType()) {
-//            case DATA -> {
-//                yield switch (rightSQLVar.getSqlVarType()) {
-//                    case DATA -> ".v$" + leftSQLVar.getSqlVarName();
-//                    case VERSIONED_NAMED_GRAPH -> {
-//                        yield null;
-//                    }
-//                    case BIT_STRING -> {
-//                        yield null;
-//                    }
-//                    case GRAPH_NAME -> {
-//                        yield null;
-//                    }
-//                };
-//            }
-//            case VERSIONED_NAMED_GRAPH -> {
-//                yield switch (rightSQLVar.getSqlVarType()) {
-//                    case DATA -> {
-//                        yield null;
-//                    }
-//                    case VERSIONED_NAMED_GRAPH -> {
-//                        yield null;
-//                    }
-//                    case BIT_STRING -> {
-//                        yield null;
-//                    }
-//                    case GRAPH_NAME -> {
-//                        yield null;
-//                    }
-//                };
-//            }
-//            case BIT_STRING -> {
-//                yield switch (rightSQLVar.getSqlVarType()) {
-//                    case DATA -> {
-//                        yield null;
-//                    }
-//                    case VERSIONED_NAMED_GRAPH -> {
-//                        yield null;
-//                    }
-//                    case BIT_STRING -> {
-//                        yield "bit_count(" + leftSQLVar.getSqlVarName() + " & " + rightSQLVar.getSqlVarName() + ") as bs$" +
-//                                leftSQLVar.getSqlVarName();
-//                    }
-//                    case GRAPH_NAME -> {
-//                        yield null;
-//                    }
-//                };
-//            }
-//            case GRAPH_NAME -> {
-//                yield switch (rightSQLVar.getSqlVarType()) {
-//                    case DATA -> {
-//                        yield null;
-//                    }
-//                    case VERSIONED_NAMED_GRAPH -> {
-//                        yield null;
-//                    }
-//                    case BIT_STRING -> {
-//                        yield null;
-//                    }
-//                    case GRAPH_NAME -> {
-//                        yield null;
-//                    }
-//                };
-//            };
-//        }
-//    }
+    private String getContextSelectGraphVariable(SQLContext context) {
+        return ", " + context.tableName() + context.tableIndex() +
+                ".ng$" + context.graph().getName() + ", " +
+                context.tableName() + context.tableIndex() + ".bs$" +
+                context.graph().getName();
+    }
 
     private String buildSelectVariablesWithoutGraph(SQLContext leftContext, SQLContext rightContext) {
         Set<String> leftSelect = leftContext.sparqlVarOccurrences().keySet().stream()
