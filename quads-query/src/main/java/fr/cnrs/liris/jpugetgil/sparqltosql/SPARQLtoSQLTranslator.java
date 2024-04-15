@@ -93,6 +93,10 @@ public class SPARQLtoSQLTranslator {
                     null,
                     context
             );
+            case OpTriple ignored -> new SQLQuery(
+                    null,
+                    context
+            );
             case OpQuadPattern opQuadPattern -> {
                 opQuadPattern.getGraphNode().getURI();
                 yield null;
@@ -116,33 +120,8 @@ public class SPARQLtoSQLTranslator {
             }
             case OpGroup opGroup -> {
                 SQLQuery sqlQuery = buildSPARQLContext(opGroup.getSubOp(), context);
-                SQLContext sqlContext = new SQLContext(
-                        sqlQuery.getContext().graph(),
-                        sqlQuery.getContext().sparqlVarOccurrences(),
-                        sqlQuery.getContext().sqlVariables() // FIXME
-                );
-
-                // TODO : GROUP BY
-                VarExprList exprList = opGroup.getGroupVars();
-                List<Var> vars = exprList.getVars();
-                Map<Var, Expr> exprVar = exprList.getExprs();
-                String groupBy = vars.stream()
-                        .map(var -> {
-                            if (sqlQuery.getContext().sparqlVarOccurrences().get(var).stream()
-                                    .anyMatch(SPARQLOccurrence -> SPARQLOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                                return "group_table.ng$" + var.getName();
-                            } else {
-                                return "group_table.v$" + var.getName();
-                            }
-                        })
-                        .collect(Collectors.joining(", "));
-
-                // FIXME : projections
-                yield new SQLQuery(
-                        "SELECT * FROM (" + sqlQuery.getSql() +
-                                ") GROUP BY (" + groupBy + ")",
-                        sqlContext
-                );
+                yield new StSGroupOperator(opGroup, sqlQuery)
+                        .buildSQLQuery();
             }
             case OpSlice opSlice -> {
                 yield buildSPARQLContext(opSlice.getSubOp(), null);
@@ -190,11 +169,6 @@ public class SPARQLtoSQLTranslator {
                 SQLQuery sqlQuery = buildSPARQLContext(opGraph.getSubOp(), cont);
                 yield new StSGraphOperator(opGraph, sqlQuery)
                         .buildSQLQuery();
-            }
-            case OpTriple opTriple -> {
-//                context.getTriples().add(opTriple.getTriple());
-//                return context.buildSQL();
-                yield null;
             }
             default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
         };
