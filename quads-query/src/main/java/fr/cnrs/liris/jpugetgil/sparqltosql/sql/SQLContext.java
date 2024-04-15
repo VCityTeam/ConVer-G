@@ -1,5 +1,6 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
 import org.apache.jena.graph.Node;
 
 import java.util.List;

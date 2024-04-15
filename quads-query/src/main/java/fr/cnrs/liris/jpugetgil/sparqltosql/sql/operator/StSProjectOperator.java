@@ -1,8 +1,8 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql.sql.context;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLContext;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLVariable;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.algebra.op.OpProject;
 
 import java.util.ArrayList;

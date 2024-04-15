@@ -1,7 +1,13 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.context.*;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLContextType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.*;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
@@ -215,7 +221,7 @@ public class SPARQLtoSQLTranslator {
 
                 newVarOccurrences
                         .computeIfAbsent(opGraph.getNode(), k -> new ArrayList<>())
-                        .add(new SPARQLOccurrence(SPARQLPositionType.GRAPH_NAME, count, ContextType.DATASET));
+                        .add(new SPARQLOccurrence(SPARQLPositionType.GRAPH_NAME, count, SPARQLContextType.DATASET));
 
                 SQLContext cont = context.setGraph(opGraph.getNode(), "sq")
                         .setVarOccurrences(newVarOccurrences)
@@ -243,7 +249,7 @@ public class SPARQLtoSQLTranslator {
      */
     private SQLContext addURIsToContext(OpBGP opBGP, SQLContext context) {
         Map<Node, List<SPARQLOccurrence>> newVarOccurrences = new HashMap<>(context.sparqlVarOccurrences());
-        ContextType contextType = context.graph() == null ? ContextType.WORKSPACE : ContextType.DATASET;
+        SPARQLContextType sparqlContextType = context.graph() == null ? SPARQLContextType.WORKSPACE : SPARQLContextType.DATASET;
 
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
             Triple triple = opBGP.getPattern().getList().get(i);
@@ -252,11 +258,11 @@ public class SPARQLtoSQLTranslator {
             Node object = triple.getObject();
 
             newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.SUBJECT, i, contextType));
+                    .add(new SPARQLOccurrence(SPARQLPositionType.SUBJECT, i, sparqlContextType));
             newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.PROPERTY, i, contextType));
+                    .add(new SPARQLOccurrence(SPARQLPositionType.PROPERTY, i, sparqlContextType));
             newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.OBJECT, i, contextType));
+                    .add(new SPARQLOccurrence(SPARQLPositionType.OBJECT, i, sparqlContextType));
 
             context = context.setVarOccurrences(newVarOccurrences);
         }

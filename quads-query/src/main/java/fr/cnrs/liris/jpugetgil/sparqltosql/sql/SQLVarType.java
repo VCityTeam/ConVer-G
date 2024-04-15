@@ -1,4 +1,4 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
 public enum SQLVarType {
     DATA,

@@ -1,9 +1,13 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql.sql.context;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.*;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLClause;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.EqualToOperator;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.NotEqualToOperator;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.EqualToOperator;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.NotEqualToOperator;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_Variable;
 

@@ -1,4 +1,4 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
 /**
  * This class represents a SQL variable.

@@ -1,15 +1,15 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sparql;
 
 public class SPARQLOccurrence {
     private SPARQLPositionType type;
     private Integer position;
 
-    private ContextType contextType;
+    private SPARQLContextType SPARQLContextType;
 
-    public SPARQLOccurrence(SPARQLPositionType type, Integer position, ContextType contextType) {
+    public SPARQLOccurrence(SPARQLPositionType type, Integer position, SPARQLContextType SPARQLContextType) {
         this.type = type;
         this.position = position;
-        this.contextType = contextType;
+        this.SPARQLContextType = SPARQLContextType;
     }
 
     public SPARQLPositionType getType() {
@@ -28,11 +28,11 @@ public class SPARQLOccurrence {
         this.position = position;
     }
 
-    public ContextType getContextType() {
-        return contextType;
+    public SPARQLContextType getContextType() {
+        return SPARQLContextType;
     }
 
-    public void setContextType(ContextType contextType) {
-        this.contextType = contextType;
+    public void setContextType(SPARQLContextType SPARQLContextType) {
+        this.SPARQLContextType = SPARQLContextType;
     }
 }
