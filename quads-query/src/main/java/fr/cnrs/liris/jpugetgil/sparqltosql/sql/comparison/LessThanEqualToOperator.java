@@ -1,4 +1,4 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison;
 
 public class LessThanEqualToOperator implements ComparisonOperator {
     @Override

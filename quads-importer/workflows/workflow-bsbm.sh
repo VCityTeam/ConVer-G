@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if the argument is provided
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <number of version> <number of product>"
+    exit 1
+fi
+
 start=$(date +%s)
 
 /bin/bash ./init_stack.sh

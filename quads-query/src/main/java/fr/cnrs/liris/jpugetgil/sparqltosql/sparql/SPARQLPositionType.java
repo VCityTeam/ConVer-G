@@ -1,4 +1,4 @@
-package fr.cnrs.liris.jpugetgil.sparqltosql;
+package fr.cnrs.liris.jpugetgil.sparqltosql.sparql;
 
 public enum SPARQLPositionType {
     SUBJECT,
