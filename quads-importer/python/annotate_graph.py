@@ -69,10 +69,10 @@ class RdfConverter:
             # check if s, p and o are URI or Literal
             subject = self.create_uriref_or_literal(s)
             predicate = URIRef(p)
-            object = self.create_uriref_or_literal(o)
+            obj = self.create_uriref_or_literal(o)
 
             # Ajouter le quadruplet au jeu de données
-            ds.add((subject, predicate, object, named_graph))
+            ds.add((subject, predicate, obj, named_graph))
         if self.annotation_type == 'theoretical':
             self.add_theoretical_annotation(named_graph)
         ds.serialize(destination=output_file,
@@ -95,8 +95,8 @@ class RdfConverter:
                 '''):
                 subject = self.create_uriref_or_literal(s)
                 predicate = URIRef(p)
-                object = self.create_uriref_or_literal(o)
-                workspace_ds.add((subject, predicate, object, workspace_uri))
+                obj = self.create_uriref_or_literal(o)
+                workspace_ds.add((subject, predicate, obj, workspace_uri))
         workspace_ds.add(
             (
                 named_graph,

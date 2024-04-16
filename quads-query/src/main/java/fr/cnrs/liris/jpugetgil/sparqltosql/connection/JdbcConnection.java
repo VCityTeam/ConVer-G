@@ -1,6 +1,5 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.connection;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.VersioningQueryExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,7 @@ import java.util.Objects;
  */
 public class JdbcConnection {
 
-    private static final Logger log = LoggerFactory.getLogger(VersioningQueryExecution.class);
+    private static final Logger log = LoggerFactory.getLogger(JdbcConnection.class);
 
     private static JdbcConnection jdbcConnection;
     private Connection connection;

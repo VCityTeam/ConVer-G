@@ -4,12 +4,12 @@ public class SPARQLOccurrence {
     private SPARQLPositionType type;
     private Integer position;
 
-    private SPARQLContextType SPARQLContextType;
+    private SPARQLContextType sparqlContextType;
 
-    public SPARQLOccurrence(SPARQLPositionType type, Integer position, SPARQLContextType SPARQLContextType) {
+    public SPARQLOccurrence(SPARQLPositionType type, Integer position, SPARQLContextType sparqlContextType) {
         this.type = type;
         this.position = position;
-        this.SPARQLContextType = SPARQLContextType;
+        this.sparqlContextType = sparqlContextType;
     }
 
     public SPARQLPositionType getType() {
@@ -29,10 +29,10 @@ public class SPARQLOccurrence {
     }
 
     public SPARQLContextType getContextType() {
-        return SPARQLContextType;
+        return sparqlContextType;
     }
 
-    public void setContextType(SPARQLContextType SPARQLContextType) {
-        this.SPARQLContextType = SPARQLContextType;
+    public void setContextType(SPARQLContextType sparqlContextType) {
+        this.sparqlContextType = sparqlContextType;
     }
 }

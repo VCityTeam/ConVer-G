@@ -29,12 +29,12 @@ public class StSGroupOperator extends StSOperator {
         List<Var> vars = exprList.getVars();
         Map<Var, Expr> exprVar = exprList.getExprs();
         String groupBy = vars.stream()
-                .map(var -> {
-                    if (sqlQuery.getContext().sparqlVarOccurrences().get(var).stream()
-                            .anyMatch(SPARQLOccurrence -> SPARQLOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                        return "group_table.ng$" + var.getName();
+                .map(variable -> {
+                    if (sqlQuery.getContext().sparqlVarOccurrences().get(variable).stream()
+                            .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
+                        return "group_table.ng$" + variable.getName();
                     } else {
-                        return "group_table.v$" + var.getName();
+                        return "group_table.v$" + variable.getName();
                     }
                 })
                 .collect(Collectors.joining(", "));
