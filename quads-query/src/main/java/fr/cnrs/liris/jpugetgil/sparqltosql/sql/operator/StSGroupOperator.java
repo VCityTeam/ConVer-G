@@ -1,14 +1,15 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
+import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.core.VarExprList;
-import org.apache.jena.sparql.expr.Expr;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StSGroupOperator extends StSOperator {
@@ -27,22 +28,34 @@ public class StSGroupOperator extends StSOperator {
         // TODO : GROUP BY
         VarExprList exprList = op.getGroupVars();
         List<Var> vars = exprList.getVars();
-        Map<Var, Expr> exprVar = exprList.getExprs();
+        String projections = op.getAggregators().stream()
+                .map(exprAggregator -> new Aggregator(exprAggregator)
+                        .toSQLString()
+                ).collect(Collectors.joining(", "));
         String groupBy = vars.stream()
                 .map(variable -> {
                     if (sqlQuery.getContext().sparqlVarOccurrences().get(variable).stream()
                             .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                        return "group_table.ng$" + variable.getName();
+                        throw new IllegalArgumentException("TODO: GROUP BY GRAPH NAME");
                     } else {
-                        return "group_table.v$" + variable.getName();
+                        return "sq.v$" + variable.getName();
                     }
                 })
                 .collect(Collectors.joining(", "));
 
-        // FIXME : projections
+        String explosions = Streams.mapWithIndex(sqlQuery.getContext().sparqlVarOccurrences().keySet()
+                        .stream()
+                        .filter((Node node) -> sqlQuery.getContext().sparqlVarOccurrences().get(node)
+                                .stream()
+                                .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)),
+                (node, index) -> ("JOIN versioned_named_graph vng" + index + " ON vng" +
+                        index + ".id_named_graph = sq.ng$versioned_graph AND get_bit(sq.bs$versioned_graph, vng"
+                        + index + ".index_version) = 1 \n")
+        ).collect(Collectors.joining(", "));
+
         return new SQLQuery(
-                "SELECT * FROM (" + sqlQuery.getSql() +
-                        ") GROUP BY (" + groupBy + ")",
+                "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
+                        ") sq " + explosions + " GROUP BY (" + groupBy + ")",
                 sqlQuery.getContext()
         );
     }

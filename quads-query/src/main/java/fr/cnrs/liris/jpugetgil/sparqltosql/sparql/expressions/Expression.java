@@ -90,6 +90,15 @@ public interface Expression {
     Expr getJenaExpr();
 
     /**
+     * Builds the SQL associated to this expression
+     *
+     * @return the SQL representation of this expression
+     */
+    default String toSQLString() {
+        throw new IllegalArgumentException("This expression does not have a SQL representation.");
+    };
+
+    /**
      * Updates the filter configuration to take this expression's variables into account
      *
      * @param configuration the configuration to update
