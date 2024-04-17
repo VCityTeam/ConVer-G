@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.ExprVar;
 
 public class Var extends AbstractExpression<ExprVar> {
@@ -14,9 +14,9 @@ public class Var extends AbstractExpression<ExprVar> {
     }
 
     @Override
-    public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
+    public void updateFilterConfiguration(ExpressionVariableClassification classification, boolean requiresValue) {
         if (requiresValue) {
-            configuration.addNeedLookupVariable(varName());
+            classification.addNeedLookupVariable(varName());
         }
     }
 

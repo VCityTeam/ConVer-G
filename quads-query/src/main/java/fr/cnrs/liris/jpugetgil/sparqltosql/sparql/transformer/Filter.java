@@ -15,7 +15,7 @@ public class Filter {
     }
 
     public SQLQuery buildSQLQuery(SQLContext context) {
-        var filterCfg = new FilterConfiguration();
+        var filterCfg = new ExpressionVariableClassification();
         expression.updateFilterConfiguration(filterCfg, true);
         // TODO: build from
         // TODO: map variables to values or ids from subquery

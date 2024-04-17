@@ -3,7 +3,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FilterConfiguration {
+public class ExpressionVariableClassification {
     private Set<String> variablesToExplode = new HashSet<>();
     private Set<String> variablesToIntersect = new HashSet<>();
     private Set<String> normalVariables = new HashSet<>();

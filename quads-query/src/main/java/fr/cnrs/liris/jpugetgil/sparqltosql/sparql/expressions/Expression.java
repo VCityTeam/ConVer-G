@@ -2,7 +2,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.constants.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.op.*;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.*;
 import org.apache.jena.sparql.expr.nodevalue.*;
 
@@ -90,10 +90,10 @@ public interface Expression {
     Expr getJenaExpr();
 
     /**
-     * Updates the filter configuration to take this expression's variables into account
+     * Updates the variable classification to take this expression's variables into account
      *
-     * @param configuration the configuration to update
+     * @param classification the classification to update
      * @param requiresValue true if the value is required, false if the int representation is sufficient
      */
-    void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue);
+    void updateFilterConfiguration(ExpressionVariableClassification classification, boolean requiresValue);
 }

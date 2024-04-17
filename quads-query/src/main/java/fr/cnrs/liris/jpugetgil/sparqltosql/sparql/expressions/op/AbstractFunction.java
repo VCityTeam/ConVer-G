@@ -2,7 +2,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.op;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.AbstractExpression;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Expression;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.ExprFunction;
 
 public abstract class AbstractFunction<E extends ExprFunction> extends AbstractExpression<E> {
@@ -16,9 +16,9 @@ public abstract class AbstractFunction<E extends ExprFunction> extends AbstractE
     }
 
     @Override
-    public void updateFilterConfiguration(FilterConfiguration configuration, boolean unusedRequiresValue) {
+    public void updateFilterConfiguration(ExpressionVariableClassification classification, boolean unusedRequiresValue) {
         for (Expression e : args) {
-            e.updateFilterConfiguration(configuration, this.requiresValue);
+            e.updateFilterConfiguration(classification, this.requiresValue);
         }
     }
 }

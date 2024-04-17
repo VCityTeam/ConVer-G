@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.E_NotExists;
 
 public class NotExists extends AbstractExpression<E_NotExists> {
@@ -9,7 +9,7 @@ public class NotExists extends AbstractExpression<E_NotExists> {
     }
 
     @Override
-    public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
+    public void updateFilterConfiguration(ExpressionVariableClassification classification, boolean requiresValue) {
         throw new IllegalStateException("Not implemented yet"); // TODO: implement
     }
 }

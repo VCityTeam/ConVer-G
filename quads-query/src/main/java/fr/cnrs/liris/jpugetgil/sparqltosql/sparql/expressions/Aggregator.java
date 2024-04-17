@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.ExprAggregator;
 
 public class Aggregator extends AbstractExpression<ExprAggregator> {
@@ -14,7 +14,7 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
     }
 
     @Override
-    public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
+    public void updateFilterConfiguration(ExpressionVariableClassification classification, boolean requiresValue) {
         throw new IllegalStateException("updateFilterConfiguration should not be called on an aggregate value");
     }
 }

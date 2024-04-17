@@ -1,7 +1,7 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.constants;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.AbstractExpression;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.ExpressionVariableClassification;
 import org.apache.jena.sparql.expr.ExprNone;
 
 public class None extends AbstractExpression<ExprNone> {
@@ -15,7 +15,7 @@ public class None extends AbstractExpression<ExprNone> {
     }
 
     @Override
-    public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
+    public void updateFilterConfiguration(ExpressionVariableClassification classification, boolean requiresValue) {
         // nothing to do for constants
     }
 }
