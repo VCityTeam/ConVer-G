@@ -22,6 +22,8 @@ public class WorkspaceComponent {
         return namedParameterJdbcTemplate.queryForObject("""
                         INSERT INTO workspace (id_subject, id_property, id_object)
                         VALUES (:idSubject, :idProperty, :idObject)
+                        ON CONFLICT ON CONSTRAINT workspace_pkey
+                        DO UPDATE SET id_subject = EXCLUDED.id_subject
                         RETURNING *;
                         """,
                 new MapSqlParameterSource()

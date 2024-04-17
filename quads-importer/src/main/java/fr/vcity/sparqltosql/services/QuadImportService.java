@@ -21,9 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 
@@ -31,9 +28,14 @@ import java.util.Iterator;
 @Slf4j
 public class QuadImportService implements IQuadImportService {
 
+    ResourceOrLiteral WORKSPACE_IS_IN_VERSION;
+    ResourceOrLiteral WORKSPACE_IS_VERSION_OF;
+    String WORKSPACE_VERSION_PREFIX = "https://github.com/VCityTeam/SPARQL-to-SQL/Version#";
+    String WORKSPACE_VNG_PREFIX = "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#";
+
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
-    IVersionedWorkspaceRepository versionedWorkspaceRepository;
+    IWorkspaceRepository workspaceRepository;
     IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository;
     VersionedNamedGraphComponent versionedNamedGraphComponent;
     WorkspaceComponent workspaceComponent;
@@ -43,7 +45,7 @@ public class QuadImportService implements IQuadImportService {
     public QuadImportService(
             IResourceOrLiteralRepository rdfResourceRepository,
             IVersionedQuadRepository rdfVersionedQuadRepository,
-            IVersionedWorkspaceRepository versionedWorkspaceRepository,
+            IWorkspaceRepository workspaceRepository,
             IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository,
             VersionedNamedGraphComponent versionedNamedGraphComponent,
             WorkspaceComponent workspaceComponent,
@@ -52,12 +54,15 @@ public class QuadImportService implements IQuadImportService {
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
-        this.versionedWorkspaceRepository = versionedWorkspaceRepository;
+        this.workspaceRepository = workspaceRepository;
         this.rdfVersionedNamedGraphRepository = rdfVersionedNamedGraphRepository;
         this.versionedNamedGraphComponent = versionedNamedGraphComponent;
         this.workspaceComponent = workspaceComponent;
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
+
+        this.WORKSPACE_IS_IN_VERSION = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version", null);
+        this.WORKSPACE_IS_VERSION_OF = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of", null);
     }
 
     /**
@@ -91,9 +96,19 @@ public class QuadImportService implements IQuadImportService {
                         model.createResource(generateVersionedNamedGraph(namedModel.getURI(), file.getOriginalFilename())),
                         "Named Graph"
                 );
+                ResourceOrLiteral resourceOrLiteralVersion = saveRDFResourceOrLiteralOrReturnExisting(
+                        model.createResource(generateVersionURI(file.getOriginalFilename())),
+                        "Version"
+                );
                 saveRDFNamedGraphOrReturnExisting(
                         resourceOrLiteralVNG.getIdResourceOrLiteral(),
                         version.getIndexVersion() - 1,
+                        resourceOrLiteralNG.getIdResourceOrLiteral()
+                );
+
+                saveVersionedNameGraphInsideWorkspace(
+                        resourceOrLiteralVNG.getIdResourceOrLiteral(),
+                        resourceOrLiteralVersion.getIdResourceOrLiteral(),
                         resourceOrLiteralNG.getIdResourceOrLiteral()
                 );
 
@@ -130,10 +145,10 @@ public class QuadImportService implements IQuadImportService {
     @Override
     public void resetDatabase() {
         rdfVersionedQuadRepository.deleteAll();
-        rdfResourceRepository.deleteAll();
         rdfVersionedNamedGraphRepository.deleteAll();
         versionRepository.deleteAll();
-        versionedWorkspaceRepository.deleteAll();
+        rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version", null);
+        rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of", null);
     }
 
     /**
@@ -143,7 +158,6 @@ public class QuadImportService implements IQuadImportService {
      */
     @Override
     public void importWorkspace(MultipartFile file) throws RiotException {
-
         log.info("Current file: {}", file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
@@ -189,7 +203,7 @@ public class QuadImportService implements IQuadImportService {
      * Reset the workspace.
      */
     public void removeWorkspace() {
-        versionedWorkspaceRepository.deleteAll();
+        workspaceRepository.deleteAll();
     }
 
     /**
@@ -247,6 +261,19 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
+     * Saves the RDF Named Graph, Versioned named graph and version inside the workspace
+     *
+     * @param idVNG        The RDF versioned named graph id
+     * @param idURIVersion The RDF version id
+     * @param idNG         The RDF named graph id
+     */
+    private void saveVersionedNameGraphInsideWorkspace(Integer idVNG, Integer idURIVersion, Integer idNG) {
+        log.info("Upsert named graph inside workspace: VNG: {}, in version: {}, versionOfNamedGraph : {}", idVNG, idURIVersion, idNG);
+        workspaceComponent.save(idVNG, this.WORKSPACE_IS_VERSION_OF.getIdResourceOrLiteral(), idNG);
+        workspaceComponent.save(idVNG, this.WORKSPACE_IS_IN_VERSION.getIdResourceOrLiteral(), idURIVersion);
+    }
+
+    /**
      * Saves and return the RDF node inside the database if it doesn't exist, else returns the existing one.
      *
      * @param spo  The RDF node
@@ -271,13 +298,23 @@ public class QuadImportService implements IQuadImportService {
      * Generates the versioned named graph URI
      *
      * @param namedGraphURI The named graph URI
-     * @param filename    The filename
+     * @param filename      The filename
      * @return The versioned graph URI
      */
     private String generateVersionedNamedGraph(String namedGraphURI, String filename) {
-        return "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#" +
+        return WORKSPACE_VNG_PREFIX +
                 DigestUtils.sha256Hex(
-                        StringUtils.getBytesUtf8(namedGraphURI + filename.split("\\.")[0])
+                        StringUtils.getBytesUtf8(namedGraphURI + filename)
                 );
+    }
+
+    /**
+     * Generates the version URI
+     *
+     * @param originalFilename The filename
+     * @return The version URI
+     */
+    private String generateVersionURI(String originalFilename) {
+        return WORKSPACE_VERSION_PREFIX + originalFilename;
     }
 }

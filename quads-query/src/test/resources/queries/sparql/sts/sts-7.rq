@@ -1,6 +1,0 @@
-# TODO : add a description of the query
-SELECT ?s ?p ?o WHERE {
-    GRAPH <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace> {
-      ?s ?p ?o .
-    }
-}

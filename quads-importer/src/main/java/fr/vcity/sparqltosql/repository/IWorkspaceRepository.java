@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface IVersionedWorkspaceRepository extends CrudRepository<Workspace, Integer> {
+public interface IWorkspaceRepository extends CrudRepository<Workspace, Integer> {
 
     @Query(value = """
                 WITH version_transitions AS (

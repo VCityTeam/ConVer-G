@@ -23,13 +23,8 @@ done
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Versions import completed."
 
 ### Import the version transitions
-printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Workspace cleaning started."
 
-curl --location --request DELETE 'http://localhost:8080/import/workspace'
-
-printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Workspace cleaning completed."
-
-printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import started."
-
-printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import completed."
+#printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import started."
+#
+#printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import completed."
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Dataset import completed."

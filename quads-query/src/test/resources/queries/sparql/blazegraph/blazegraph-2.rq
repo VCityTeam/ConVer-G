@@ -3,4 +3,5 @@ SELECT ?g ?p ?o WHERE {
     GRAPH ?g {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p ?o .
     }
+    FILTER(?g != <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace>)
 }

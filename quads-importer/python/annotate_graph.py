@@ -2,8 +2,7 @@ import argparse
 import os
 import hashlib
 import rdflib
-from rdflib import Dataset, URIRef, Literal
-from rdflib.term import _is_valid_uri
+from rdflib import Dataset, URIRef, Literal, ConjunctiveGraph
 
 RDFLIB_INPUT_SUPPORTED_FORMATS = ['turtle', 'ttl', 'turtle2', 'xml',
                                   'pretty-xml', 'json-ld', 'ntriples', 'nt', 'nt11', 'n3', 'trig', 'trix']
@@ -33,17 +32,16 @@ def main():
 class RdfConverter:
     def __init__(self, args):
         self.args = args
-        self.filename = '.'.join(os.path.split(args.input_file)[-1].split('.')[:-1])
+        self.filename = os.path.split(args.input_file)[-1]
         self.graph = rdflib.Graph()
-        self.workspace_graph = rdflib.Graph()
+        self.workspace_graph = ConjunctiveGraph()
         self.version = f'https://github.com/VCityTeam/SPARQL-to-SQL/Version#{self.filename}'
         self.annotation = f'https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#{args.annotation}'
 
         if args.annotation_type == 'theoretical':
             self.graph_name = ('https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#'
                                + hashlib.sha256(
-                                        (
-                                            self.annotation + self.filename.split('.')[0]).encode("utf-8")
+                                        (self.annotation + self.filename).encode("utf-8")
                                     ).hexdigest()
                                )
         else:
@@ -88,14 +86,10 @@ class RdfConverter:
         if os.path.exists('theoretical_annotations.nq'):
             self.workspace_graph.parse(
                 'theoretical_annotations.nq', format='nquads')
-            for s, p, o in self.workspace_graph.query('''
-                SELECT ?s ?p ?o WHERE { 
-                    ?s ?p ?o . 
-                }
-                '''):
-                subject = self.create_uriref_or_literal(s)
-                predicate = URIRef(p)
-                obj = self.create_uriref_or_literal(o)
+            for t in self.workspace_graph:
+                subject = self.create_uriref_or_literal(t[0])
+                predicate = URIRef(t[1])
+                obj = self.create_uriref_or_literal(t[2])
                 workspace_ds.add((subject, predicate, obj, workspace_uri))
         workspace_ds.add(
             (

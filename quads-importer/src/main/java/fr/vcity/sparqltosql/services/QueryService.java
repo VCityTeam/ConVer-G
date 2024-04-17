@@ -7,17 +7,9 @@ import fr.vcity.sparqltosql.dto.Space;
 import fr.vcity.sparqltosql.dto.Workspace;
 import fr.vcity.sparqltosql.repository.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QueryParseException;
-import org.apache.jena.query.Syntax;
-import org.apache.jena.sparql.algebra.Algebra;
-import org.apache.jena.sparql.algebra.Op;
-import org.apache.jena.sparql.algebra.op.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,7 +21,7 @@ public class QueryService implements IQueryService {
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
     IVersionedNamedGraphRepository rdfNamedGraphRepository;
-    IVersionedWorkspaceRepository versionedWorkspaceRepository;
+    IWorkspaceRepository workspaceRepository;
     IVersionRepository versionRepository;
     VersionedQuadComponent versionedQuadComponent;
 
@@ -39,14 +31,14 @@ public class QueryService implements IQueryService {
             IVersionedNamedGraphRepository rdfNamedGraphRepository,
             IVersionRepository versionRepository,
             VersionedQuadComponent versionedQuadComponent,
-            IVersionedWorkspaceRepository versionedWorkspaceRepository
+            IWorkspaceRepository workspaceRepository
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.rdfNamedGraphRepository = rdfNamedGraphRepository;
         this.versionRepository = versionRepository;
         this.versionedQuadComponent = versionedQuadComponent;
-        this.versionedWorkspaceRepository = versionedWorkspaceRepository;
+        this.workspaceRepository = workspaceRepository;
     }
 
     /**
@@ -81,7 +73,7 @@ public class QueryService implements IQueryService {
      */
     @Override
     public Workspace getGraphVersion() {
-        List<ScenarioVersion> scenarios = versionedWorkspaceRepository.getAllScenarios();
+        List<ScenarioVersion> scenarios = workspaceRepository.getAllScenarios();
 
         Workspace workspace = new Workspace();
 

@@ -23,7 +23,4 @@ public class Workspace {
         this.idProperty = idProperty;
         this.idObject = idObject;
     }
-
-    public Workspace() {}
-
 }

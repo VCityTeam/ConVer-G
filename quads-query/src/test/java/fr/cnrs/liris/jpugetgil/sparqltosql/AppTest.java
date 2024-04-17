@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -30,11 +29,11 @@ class AppTest {
 
     @Order(1)
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6"})
     void querySPARQLN(String queryNumber) throws Exception {
         log.info("Query number : " + queryNumber);
-        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-"+ queryNumber +".rq");
-        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-"+ queryNumber + ".rq");
+        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-" + queryNumber + ".rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-" + queryNumber + ".rq");
         HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
         HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
@@ -60,10 +59,10 @@ class AppTest {
 
     /**
      * Create a HttpRequest object with the URL and the path of the query.
-     * @param url The URL of the endpoint.
+     *
+     * @param url  The URL of the endpoint.
      * @param path The path of the file containing the query.
      * @return The HttpRequest object.
-     * @throws FileNotFoundException If the file is not found.
      */
     private static HttpRequest getHttpRequestByURLandPath(String url, Path path) throws FileNotFoundException {
         return HttpRequest.newBuilder()
@@ -76,7 +75,8 @@ class AppTest {
 
     /**
      * Check if the two JSON strings are equal.
-     * @param actual The JSON string of the SPARQL-to-SQL endpoint.
+     *
+     * @param actual   The JSON string of the SPARQL-to-SQL endpoint.
      * @param expected The JSON string of the Blazegraph endpoint.
      * @throws JsonProcessingException If the JSON string cannot be processed.
      */

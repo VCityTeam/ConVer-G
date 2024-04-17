@@ -16,6 +16,7 @@ public class VersionedNamedGraphComponent {
     public RDFVersionedNamedGraph save(Integer idVersionedNamedGraph, Integer index, Integer idNamedGraph) {
         return namedParameterJdbcTemplate.queryForObject("""
                         INSERT INTO versioned_named_graph VALUES (:idVersionedNamedGraph, :idNamedGraph, :index)
+                        ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
                         RETURNING *
                         """,
                 new MapSqlParameterSource()
