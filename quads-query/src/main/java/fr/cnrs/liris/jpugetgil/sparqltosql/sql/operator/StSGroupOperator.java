@@ -30,7 +30,7 @@ public class StSGroupOperator extends StSOperator {
         List<Var> vars = exprList.getVars();
         String projections = op.getAggregators().stream()
                 .map(exprAggregator -> new Aggregator(exprAggregator)
-                        .toSQLString()
+                        .toSQLString(this.sqlVariables)
                 ).collect(Collectors.joining(", "));
         String groupBy = vars.stream()
                 .map(variable -> {

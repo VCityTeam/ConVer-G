@@ -28,10 +28,4 @@ public class Var extends AbstractExpression<ExprVar> {
     public String varName() {
         return getJenaExpr().getVarName();
     }
-
-    @Override
-    public String toSQLString() {
-        // FIXME : Detect if the variable is a graph name (bs/ng) or not ?
-        return "$" + varName();
-    }
 }

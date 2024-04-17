@@ -1,7 +1,10 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.AbstractAggregator;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.expr.aggregate.AggAvgDistinct;
+
+import java.util.List;
 
 public class AvgDistinct extends AbstractAggregator<AggAvgDistinct> {
     /**
@@ -14,7 +17,7 @@ public class AvgDistinct extends AbstractAggregator<AggAvgDistinct> {
     }
 
     @Override
-    public String toSQLString() {
+    public String toSQLString(List<SQLVariable> sqlVariables) {
         throw new IllegalStateException("Not implemented yet");
     }
 }
