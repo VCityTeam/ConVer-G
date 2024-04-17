@@ -23,10 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class VersioningQueryExecution implements QueryExecution {
@@ -95,13 +92,13 @@ public class VersioningQueryExecution implements QueryExecution {
                 }
 
                 BindingBuilder bindingBuilder = Binding.builder();
-                for (String var : variables) {
-                    Var variable = Var.alloc(var);
+                for (String v : variables) {
+                    Var variable = Var.alloc(v);
                     Node variableValue;
 
-                    if (rs.getString("name$" + var) != null) {
-                        String value = rs.getString("name$" + var);
-                        String valueType = rs.getString("type$" + var);
+                    if (rs.getString("name$" + v) != null) {
+                        String value = rs.getString("name$" + v);
+                        String valueType = rs.getString("type$" + v);
                         variableValue = valueType == null ?
                                 NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
@@ -178,7 +175,7 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public JsonArray execJson() {
-        return null;
+        return new JsonArray();
     }
 
     @Override

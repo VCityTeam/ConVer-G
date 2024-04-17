@@ -1,8 +1,8 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLContext;
-import fr.cnrs.liris.jpugetgil.sparqltosql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Expression;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
 import org.apache.jena.sparql.algebra.op.OpFilter;
 
 public class Filter {

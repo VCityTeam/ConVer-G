@@ -1,13 +1,10 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLContextType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator.*;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -15,9 +12,6 @@ import org.apache.jena.query.Query;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
-import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.core.VarExprList;
-import org.apache.jena.sparql.expr.Expr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * This class is used to translate a SPARQL query into a SQL query
@@ -44,19 +37,11 @@ public class SPARQLtoSQLTranslator {
      */
     public String translate(Query query) {
         Op op = Algebra.compile(query);
-        SQLQuery qu = buildSPARQLContext(op);
+        SQLQuery qu = buildSPARQLContext(op)
+                .finalizeQuery();
 
-        String select = "SELECT " + getSelectVariablesResourceOrLiteral(qu.getContext().sqlVariables());
-        String from = " FROM (" + qu.getSql() + ") indexes_table";
-        String join = getJoinVariablesResourceOrLiteral(qu.getContext().sqlVariables());
-
-        SQLQuery finalQuery = new SQLQuery(
-                select + from + join,
-                qu.getContext()
-        );
-
-        log.info(finalQuery.getSql());
-        return finalQuery.getSql();
+        log.info(qu.getSql());
+        return qu.getSql();
     }
 
     private SQLQuery buildSPARQLContext(Op op) {
@@ -65,30 +50,24 @@ public class SPARQLtoSQLTranslator {
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
         return switch (op) {
-            case OpJoin opJoin -> {
-                SQLQuery leftSQLQuery = buildSPARQLContext(opJoin.getLeft(), context);
-                SQLQuery rightSQLQuery = buildSPARQLContext(opJoin.getRight(), context);
-                yield new StSJoinOperator(leftSQLQuery, rightSQLQuery)
-                        .buildSQLQuery();
-            }
+            case OpJoin opJoin -> new StSJoinOperator(
+                    buildSPARQLContext(opJoin.getLeft(), context),
+                    buildSPARQLContext(opJoin.getRight(), context)
+            ).buildSQLQuery();
             case OpLeftJoin opLeftJoin -> {
                 // Jointure avec un/des var qui sont dans un optional
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
-                yield null;
+                throw new IllegalArgumentException("TODO: OpLeftJoin not implemented");
             }
-            case OpUnion opUnion -> {
-                SQLQuery leftQuery = buildSPARQLContext(opUnion.getLeft(), context);
-                SQLQuery rightQuery = buildSPARQLContext(opUnion.getRight(), context);
-
-                yield new StSUnionOperator(leftQuery, rightQuery)
-                        .buildSQLQuery();
-            }
-            case OpProject opProject -> {
-                SQLQuery sqlQuery = buildSPARQLContext(opProject.getSubOp(), context);
-                yield new StSProjectOperator(opProject, sqlQuery)
-                        .buildSQLQuery();
-            }
+            case OpUnion opUnion -> new StSUnionOperator(
+                    buildSPARQLContext(opUnion.getLeft(), context),
+                    buildSPARQLContext(opUnion.getRight(), context)
+            ).buildSQLQuery();
+            case OpProject opProject -> new StSProjectOperator(
+                    opProject,
+                    buildSPARQLContext(opProject.getSubOp(), context)
+            ).buildSQLQuery();
             case OpTable ignored -> new SQLQuery(
                     null,
                     context
@@ -97,62 +76,36 @@ public class SPARQLtoSQLTranslator {
                     null,
                     context
             );
-            case OpQuadPattern opQuadPattern -> {
-                opQuadPattern.getGraphNode().getURI();
-                yield null;
-            }
-            case OpExtend opExtend -> {
-                VarExprList varExprList = opExtend.getVarExprList();
-                List<Var> vars = varExprList.getVars();
-                Map<Var, Expr> exprMap = varExprList.getExprs();
-                yield buildSPARQLContext(opExtend.getSubOp(), context);
-            }
-            case OpDistinct opDistinct -> {
-                SQLQuery sqlQuery = buildSPARQLContext(opDistinct.getSubOp(), context);
-                yield new StSDistinctOperator(sqlQuery)
-                        .buildSQLQuery();
-            }
-            case OpFilter opFilter -> {
-                yield buildSPARQLContext(opFilter.getSubOp(), null);
-            }
-            case OpOrder opOrder -> {
-                yield buildSPARQLContext(opOrder.getSubOp(), null);
-            }
-            case OpGroup opGroup -> {
-                SQLQuery sqlQuery = buildSPARQLContext(opGroup.getSubOp(), context);
-                yield new StSGroupOperator(opGroup, sqlQuery)
-                        .buildSQLQuery();
-            }
-            case OpSlice opSlice -> {
-                yield buildSPARQLContext(opSlice.getSubOp(), null);
-            }
-            case OpTopN opTopN -> {
-                yield buildSPARQLContext(opTopN.getSubOp(), null);
-            }
-            case OpPath opPath -> {
-                yield null;
-            }
-            case OpLabel opLabel -> {
-                yield buildSPARQLContext(opLabel.getSubOp(), null);
-            }
-            case OpNull opNull -> {
-                yield buildSPARQLContext(null, context);
-            }
-            case OpList opList -> {
-                yield buildSPARQLContext(opList.getSubOp(), null);
-            }
-            case OpBGP opBGP -> {
-                SQLContext cont = addURIsToContext(opBGP, context);
-                yield new StSBGPOperator(opBGP, cont)
-                        .buildSQLQuery();
-            }
+            case OpNull ignored -> new SQLQuery(
+                    null,
+                    context
+            );
+            case OpDistinct opDistinct -> new StSDistinctOperator(
+                    buildSPARQLContext(opDistinct.getSubOp(), context)
+            ).buildSQLQuery();
+            case OpExtend opExtend -> new StSExtendOperator(
+                    opExtend,
+                    buildSPARQLContext(opExtend.getSubOp(), context)
+            ).buildSQLQuery();
+            case OpGroup opGroup -> new StSGroupOperator(opGroup, buildSPARQLContext(opGroup.getSubOp(), context))
+                    .buildSQLQuery();
+            case OpQuadPattern opQuadPattern -> throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
+            case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
+            case OpSlice opSlice -> throw new IllegalArgumentException("TODO: OpSlice not implemented");
+            case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");
+            case OpTopN opTopN -> throw new IllegalArgumentException("TODO: OpTopN not implemented");
+            case OpPath opPath -> throw new IllegalArgumentException("TODO: OpPath not implemented");
+            case OpLabel opLabel -> throw new IllegalArgumentException("TODO: OpLabel not implemented");
+            case OpList opList -> throw new IllegalArgumentException("TODO: OpList not implemented");
+            case OpBGP opBGP -> new StSBGPOperator(opBGP, addURIsToContext(opBGP, context))
+                    .buildSQLQuery();
             case OpGraph opGraph -> {
                 Integer count = context.sparqlVarOccurrences()
                         .keySet()
                         .stream()
                         .filter(
                                 node -> context.sparqlVarOccurrences().get(node).stream()
-                                        .anyMatch(SPARQLOccurrence -> SPARQLOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)
+                                        .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)
                         )
                         .map(node -> 1)
                         .reduce(0, Integer::sum, Integer::sum);
@@ -166,8 +119,7 @@ public class SPARQLtoSQLTranslator {
                 SQLContext cont = context.setGraph(opGraph.getNode())
                         .setVarOccurrences(newVarOccurrences);
 
-                SQLQuery sqlQuery = buildSPARQLContext(opGraph.getSubOp(), cont);
-                yield new StSGraphOperator(opGraph, sqlQuery)
+                yield new StSGraphOperator(opGraph, buildSPARQLContext(opGraph.getSubOp(), cont))
                         .buildSQLQuery();
             }
             default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
@@ -202,42 +154,5 @@ public class SPARQLtoSQLTranslator {
         }
 
         return context;
-    }
-
-    /**
-     * Get the SELECT clause of the SQL query with the resource or literal table
-     *
-     * @param sqlVariables the list of SQL variables
-     * @return the SELECT clause of the SQL query
-     */
-    private String getSelectVariablesResourceOrLiteral(List<SQLVariable> sqlVariables) {
-        return Streams.mapWithIndex(sqlVariables.stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> (
-                "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
-        )).collect(Collectors.joining(", "));
-    }
-
-    private String getJoinVariablesResourceOrLiteral(List<SQLVariable> sqlVariables) {
-        return Streams.mapWithIndex(sqlVariables.stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) ->
-                switch (sqlVariable.getSqlVarType()) {
-                    case DATA:
-                        yield " JOIN resource_or_literal rl" + index + " ON indexes_table.v$" +
-                                sqlVariable.getSqlVarName() +
-                                " = rl" + index + ".id_resource_or_literal";
-                    case GRAPH_NAME:
-                        yield " JOIN versioned_named_graph vng" + index + " ON indexes_table.ng$" +
-                                sqlVariable.getSqlVarName() + " = vng" + index +
-                                ".id_named_graph AND get_bit(indexes_table.bs$" +
-                                sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
-                                " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
-                                index + ".id_resource_or_literal";
-                    case VERSIONED_NAMED_GRAPH:
-                        yield " JOIN resource_or_literal rl" + index + " ON " +
-                                "indexes_table.vng$" + sqlVariable.getSqlVarName() +
-                                " = rl" + index + ".id_resource_or_literal";
-                    default:
-                        yield "";
-                }).collect(Collectors.joining(" \n"));
     }
 }

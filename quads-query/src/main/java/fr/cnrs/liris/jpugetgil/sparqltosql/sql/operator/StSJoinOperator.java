@@ -139,7 +139,7 @@ public class StSJoinOperator extends StSOperator {
 
     private String buildSelectVariablesWithoutGraph(SQLContext leftContext, SQLContext rightContext) {
         Set<String> leftSelect = leftContext.sparqlVarOccurrences().keySet().stream()
-                .filter(node -> node instanceof Node_Variable)
+                .filter(Node_Variable.class::isInstance)
                 .filter(node -> leftContext.graph() == null || !node.equals(leftContext.graph()))
                 .map(node ->
                         ".v$" + node.getName()
@@ -147,7 +147,7 @@ public class StSJoinOperator extends StSOperator {
                 .collect(Collectors.toSet());
 
         Set<String> rightSelect = rightContext.sparqlVarOccurrences().keySet().stream()
-                .filter(node -> node instanceof Node_Variable)
+                .filter(Node_Variable.class::isInstance)
                 .filter(node -> rightContext.graph() == null || !node.equals(rightContext.graph()))
                 .map(node ->
                         ".v$" + node.getName()
@@ -157,11 +157,11 @@ public class StSJoinOperator extends StSOperator {
         Set<String> unionSelect = new HashSet<>(leftSelect);
         unionSelect.addAll(rightSelect);
 
-        return unionSelect.stream().map(var -> {
-            if (leftSelect.contains(var)) {
-                return "left_table" + var;
+        return unionSelect.stream().map(unionS -> {
+            if (leftSelect.contains(unionS)) {
+                return "left_table" + unionS;
             }
-            return "right_table" + var;
+            return "right_table" + unionS;
         }).collect(Collectors.joining(", "));
     }
 

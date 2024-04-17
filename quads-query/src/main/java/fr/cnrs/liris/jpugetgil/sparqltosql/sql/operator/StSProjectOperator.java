@@ -25,7 +25,7 @@ public class StSProjectOperator extends StSOperator {
         List<SQLVariable> sqlVariables = new ArrayList<>();
         for (SQLVariable sqlVariable : sqlQuery.getContext().sqlVariables()) {
             if (op.getVars().stream()
-                    .anyMatch(var -> var.getName().equals(sqlVariable.getSqlVarName()))) {
+                    .anyMatch(variable -> variable.getName().equals(sqlVariable.getSqlVarName()))) {
                 sqlVariables.add(sqlVariable);
             }
         }

@@ -24,46 +24,19 @@ public class StSBGPOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
-        if (this.context.graph() != null && this.context.graph() instanceof Node_Variable) {
-            return buildContextBGPWithGraph();
-        } else if (this.context.graph() != null && this.context.graph() instanceof Node_URI) {
-            return buildContextBGPWithGraphURI();
+        if (this.context.graph() instanceof Node_Variable) {
+            String select = generateSelect();
+            String tables = generateFromTables(false);
+            return getSqlProjectionsQuery(select, tables, false);
+        } else if (this.context.graph() instanceof Node_URI) {
+            String select = generateSelect();
+            String tables = generateFromTables(false);
+            return getSqlProjectionsQuery(select, tables, false);
         } else {
-            return buildContextBGPWorkspace();
+            String select = generateSelectWorkspace();
+            String tables = generateFromTables(true);
+            return getSqlProjectionsQuery(select, tables, true);
         }
-    }
-
-    /**
-     * Build the SQL query in a graph context
-     *
-     * @return the SQL query
-     */
-    private SQLQuery buildContextBGPWithGraph() {
-        String select = generateSelect();
-        String tables = generateFromTables(false);
-        return getSqlProjectionsQuery(select, tables, false);
-    }
-
-    /**
-     * Build the SQL query in a URI graph context
-     *
-     * @return the built SQL query
-     */
-    private SQLQuery buildContextBGPWithGraphURI() {
-        String select = generateSelect();
-        String tables = generateFromTables(false);
-        return getSqlProjectionsQuery(select, tables, false);
-    }
-
-    /**
-     * Build the SQL query in a workspace context (no graph)
-     *
-     * @return the SQL query
-     */
-    private SQLQuery buildContextBGPWorkspace() {
-        String select = generateSelectWorkspace();
-        String tables = generateFromTables(true);
-        return getSqlProjectionsQuery(select, tables, true);
     }
 
     /**
@@ -87,7 +60,7 @@ public class StSBGPOperator extends StSOperator {
      */
     private String generateSelectWorkspace() {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
-                        .filter(node -> node instanceof Node_Variable), (node, index) -> {
+                        .filter(Node_Variable.class::isInstance), (node, index) -> {
                     this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
 
                     return "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
@@ -121,7 +94,7 @@ public class StSBGPOperator extends StSOperator {
      */
     private String getSelectVariables() {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
-                .filter(node -> node instanceof Node_Variable), (node, index) -> {
+                .filter(Node_Variable.class::isInstance), (node, index) -> {
             if (context.sparqlVarOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
                 this.sqlVariables.add(new SQLVariable(SQLVarType.GRAPH_NAME, node.getName()));
 
@@ -143,11 +116,11 @@ public class StSBGPOperator extends StSOperator {
     /**
      * Return the column name of the SQL query according to the occurrence type
      *
-     * @param SPARQLOccurrence the occurrence of the Node
+     * @param sparqlOccurrence the occurrence of the Node
      * @return the column name of the versioned quad table
      */
-    private String getColumnByOccurrence(SPARQLOccurrence SPARQLOccurrence) {
-        return switch (SPARQLOccurrence.getType()) {
+    private String getColumnByOccurrence(SPARQLOccurrence sparqlOccurrence) {
+        return switch (sparqlOccurrence.getType()) {
             case SUBJECT -> "id_subject";
             case PROPERTY -> "id_property";
             case OBJECT -> "id_object";
