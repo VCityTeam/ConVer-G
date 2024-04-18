@@ -17,6 +17,7 @@ public class StSExtendOperator extends StSOperator {
     public StSExtendOperator(OpExtend op, SQLQuery sqlQuery) {
         this.sqlQuery = sqlQuery;
         this.op = op;
+        this.sqlVariables = sqlQuery.getContext().sqlVariables();
     }
 
     @Override

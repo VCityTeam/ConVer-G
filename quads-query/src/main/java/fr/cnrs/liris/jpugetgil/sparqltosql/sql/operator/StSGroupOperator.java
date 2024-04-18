@@ -25,23 +25,28 @@ public class StSGroupOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
-        // TODO : GROUP BY
         VarExprList exprList = op.getGroupVars();
         List<Var> vars = exprList.getVars();
-        String projections = op.getAggregators().stream()
-                .map(exprAggregator -> new Aggregator(exprAggregator)
-                        .toSQLString(this.sqlVariables)
-                ).collect(Collectors.joining(", "));
-        String groupBy = vars.stream()
+        String groupByVars = vars.stream()
                 .map(variable -> {
                     if (sqlQuery.getContext().sparqlVarOccurrences().get(variable).stream()
                             .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                        throw new IllegalArgumentException("TODO: GROUP BY GRAPH NAME");
+                        return "id_versioned_graph";
                     } else {
-                        return "sq.v$" + variable.getName();
+                        return "v$" + variable.getName();
                     }
-                })
+                }).collect(Collectors.joining(", "));
+        String aggregatorsString = op.getAggregators().stream()
+                .map(Aggregator::new)
+                .map(aggregator -> aggregator.toSQLString(sqlQuery.getContext().sqlVariables()))
                 .collect(Collectors.joining(", "));
+
+        String projections;
+        if (!groupByVars.isBlank() && !aggregatorsString.isBlank()) {
+            projections = groupByVars + ", " + aggregatorsString;
+        } else {
+            projections = aggregatorsString + groupByVars;
+        }
 
         String explosions = Streams.mapWithIndex(sqlQuery.getContext().sparqlVarOccurrences().keySet()
                         .stream()
@@ -55,7 +60,7 @@ public class StSGroupOperator extends StSOperator {
 
         return new SQLQuery(
                 "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
-                        ") sq " + explosions + " GROUP BY (" + groupBy + ")",
+                        ") sq " + explosions + " GROUP BY (" + groupByVars + ")",
                 sqlQuery.getContext()
         );
     }

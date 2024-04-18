@@ -28,10 +28,10 @@ import java.util.Iterator;
 @Slf4j
 public class QuadImportService implements IQuadImportService {
 
-    ResourceOrLiteral WORKSPACE_IS_IN_VERSION;
-    ResourceOrLiteral WORKSPACE_IS_VERSION_OF;
-    String WORKSPACE_VERSION_PREFIX = "https://github.com/VCityTeam/SPARQL-to-SQL/Version#";
-    String WORKSPACE_VNG_PREFIX = "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#";
+    ResourceOrLiteral workspaceIsInVersion;
+    ResourceOrLiteral workspaceIsVersionOf;
+    String workspaceVersionPrefix = "https://github.com/VCityTeam/SPARQL-to-SQL/Version#";
+    String workspaceVngPrefix = "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#";
 
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
@@ -61,8 +61,8 @@ public class QuadImportService implements IQuadImportService {
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
 
-        this.WORKSPACE_IS_IN_VERSION = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version", null);
-        this.WORKSPACE_IS_VERSION_OF = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of", null);
+        this.workspaceIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version", null);
+        this.workspaceIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of", null);
     }
 
     /**
@@ -269,8 +269,8 @@ public class QuadImportService implements IQuadImportService {
      */
     private void saveVersionedNameGraphInsideWorkspace(Integer idVNG, Integer idURIVersion, Integer idNG) {
         log.info("Upsert named graph inside workspace: VNG: {}, in version: {}, versionOfNamedGraph : {}", idVNG, idURIVersion, idNG);
-        workspaceComponent.save(idVNG, this.WORKSPACE_IS_VERSION_OF.getIdResourceOrLiteral(), idNG);
-        workspaceComponent.save(idVNG, this.WORKSPACE_IS_IN_VERSION.getIdResourceOrLiteral(), idURIVersion);
+        workspaceComponent.save(idVNG, this.workspaceIsVersionOf.getIdResourceOrLiteral(), idNG);
+        workspaceComponent.save(idVNG, this.workspaceIsInVersion.getIdResourceOrLiteral(), idURIVersion);
     }
 
     /**
@@ -302,7 +302,7 @@ public class QuadImportService implements IQuadImportService {
      * @return The versioned graph URI
      */
     private String generateVersionedNamedGraph(String namedGraphURI, String filename) {
-        return WORKSPACE_VNG_PREFIX +
+        return workspaceVngPrefix +
                 DigestUtils.sha256Hex(
                         StringUtils.getBytesUtf8(namedGraphURI + filename)
                 );
@@ -315,6 +315,6 @@ public class QuadImportService implements IQuadImportService {
      * @return The version URI
      */
     private String generateVersionURI(String originalFilename) {
-        return WORKSPACE_VERSION_PREFIX + originalFilename;
+        return workspaceVersionPrefix + originalFilename;
     }
 }

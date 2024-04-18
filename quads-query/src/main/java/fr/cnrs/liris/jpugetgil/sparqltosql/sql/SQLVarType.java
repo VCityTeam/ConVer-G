@@ -4,5 +4,6 @@ public enum SQLVarType {
     DATA,
     VERSIONED_NAMED_GRAPH,
     BIT_STRING,
-    GRAPH_NAME
+    GRAPH_NAME,
+    AGGREGATED
 }

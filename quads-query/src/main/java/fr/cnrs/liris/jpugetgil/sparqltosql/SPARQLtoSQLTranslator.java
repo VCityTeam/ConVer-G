@@ -83,13 +83,15 @@ public class SPARQLtoSQLTranslator {
             case OpDistinct opDistinct -> new StSDistinctOperator(
                     buildSPARQLContext(opDistinct.getSubOp(), context)
             ).buildSQLQuery();
-            case OpExtend opExtend -> new StSExtendOperator(
-                    opExtend,
-                    buildSPARQLContext(opExtend.getSubOp(), context)
-            ).buildSQLQuery();
+            case OpExtend opExtend -> buildSPARQLContext(opExtend.getSubOp(), context);
+//            case OpExtend opExtend -> new StSExtendOperator(
+//                    opExtend,
+//                    buildSPARQLContext(opExtend.getSubOp(), context)
+//            ).buildSQLQuery();
             case OpGroup opGroup -> new StSGroupOperator(opGroup, buildSPARQLContext(opGroup.getSubOp(), context))
                     .buildSQLQuery();
-            case OpQuadPattern opQuadPattern -> throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
+            case OpQuadPattern opQuadPattern ->
+                    throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
             case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
             case OpSlice opSlice -> throw new IllegalArgumentException("TODO: OpSlice not implemented");
             case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");

@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.algebra.op.OpProject;
 
@@ -23,9 +24,10 @@ public class StSProjectOperator extends StSOperator {
     @Override
     public SQLQuery buildSQLQuery() {
         List<SQLVariable> sqlVariables = new ArrayList<>();
-        for (SQLVariable sqlVariable : sqlQuery.getContext().sqlVariables()) {
-            if (op.getVars().stream()
-                    .anyMatch(variable -> variable.getName().equals(sqlVariable.getSqlVarName()))) {
+        for (SQLVariable sqlVariable : this.sqlVariables) {
+            if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED ||
+                    op.getVars().stream()
+                            .anyMatch(variable -> variable.getName().equals(sqlVariable.getSqlVarName()))) {
                 sqlVariables.add(sqlVariable);
             }
         }
@@ -61,6 +63,8 @@ public class StSProjectOperator extends StSOperator {
                         yield "project_table.ng$" + sqlVariable.getSqlVarName();
                     case VERSIONED_NAMED_GRAPH:
                         yield "project_table.vng$" + sqlVariable.getSqlVarName();
+                    case AGGREGATED:
+                        yield "project_table." + sqlVariable.getSqlVarName();
                 })
                 .collect(Collectors.joining(", "));
     }
