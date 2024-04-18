@@ -25,7 +25,6 @@ public class CountVar extends AbstractAggregator<AggCountVar> {
                 .map(Expression::fromJenaExpr)
                 .toList();
 
-
         String joinedExpression = expressions.stream()
                 .map(expression -> expression.toSQLString(sqlVariables))
                 .collect(Collectors.joining(", "));

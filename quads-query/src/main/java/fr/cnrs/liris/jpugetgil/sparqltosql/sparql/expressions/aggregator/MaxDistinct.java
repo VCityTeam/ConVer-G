@@ -1,10 +1,13 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.AbstractAggregator;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Expression;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.expr.aggregate.AggMaxDistinct;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MaxDistinct extends AbstractAggregator<AggMaxDistinct> {
     /**
@@ -18,6 +21,19 @@ public class MaxDistinct extends AbstractAggregator<AggMaxDistinct> {
 
     @Override
     public String toSQLString(List<SQLVariable> sqlVariables) {
-        throw new IllegalStateException("Not implemented yet");
+        List<Expression> expressions = this.getAggregator().getExprList().getList().stream()
+                .map(Expression::fromJenaExpr)
+                .toList();
+
+        String joinedExpression = expressions.stream()
+                .map(expression -> expression.toSQLString(sqlVariables))
+                .collect(Collectors.joining(", "));
+
+        expressions.forEach(expression -> sqlVariables.removeIf(
+                sqlVariable -> sqlVariable.getSqlVarName().equals(expression.getJenaExpr().getVarName()))
+        );
+
+        sqlVariables.add(new SQLVariable(SQLVarType.AGGREGATED, joinedExpression));
+        return "MAX(DISTINCT " + joinedExpression + ") AS " + joinedExpression;
     }
 }
