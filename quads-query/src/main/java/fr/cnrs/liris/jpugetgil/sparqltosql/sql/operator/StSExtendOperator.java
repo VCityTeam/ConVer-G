@@ -26,6 +26,7 @@ public class StSExtendOperator extends StSOperator {
         List<Var> vars = varExprList.getVars();
         Map<Var, Expr> exprMap = varExprList.getExprs();
 
-        throw new IllegalArgumentException("TODO: implement StSExtendOperator.buildSQLQuery()");
+//        throw new IllegalArgumentException("TODO: implement StSExtendOperator.buildSQLQuery()");
+        return this.sqlQuery;
     }
 }

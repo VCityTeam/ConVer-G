@@ -99,7 +99,11 @@ public interface Expression {
      */
     default String toSQLString(List<SQLVariable> sqlVariables) {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
-    };
+    }
+
+    default String toSQLString() {
+        throw new IllegalArgumentException("This expression does not have a SQL representation.");
+    }
 
     /**
      * Updates the filter configuration to take this expression's variables into account
