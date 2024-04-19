@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -48,11 +51,17 @@ class AppTest {
      */
     private void sendRequestAndCompareResults(HttpRequest requestStS, HttpRequest requestBlazegraph) {
         try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpResponse<String> responseStS = client.send(requestStS, HttpResponse.BodyHandlers.ofString());
-            HttpResponse<String> responseBlazegraph = client.send(requestBlazegraph, HttpResponse.BodyHandlers.ofString());
+            try {
+                HttpResponse<String> responseStS = client.send(requestStS, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> responseBlazegraph = client.send(requestBlazegraph, HttpResponse.BodyHandlers.ofString());
 
-            checkEqualityString(responseStS.body(), responseBlazegraph.body());
-        } catch (Exception e) {
+                checkEqualityString(responseStS.body(), responseBlazegraph.body());
+            } catch (ConnectException e) {
+                throw new RuntimeException("Connection refused. Please check if the endpoints are running.");
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (UncheckedIOException e) {
             log.error(e.getLocalizedMessage());
         }
     }

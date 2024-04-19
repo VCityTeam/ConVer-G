@@ -172,7 +172,6 @@ public class StSBGPOperator extends StSOperator {
      */
     private String generateWhere() {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
-        String idSelect = "";
         List<Triple> triples = op.getPattern().getList();
 
         if (context.graph() instanceof Node_Variable) {
@@ -185,10 +184,19 @@ public class StSBGPOperator extends StSOperator {
             );
         }
 
+        for (Node node : this.context.sparqlVarOccurrences().keySet()) {
+            if (node instanceof Node_Variable && context.sparqlVarOccurrences().get(node).size() > 1) {
+                sqlClauseBuilder.and(context.sparqlVarOccurrences().get(node).stream()
+                        .map(occurrence ->
+                                "t" + occurrence.getPosition() + "." +
+                                        getColumnByOccurrence(occurrence)).collect(Collectors.joining(" = "))
+                );
+            }
+        }
+
         for (int i = 0; i < triples.size(); i++) {
             switch (context.graph()) {
                 case Node_Variable ignored -> {
-                    // where
                     if (i < triples.size() - 1) {
                         sqlClauseBuilder = sqlClauseBuilder.and(
                                 new EqualToOperator()
@@ -198,40 +206,38 @@ public class StSBGPOperator extends StSOperator {
                         );
                     }
                 }
-                case Node_URI nodeUri -> {
-                    // where
-                    sqlClauseBuilder = sqlClauseBuilder.and(
-                            new EqualToOperator().buildComparisonOperatorSQL(
-                                    "t" + i + ".id_named_graph",
-                                    """
-                                            (
-                                                SELECT vng.id_named_graph
-                                                FROM versioned_named_graph vng JOIN resource_or_literal rl ON 
-                                                vng.id_versioned_named_graph = rl.id_resource_or_literal
-                                                WHERE rl.name = '""" + nodeUri.getURI() + "')"
-                            )
-                    ).and(
-                            new EqualToOperator()
-                                    .buildComparisonOperatorSQL(
-                                            "get_bit(t" + i + ".validity," +
-                                                    """
-                                                            (
-                                                                SELECT vng.index_version
-                                                                FROM versioned_named_graph vng JOIN resource_or_literal rl ON 
-                                                                vng.id_versioned_named_graph = rl.id_resource_or_literal
-                                                                WHERE rl.name = '""" + nodeUri.getURI() + "')"
-                                                    + ")",
-                                            "1"
-                                    )
-                    );
-                }
+                case Node_URI nodeUri ->
+                        sqlClauseBuilder = sqlClauseBuilder.and(
+                                new EqualToOperator().buildComparisonOperatorSQL(
+                                        "t" + i + ".id_named_graph",
+                                        """
+                                                (
+                                                    SELECT vng.id_named_graph
+                                                    FROM versioned_named_graph vng JOIN resource_or_literal rl ON
+                                                    vng.id_versioned_named_graph = rl.id_resource_or_literal
+                                                    WHERE rl.name = '""" + nodeUri.getURI() + "')"
+                                )
+                        ).and(
+                                new EqualToOperator()
+                                        .buildComparisonOperatorSQL(
+                                                "get_bit(t" + i + ".validity," +
+                                                        """
+                                                                (
+                                                                    SELECT vng.index_version
+                                                                    FROM versioned_named_graph vng JOIN resource_or_literal rl ON
+                                                                    vng.id_versioned_named_graph = rl.id_resource_or_literal
+                                                                    WHERE rl.name = '""" + nodeUri.getURI() + "')"
+                                                        + ")",
+                                                "1"
+                                        )
+                        );
                 default -> throw new IllegalStateException("Unexpected value: " + context.graph());
             }
 
             sqlClauseBuilder.and(buildFiltersOnIds(triples, i));
         }
 
-        return sqlClauseBuilder.and(idSelect).build().clause;
+        return sqlClauseBuilder.build().clause;
     }
 
     /**
