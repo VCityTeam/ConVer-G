@@ -6,18 +6,42 @@ import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.EqualToOperator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.comparison.NotEqualToOperator;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Node_Variable;
+import org.apache.jena.sparql.algebra.op.OpJoin;
 
+import java.sql.SQLType;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class StSJoinOperator extends StSOperator {
-    private final SQLQuery leftSQLQuery;
 
-    private final SQLQuery rightSQLQuery;
+    private final OpJoin opJoin;
+    private final StSOperator left;
+    private final StSOperator right;
+    private Map<String, JoinVar> vars = new HashMap<>();
 
-    public StSJoinOperator(SQLQuery leftSQLQuery, SQLQuery rightSQLQuery) {
-        this.leftSQLQuery = leftSQLQuery;
-        this.rightSQLQuery = rightSQLQuery;
+    public StSJoinOperator(SQLContext context, OpJoin opJoin) {
+        super(context);
+        this.opJoin = opJoin;
+        left = fromSPARQL(context,opJoin.getLeft());
+        right = fromSPARQL(context,opJoin.getRight());
+        for(SQLVariable v : left.getSQLVariables()) {
+            vars.
+        }
+    }
+
+
+
+    private enum OccType { DATA, GRAPH, NONE; public OccType fromSQLType(SQLVarType type) {
+        return switch (type) {
+            case SQLVarType.BIT_STRING -> GRAPH;
+            case SQLVarType.GRAPH_NAME -> GRAPH;
+            case SQLVarType.VERSIONED_NAMED_GRAPH -> throw new IllegalStateException();
+            case SQLVarType.DATA -> DATA;
+
+        };
+    }}
+    private record JoinVar(String name, OccType left, OccType right) {
+        public JoinVar setRight(OccType newRight) { return new JoinVar(name, left, newRight); }
     }
 
     @Override

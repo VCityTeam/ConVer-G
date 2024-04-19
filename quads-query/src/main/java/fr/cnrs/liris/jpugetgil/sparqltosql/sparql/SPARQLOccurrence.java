@@ -3,7 +3,6 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql;
 public class SPARQLOccurrence {
     private SPARQLPositionType type;
     private Integer position;
-
     private SPARQLContextType sparqlContextType;
 
     public SPARQLOccurrence(SPARQLPositionType type, Integer position, SPARQLContextType sparqlContextType) {
@@ -34,5 +33,14 @@ public class SPARQLOccurrence {
 
     public void setContextType(SPARQLContextType sparqlContextType) {
         this.sparqlContextType = sparqlContextType;
+    }
+
+    /**
+     * The SQL String for accessing this occurence.
+     * @param tablePrefix the prefix to prepend to the triple table number (aka position)
+     * @return the correct table_alias.attribute
+     */
+    public String asSQL(String tablePrefix) {
+        return tablePrefix + position + "." + type.getSQLColumn();
     }
 }

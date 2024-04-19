@@ -2,17 +2,20 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class SQLQuery {
 
     private String sql;
+    private final List<SQLVariable> sqlVariables;
 
-    private SQLContext context;
+//    private SQLContext context;
 
-    public SQLQuery(String sql, SQLContext context) {
+    public SQLQuery(String sql /*, SQLContext context */, List<SQLVariable> sqlVariables) {
         this.sql = sql;
-        this.context = context;
+//        this.context = context;
+        this.sqlVariables = sqlVariables;
     }
 
     public String getSql() {
@@ -23,13 +26,17 @@ public class SQLQuery {
         this.sql = sql;
     }
 
-    public SQLContext getContext() {
-        return context;
+    public List<SQLVariable> getSqlVariables() {
+        return sqlVariables;
     }
 
-    public void setContext(SQLContext context) {
-        this.context = context;
-    }
+    //    public SQLContext getContext() {
+//        return context;
+//    }
+
+//    public void setContext(SQLContext context) {
+//        this.context = context;
+//    }
 
     public SQLQuery finalizeQuery() {
         String select = "SELECT " + getSelectVariablesResourceOrLiteral();
@@ -38,7 +45,8 @@ public class SQLQuery {
 
         return new SQLQuery(
                 select + from + join,
-                this.context
+//                this.context
+                sqlVariables
         );
     }
 
@@ -48,7 +56,7 @@ public class SQLQuery {
      * @return the SELECT clause of the SQL query
      */
     private String getSelectVariablesResourceOrLiteral() {
-        return Streams.mapWithIndex(this.context.sqlVariables().stream()
+        return Streams.mapWithIndex(sqlVariables.stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> (
                 "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
         )).collect(Collectors.joining(", "));
@@ -60,7 +68,7 @@ public class SQLQuery {
      * @return the finalized SQL query
      */
     private String getJoinVariablesResourceOrLiteral() {
-        return Streams.mapWithIndex(this.context.sqlVariables().stream()
+        return Streams.mapWithIndex(sqlVariables.stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) ->
                 switch (sqlVariable.getSqlVarType()) {
                     case DATA:

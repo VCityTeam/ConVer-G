@@ -40,6 +40,14 @@ public class SQLVariable {
         this.sqlVarName = sqlVarName;
     }
 
+    public String getSQLValue(String tableName) {
+        return tableName + "." + getSQLAttributeName();
+    }
+
+    public String getSQLAttributeName() {
+        return sqlVarType.getAttributeName(sqlVarName);
+    }
+
     public String join(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return switch (this.sqlVarType) {
             case DATA -> switch (rightSQLVar.getSqlVarType()) {
@@ -82,7 +90,8 @@ public class SQLVariable {
                 case DATA, VERSIONED_NAMED_GRAPH, GRAPH_NAME -> throw new NotImplementedException("Not supported yet.");
                 case BIT_STRING -> new NotEqualToOperator()
                         .buildComparisonOperatorSQL(
-                                "bit_count(" + leftTableName + ".bs$" + this.sqlVarName + " & " + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")",
+                                "bit_count(" + leftTableName + ".bs$" + this.sqlVarName + " & " + rightTableName +
+                                        ".bs$" + rightSQLVar.getSqlVarName() + ")",
                                 "0"
                         );
             };

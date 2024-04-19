@@ -1,28 +1,42 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
 import org.apache.jena.graph.Node;
-
-import java.util.List;
-import java.util.Map;
+import org.apache.jena.graph.Node_Variable;
 
 /**
  * This class represents the context of a SQL query.
  *
- * @param graph                The graph of the context
- * @param sparqlVarOccurrences The occurrences of the variables in the context
- * @param sqlVariables         The variables of the SQL query made by the context
+ * @param graph The graph of the context
+ *              // @param sparqlVarOccurrences The occurrences of the variables in the context
+ *              // @param sqlVariables         The variables of the SQL query made by the context
  */
-public record SQLContext(Node graph, Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences, List<SQLVariable> sqlVariables) {
+public record SQLContext(Node graph)
+        //, Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences, List<SQLVariable> sqlVariables)
+{
     public SQLContext setGraph(Node newGraph) {
-        return new SQLContext(newGraph, sparqlVarOccurrences, sqlVariables);
+        return new SQLContext(newGraph); //, sparqlVarOccurrences, sqlVariables);
     }
 
-    public SQLContext setVarOccurrences(Map<Node, List<SPARQLOccurrence>> newVarOccurrences) {
-        return new SQLContext(graph, newVarOccurrences, sqlVariables);
+    /**
+     * Checks whether there is a ghraph in this context
+     * @return true if there is a context graph
+     */
+    public boolean hasGraph() {
+        return graph != null;
     }
 
-    public SQLContext setSQLVariables(List<SQLVariable> newSQLVariables) {
-        return new SQLContext(graph, sparqlVarOccurrences, newSQLVariables);
+    /**
+     * Checks whether there is a context graph and this is a variable
+     * @return true if it is the case
+     */
+    public boolean hasGraphVariable() {
+        return graph instanceof Node_Variable;
     }
+//    public SQLContext setVarOccurrences(Map<Node, List<SPARQLOccurrence>> newVarOccurrences) {
+//        return new SQLContext(graph, newVarOccurrences, sqlVariables);
+//    }
+//
+//    public SQLContext setSQLVariables(List<SQLVariable> newSQLVariables) {
+//        return new SQLContext(graph, sparqlVarOccurrences, newSQLVariables);
+//    }
 }
