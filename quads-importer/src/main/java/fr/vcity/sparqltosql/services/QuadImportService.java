@@ -3,7 +3,7 @@ package fr.vcity.sparqltosql.services;
 import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
 import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.Version;
-import fr.vcity.sparqltosql.model.RDFSavedTriple;
+import fr.vcity.sparqltosql.dao.RDFSavedTriple;
 import fr.vcity.sparqltosql.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.StringUtils;

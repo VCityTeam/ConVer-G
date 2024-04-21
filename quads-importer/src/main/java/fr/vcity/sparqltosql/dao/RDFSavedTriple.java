@@ -1,6 +1,5 @@
-package fr.vcity.sparqltosql.model;
+package fr.vcity.sparqltosql.dao;
 
-import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import lombok.Data;
 
 @Data
