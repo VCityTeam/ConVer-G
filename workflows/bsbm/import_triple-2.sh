@@ -6,6 +6,7 @@
 
 cd ../dataset/quads/theoretical || exit
 
+echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
 ## BSBM tagged data
@@ -18,3 +19,4 @@ do
 done
 
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import completed."
+echo "--------------------------------------------------------------- [END IMPORT TRIPLE] ---------------------------------------------------------------"

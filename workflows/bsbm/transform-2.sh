@@ -6,6 +6,8 @@
 
 cd ../dataset || exit
 
+echo "---------------------------------------------------------------- [BEGIN TRANSFORM] ----------------------------------------------------------------"
+
 mkdir -p quads/relational
 mkdir -p quads/theoretical
 
@@ -45,3 +47,4 @@ mkdir -p ../quads-importer/src/test/resources/dataset
 cp quads/relational/* ../quads-importer/src/test/resources/dataset
 
 printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace completed."
+echo "----------------------------------------------------------------- [END TRANSFORM] -----------------------------------------------------------------"

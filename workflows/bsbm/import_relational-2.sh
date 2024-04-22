@@ -6,6 +6,7 @@
 
 cd ../dataset/quads/relational || exit
 
+echo "------------------------------------------------------------ [BEGIN IMPORT RELATIONAL] ------------------------------------------------------------"
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Dataset import started."
 
 ## BSBM tagged data
@@ -28,3 +29,4 @@ printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Versions import completed."
 #
 #printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version transitions import completed."
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Dataset import completed."
+echo "------------------------------------------------------------- [END IMPORT RELATIONAL] -------------------------------------------------------------"

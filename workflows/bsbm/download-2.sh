@@ -3,7 +3,7 @@
 ######################################################
 # Copy the dataset from the BSBM generated dataset
 ######################################################
-
+echo "---------------------------------------------------------------- [BEGIN DOWNLOAD] ----------------------------------------------------------------"
 printf "\versions_number%s$(date +%FT%T) - [Copy] Dataset generation started."
 
 rm -rf ../dataset
@@ -41,3 +41,4 @@ rm -rf save
 docker ps --filter name=bsbm-* -aq | xargs docker stop | xargs docker rm
 
 printf "\versions_number%s$(date +%FT%T) - [Copy] Dataset generation completed."
+echo "----------------------------------------------------------------- [END DOWNLOAD] -----------------------------------------------------------------"
