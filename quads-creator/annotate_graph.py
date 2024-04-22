@@ -3,7 +3,6 @@ import os
 import hashlib
 import rdflib
 from rdflib import Dataset, URIRef, Literal, ConjunctiveGraph
-from pathlib import Path
 
 RDFLIB_INPUT_SUPPORTED_FORMATS = ['turtle', 'ttl', 'turtle2', 'xml',
                                   'pretty-xml', 'json-ld', 'ntriples', 'nt', 'nt11', 'n3', 'trig', 'trix']
@@ -60,8 +59,8 @@ class RdfConverter:
         :param input_format: The format of the input RDF file. Must be an RDFlib compliant format
         :param output_folder: The folder to write the output to
         """
-        self.graph.parse(os.path.join(input_folder, input_file), format=input_format)
-        Path(output_folder).mkdir(parents=True, exist_ok=True)
+        self.graph.parse(os.path.join(input_folder + '/', input_file), format=input_format)
+        os.makedirs(output_folder, exist_ok=True)
 
         ds = Dataset()
         named_graph = URIRef(self.graph_name)
@@ -77,29 +76,29 @@ class RdfConverter:
             # Ajouter le quadruplet au jeu de données
             ds.add((subject, predicate, obj, named_graph))
         if self.annotation_type == 'theoretical':
-            self.add_theoretical_annotation(named_graph, input_folder, output_folder)
-            ds.serialize(destination=output_folder + self.filename + '.theoretical.nq',
+            self.add_theoretical_annotation(named_graph, output_folder)
+            ds.serialize(destination=output_folder + '/' + self.filename + '.theoretical.nq',
                          format='nquads', encoding='utf-8')
         else:
-            ds.serialize(destination=output_folder + self.filename + '.relational.nq',
+            ds.serialize(destination=output_folder + '/' + self.filename + '.relational.nq',
                          format='nquads', encoding='utf-8')
 
-    def add_theoretical_annotation(self, named_graph, input_folder, output_folder):
+    def add_theoretical_annotation(self, named_graph, output_folder):
         """
         Creates a new ttl file or append at the end the annotation for the named graph
         :param named_graph: The named graph to be annotated
-        :param input_folder: The folder containing the input files
         :param output_folder: The folder to write the output to
         """
+        theoretical_annotations_filename = 'theoretical_annotations.nq'
         workspace_ds = Dataset()
         workspace_uri = URIRef('https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace')
-        if os.path.exists(os.path.join(output_folder, 'theoretical_annotations.nq')):
+        if os.path.exists(os.path.join(output_folder + '/', theoretical_annotations_filename)):
             self.workspace_graph.parse(
-                os.path.join(output_folder, 'theoretical_annotations.nq'), format='nquads')
-            for t in self.workspace_graph:
-                subject = self.create_uriref_or_literal(t[0])
-                predicate = URIRef(t[1])
-                obj = self.create_uriref_or_literal(t[2])
+                os.path.join(output_folder + '/', theoretical_annotations_filename), format='nquads')
+            for triple in self.workspace_graph:
+                subject = self.create_uriref_or_literal(triple[0])
+                predicate = URIRef(triple[1])
+                obj = self.create_uriref_or_literal(triple[2])
                 workspace_ds.add((subject, predicate, obj, workspace_uri))
         workspace_ds.add(
             (
@@ -118,16 +117,16 @@ class RdfConverter:
             )
         )
         workspace_ds.serialize(
-            destination=output_folder + 'theoretical_annotations.nq', format='nquads', encoding='utf-8')
+            destination=output_folder + '/' + theoretical_annotations_filename, format='nquads', encoding='utf-8')
 
-    def create_uriref_or_literal(self, str):
+    def create_uriref_or_literal(self, string):
         """Create a URIRef with the same validation func used by URIRef
-            or a Literal if str is not an URI
+            or a Literal if str is not a URI
         """
-        if isinstance(str, URIRef):
-            return URIRef(str)
-        elif isinstance(str, Literal):
-            return Literal(str)
+        if isinstance(string, URIRef):
+            return URIRef(string)
+        elif isinstance(string, Literal):
+            return Literal(string)
 
 
 if __name__ == "__main__":

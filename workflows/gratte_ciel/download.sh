@@ -8,9 +8,7 @@ printf "\n%s$(date +%FT%T) - [Download] Dataset download started."
 
 rm -rf ../dataset
 
-mkdir -p ../dataset/triples
-
-cd ../dataset/triples || exit
+mkdir -p ../dataset/triples && cd ../dataset/triples || exit
 
 ## Get the versions
 curl --request GET -sL \

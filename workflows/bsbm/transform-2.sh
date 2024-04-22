@@ -6,6 +6,9 @@
 
 cd ../dataset || exit
 
+mkdir -p quads/relational
+mkdir -p quads/theoretical
+
 ## Transform data as quads
 ### Use the find command to locate all files ending with "split.ttl"
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
@@ -13,21 +16,21 @@ printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 find . -type f -name "*.ttl" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational/" "/data/triples/" "$file" ttl relational BSBM
+    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" ttl relational BSBM
 done
 docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 find . -type f -name "version*split.ttl" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical/" "/data/triples/" "$file" ttl theoretical BSBM
+    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" "$file" ttl theoretical BSBM
 done
 docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 find . -type f -name "*.nt" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational/" "/data/triples/" "$file" nt  relational BSBM
+    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" nt  relational BSBM
 done
 docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
