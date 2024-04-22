@@ -1,13 +1,10 @@
 package fr.vcity.sparqltosql.services;
 
-import fr.vcity.sparqltosql.dao.RDFVersionedNamedGraph;
+import fr.vcity.sparqltosql.dao.RDFSavedTriple;
 import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.Version;
-import fr.vcity.sparqltosql.dao.RDFSavedTriple;
 import fr.vcity.sparqltosql.repository.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.StringUtils;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.*;
@@ -23,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,8 +28,6 @@ public class QuadImportService implements IQuadImportService {
 
     ResourceOrLiteral workspaceIsInVersion;
     ResourceOrLiteral workspaceIsVersionOf;
-    String workspaceVersionPrefix = "https://github.com/VCityTeam/SPARQL-to-SQL/Version#";
-    String workspaceVngPrefix = "https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#";
 
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
@@ -91,38 +87,48 @@ public class QuadImportService implements IQuadImportService {
                 Resource namedModel = i.next();
                 Model model = dataset.getNamedModel(namedModel);
                 log.info("Name Graph : {}", namedModel.getURI());
-                ResourceOrLiteral resourceOrLiteralNG = saveRDFResourceOrLiteralOrReturnExisting(namedModel, "Named Graph");
-                ResourceOrLiteral resourceOrLiteralVNG = saveRDFResourceOrLiteralOrReturnExisting(
-                        model.createResource(generateVersionedNamedGraph(namedModel.getURI(), file.getOriginalFilename())),
-                        "Named Graph"
-                );
-                ResourceOrLiteral resourceOrLiteralVersion = saveRDFResourceOrLiteralOrReturnExisting(
-                        model.createResource(generateVersionURI(file.getOriginalFilename())),
-                        "Version"
-                );
-                saveRDFNamedGraphOrReturnExisting(
-                        resourceOrLiteralVNG.getIdResourceOrLiteral(),
-                        version.getIndexVersion() - 1,
-                        resourceOrLiteralNG.getIdResourceOrLiteral()
-                );
 
-                saveVersionedNameGraphInsideWorkspace(
-                        resourceOrLiteralVNG.getIdResourceOrLiteral(),
-                        resourceOrLiteralVersion.getIdResourceOrLiteral(),
-                        resourceOrLiteralNG.getIdResourceOrLiteral()
-                );
+                String insert = model.listStatements().toList().stream().map(statement -> {
+                    RDFNode subject = statement.getSubject();
+                    RDFNode predicate = statement.getPredicate();
+                    RDFNode object = statement.getObject();
 
-                model.listStatements().toList().parallelStream().forEach(statement -> {
-                    RDFSavedTriple rdfSavedTriple = saveRDFTripleOrReturnExisting(statement);
+                    String sValue = subject.isLiteral() ? subject.asLiteral().getString() : subject.toString();
+                    String sType = subject.isLiteral() ? subject.asLiteral().getDatatype().getURI() : null;
 
-                    versionedQuadComponent.save(
-                            rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                            rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                            rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral(),
-                            resourceOrLiteralNG.getIdResourceOrLiteral(),
-                            version.getIndexVersion() - 1
-                    );
-                });
+                    String pValue = predicate.isLiteral() ? predicate.asLiteral().getString() : predicate.toString();
+                    String pType = predicate.isLiteral() ? predicate.asLiteral().getDatatype().getURI() : null;
+
+                    String oValue = object.isLiteral() ? object.asLiteral().getString() : object.toString();
+                    String oType = object.isLiteral() ? object.asLiteral().getDatatype().getURI() : null;
+
+                    return "('" + sValue + "','" + sType + "','" + pValue + "','" + pType + "','" + oValue + "','" + oType + "','" + namedModel.getURI() + "','" + file.getOriginalFilename() + "'," + (version.getIndexVersion() - 1) + ")";
+                }).collect(Collectors.joining(",\n"));
+
+                String query = """
+                            WITH a (
+                            subject, subject_type,
+                            property, property_type,
+                            object, object_type,
+                            named_graph,
+                            filename,
+                            version
+                        ) AS (
+                        VALUES
+                        """ + "\n";
+                query += insert + "\n";
+                query += """
+                        )
+                        SELECT add_quad(
+                            a.subject, a.subject_type,
+                            a.property, a.property_type,
+                            a.object, a.object_type,
+                            a.named_graph,
+                            a.filename,
+                            a.version
+                        ) FROM a;
+                        """;
+                versionedQuadComponent.saveAll(query);
             }
 
             Long end = System.nanoTime();
@@ -248,32 +254,6 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Saves and return the RDF Named Graph inside the database if it doesn't exist, else returns the existing one.
-     *
-     * @param idVersionedNamedGraph The RDF versioned named graph id
-     * @param index                 The number of the associated version
-     * @param idNamedGraph          The RDF named graph URI id
-     * @return The saved or existing RDFNamedGraph element
-     */
-    private RDFVersionedNamedGraph saveRDFNamedGraphOrReturnExisting(Integer idVersionedNamedGraph, Integer index, Integer idNamedGraph) {
-        log.info("Upsert named graph: {} in version {}. versionedId : {}", idNamedGraph, index, idVersionedNamedGraph);
-        return versionedNamedGraphComponent.save(idVersionedNamedGraph, index, idNamedGraph);
-    }
-
-    /**
-     * Saves the RDF Named Graph, Versioned named graph and version inside the workspace
-     *
-     * @param idVNG        The RDF versioned named graph id
-     * @param idURIVersion The RDF version id
-     * @param idNG         The RDF named graph id
-     */
-    private void saveVersionedNameGraphInsideWorkspace(Integer idVNG, Integer idURIVersion, Integer idNG) {
-        log.info("Upsert named graph inside workspace: VNG: {}, in version: {}, versionOfNamedGraph : {}", idVNG, idURIVersion, idNG);
-        workspaceComponent.save(idVNG, this.workspaceIsVersionOf.getIdResourceOrLiteral(), idNG);
-        workspaceComponent.save(idVNG, this.workspaceIsInVersion.getIdResourceOrLiteral(), idURIVersion);
-    }
-
-    /**
      * Saves and return the RDF node inside the database if it doesn't exist, else returns the existing one.
      *
      * @param spo  The RDF node
@@ -292,29 +272,5 @@ public class QuadImportService implements IQuadImportService {
             log.debug("Upsert {} resource: {}", type, spo);
             return rdfResourceRepository.save(spo.toString(), null);
         }
-    }
-
-    /**
-     * Generates the versioned named graph URI
-     *
-     * @param namedGraphURI The named graph URI
-     * @param filename      The filename
-     * @return The versioned graph URI
-     */
-    private String generateVersionedNamedGraph(String namedGraphURI, String filename) {
-        return workspaceVngPrefix +
-                DigestUtils.sha256Hex(
-                        StringUtils.getBytesUtf8(namedGraphURI + filename)
-                );
-    }
-
-    /**
-     * Generates the version URI
-     *
-     * @param originalFilename The filename
-     * @return The version URI
-     */
-    private String generateVersionURI(String originalFilename) {
-        return workspaceVersionPrefix + originalFilename;
     }
 }
