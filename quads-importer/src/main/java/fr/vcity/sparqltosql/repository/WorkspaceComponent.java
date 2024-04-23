@@ -1,40 +1,30 @@
 package fr.vcity.sparqltosql.repository;
 
-import fr.vcity.sparqltosql.dao.Workspace;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class WorkspaceComponent {
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    public WorkspaceComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+    public WorkspaceComponent(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Workspace save(
-            Integer idSubject,
-            Integer idProperty,
-            Integer idObject
-    ) throws DuplicateKeyException {
-        return namedParameterJdbcTemplate.queryForObject("""
-                        INSERT INTO workspace (id_subject, id_property, id_object)
-                        VALUES (:idSubject, :idProperty, :idObject)
-                        ON CONFLICT ON CONSTRAINT workspace_pkey
-                        DO UPDATE SET id_subject = EXCLUDED.id_subject
-                        RETURNING *;
-                        """,
-                new MapSqlParameterSource()
-                        .addValue("idSubject", idSubject)
-                        .addValue("idProperty", idProperty)
-                        .addValue("idObject", idObject),
-                (rs, i) -> new Workspace(
-                        rs.getInt("id_subject"),
-                        rs.getInt("id_property"),
-                        rs.getInt("id_object")
+    public void saveTriples(String triplesQuery) {
+        jdbcTemplate.execute("""
+                WITH a (
+                     subject, subject_type,
+                     property, property_type,
+                     object, object_type
+                 ) AS (
+                 VALUES""" + "\n" + triplesQuery +
+                """
                 )
-        );
+                SELECT add_triple(
+                    a.subject, a.subject_type,
+                    a.property, a.property_type,
+                    a.object, a.object_type
+                ) FROM a;""");
     }
 }

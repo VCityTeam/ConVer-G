@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.repository;
 
-import fr.vcity.sparqltosql.dao.VersionedQuad;
 import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,9 +12,11 @@ import java.util.List;
 @Component
 public class VersionedQuadComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate, JdbcTemplate jdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public List<CompleteVersionedQuad> findAll() {
@@ -57,37 +59,6 @@ public class VersionedQuadComponent {
         );
     }
 
-    public VersionedQuad save(
-            Integer idSubject,
-            Integer idProperty,
-            Integer idObject,
-            Integer idNamedGraph,
-            Integer length
-    ) {
-        return namedParameterJdbcTemplate.queryForObject("""
-                        INSERT INTO versioned_quad (id_subject, id_property, id_object, id_named_graph, validity)
-                        VALUES (:idSubject, :idProperty, :idObject, :idNamedGraph, (
-                        SELECT LPAD('', :length, '0')::bit varying || B'1'
-                        ) )
-                        ON CONFLICT ON CONSTRAINT versioned_quad_pkey
-                        DO UPDATE SET validity = versioned_quad.validity || B'1'
-                        RETURNING *;
-                        """,
-                new MapSqlParameterSource()
-                        .addValue("idSubject", idSubject)
-                        .addValue("idProperty", idProperty)
-                        .addValue("idObject", idObject)
-                        .addValue("idNamedGraph", idNamedGraph)
-                        .addValue("length", length),
-                (rs, i) -> new VersionedQuad(
-                        rs.getInt("id_subject"),
-                        rs.getInt("id_property"),
-                        rs.getInt("id_object"),
-                        rs.getInt("id_named_graph"),
-                        rs.getBytes("validity")
-                )
-        );
-    }
 
     private static RowMapper<CompleteVersionedQuad> getRdfCompleteVersionedQuadRowMapper() {
         return (rs, rowNum) -> new CompleteVersionedQuad(
@@ -97,5 +68,38 @@ public class VersionedQuadComponent {
                 rs.getString(4),
                 rs.getBytes(5)
         );
+    }
+
+    public void saveResourceOrLiteral(String rlQuery) {
+        jdbcTemplate.execute("""
+                WITH a (
+                     node, node_type
+                 ) AS (
+                 VALUES""" + "\n" + rlQuery + """
+                )
+                SELECT add_quad_to_rl(
+                    a.node, a.node_type
+                ) FROM a;""");
+    }
+
+    public void saveQuads(String quadsQuery) {
+        jdbcTemplate.execute("""
+                WITH a (
+                     subject, subject_type,
+                     property, property_type,
+                     object, object_type,
+                     named_graph,
+                     version
+                 ) AS (
+                 VALUES""" + "\n" + quadsQuery +
+                """
+                        )
+                        SELECT add_quad(
+                            a.subject, a.subject_type,
+                            a.property, a.property_type,
+                            a.object, a.object_type,
+                            a.named_graph,
+                            a.version
+                        ) FROM a;""");
     }
 }
