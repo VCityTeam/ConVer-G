@@ -59,9 +59,6 @@ public class VersionedQuadComponent {
         );
     }
 
-    public void saveAll(String sql) {
-        jdbcTemplate.execute(sql);
-    }
 
     private static RowMapper<CompleteVersionedQuad> getRdfCompleteVersionedQuadRowMapper() {
         return (rs, rowNum) -> new CompleteVersionedQuad(
@@ -71,5 +68,38 @@ public class VersionedQuadComponent {
                 rs.getString(4),
                 rs.getBytes(5)
         );
+    }
+
+    public void saveResourceOrLiteral(String rlQuery) {
+        jdbcTemplate.execute("""
+                WITH a (
+                     node, node_type
+                 ) AS (
+                 VALUES""" + "\n" + rlQuery + """
+                )
+                SELECT add_quad_to_rl(
+                    a.node, a.node_type
+                ) FROM a;""");
+    }
+
+    public void saveQuads(String quadsQuery) {
+        jdbcTemplate.execute("""
+                WITH a (
+                     subject, subject_type,
+                     property, property_type,
+                     object, object_type,
+                     named_graph,
+                     version
+                 ) AS (
+                 VALUES""" + "\n" + quadsQuery +
+                """
+                        )
+                        SELECT add_quad(
+                            a.subject, a.subject_type,
+                            a.property, a.property_type,
+                            a.object, a.object_type,
+                            a.named_graph,
+                            a.version
+                        ) FROM a;""");
     }
 }

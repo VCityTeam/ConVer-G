@@ -1,6 +1,5 @@
 package fr.vcity.sparqltosql.services;
 
-import fr.vcity.sparqltosql.dao.RDFSavedTriple;
 import fr.vcity.sparqltosql.dao.ResourceOrLiteral;
 import fr.vcity.sparqltosql.dao.Version;
 import fr.vcity.sparqltosql.repository.*;
@@ -12,19 +11,24 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class QuadImportService implements IQuadImportService {
+
+    private record TripleValueType(String sValue, String sType, String pValue, String pType, String oValue,
+                                   String oType) {
+    }
 
     ResourceOrLiteral workspaceIsInVersion;
     ResourceOrLiteral workspaceIsVersionOf;
@@ -83,53 +87,8 @@ public class QuadImportService implements IQuadImportService {
 
             Long start = System.nanoTime();
 
-            for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
-                Resource namedModel = i.next();
-                Model model = dataset.getNamedModel(namedModel);
-                log.info("Name Graph : {}", namedModel.getURI());
-
-                String insert = model.listStatements().toList().stream().map(statement -> {
-                    RDFNode subject = statement.getSubject();
-                    RDFNode predicate = statement.getPredicate();
-                    RDFNode object = statement.getObject();
-
-                    String sValue = subject.isLiteral() ? subject.asLiteral().getString() : subject.toString();
-                    String sType = subject.isLiteral() ? subject.asLiteral().getDatatype().getURI() : null;
-
-                    String pValue = predicate.isLiteral() ? predicate.asLiteral().getString() : predicate.toString();
-                    String pType = predicate.isLiteral() ? predicate.asLiteral().getDatatype().getURI() : null;
-
-                    String oValue = object.isLiteral() ? object.asLiteral().getString() : object.toString();
-                    String oType = object.isLiteral() ? object.asLiteral().getDatatype().getURI() : null;
-
-                    return "('" + sValue + "','" + sType + "','" + pValue + "','" + pType + "','" + oValue + "','" + oType + "','" + namedModel.getURI() + "','" + file.getOriginalFilename() + "'," + (version.getIndexVersion() - 1) + ")";
-                }).collect(Collectors.joining(",\n"));
-
-                String query = """
-                            WITH a (
-                            subject, subject_type,
-                            property, property_type,
-                            object, object_type,
-                            named_graph,
-                            filename,
-                            version
-                        ) AS (
-                        VALUES
-                        """ + "\n";
-                query += insert + "\n";
-                query += """
-                        )
-                        SELECT add_quad(
-                            a.subject, a.subject_type,
-                            a.property, a.property_type,
-                            a.object, a.object_type,
-                            a.named_graph,
-                            a.filename,
-                            a.version
-                        ) FROM a;
-                        """;
-                versionedQuadComponent.saveAll(query);
-            }
+            extractAndInsertVersionedNamedGraph(file, dataset, version);
+            extractAndInsertQuads(dataset, version);
 
             Long end = System.nanoTime();
             log.info("Time of execution: {} ns for file: {}", end - start, file.getOriginalFilename());
@@ -183,19 +142,7 @@ public class QuadImportService implements IQuadImportService {
             for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
                 Resource namedModel = i.next();
                 Model model = dataset.getNamedModel(namedModel);
-                model.listStatements().toList().parallelStream().forEach(statement -> {
-                    RDFSavedTriple rdfSavedTriple = saveRDFTripleOrReturnExisting(statement);
-
-                    try {
-                        workspaceComponent.save(
-                                rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                                rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                                rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral()
-                        );
-                    } catch (DuplicateKeyException duplicate) {
-                        log.info(duplicate.getMessage());
-                    }
-                });
+                importDefaultModel(model);
             }
 
             Long end = System.nanoTime();
@@ -218,59 +165,150 @@ public class QuadImportService implements IQuadImportService {
      * @param defaultModel The default graph
      */
     private void importDefaultModel(Model defaultModel) {
-        defaultModel.listStatements().toList().parallelStream().forEach(statement -> {
-            RDFSavedTriple rdfSavedTriple = saveRDFTripleOrReturnExisting(statement);
+        Set<RDFNode> nodeSet = new HashSet<>();
+        StringBuilder triplesQuery = new StringBuilder();
 
-            workspaceComponent.save(
-                    rdfSavedTriple.getSavedRDFSubject().getIdResourceOrLiteral(),
-                    rdfSavedTriple.getSavedRDFPredicate().getIdResourceOrLiteral(),
-                    rdfSavedTriple.getSavedRDFObject().getIdResourceOrLiteral()
-            );
-        });
+        for (StmtIterator stmtIterator = defaultModel.listStatements(); stmtIterator.hasNext(); ) {
+            TripleValueType tripleVT = getTripleValueType(stmtIterator, nodeSet);
+
+            triplesQuery.append("(").append(formatStringToInsert(tripleVT.sValue()))
+                    .append(",").append(formatStringToInsert(tripleVT.sType()))
+                    .append(",").append(formatStringToInsert(tripleVT.pValue()))
+                    .append(",").append(formatStringToInsert(tripleVT.pType()))
+                    .append(",").append(formatStringToInsert(tripleVT.oValue()))
+                    .append(",").append(formatStringToInsert(tripleVT.oType()))
+                    .append(")");
+            if (stmtIterator.hasNext()) {
+                triplesQuery.append(",\n");
+            } else {
+                triplesQuery.append("\n");
+            }
+        }
+
+        String rlQuery = nodeSet.stream().map(node -> {
+            String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
+            String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
+            return "(" + formatStringToInsert(nValue) + "," + formatStringToInsert(nType) + ")";
+        }).collect(Collectors.joining(",\n"));
+
+        if (!rlQuery.isBlank()) {
+            versionedQuadComponent.saveResourceOrLiteral(rlQuery);
+        }
+
+        if (!triplesQuery.toString().isBlank()) {
+            workspaceComponent.saveTriples(triplesQuery.toString());
+        }
     }
 
     /**
-     * Saves the subject, the property, the object and the named graph inside the database if they exist else returning them
+     * Extract and insert the quads
      *
-     * @param statement The statement
-     * @return The saved or existing Quad
+     * @param dataset The dataset
+     * @param version The version
      */
-    private RDFSavedTriple saveRDFTripleOrReturnExisting(Statement statement) {
+    private void extractAndInsertQuads(Dataset dataset, Version version) {
+        Set<RDFNode> nodeSet = new HashSet<>();
+        StringBuilder quadsQuery = new StringBuilder();
+
+        for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
+            Resource namedModel = i.next();
+            Model model = dataset.getNamedModel(namedModel);
+            log.info("Name Graph : {}", namedModel.getURI());
+
+            for (StmtIterator stmtIterator = model.listStatements(); stmtIterator.hasNext(); ) {
+                TripleValueType tripleVT = getTripleValueType(stmtIterator, nodeSet);
+
+                quadsQuery.append("(").append(formatStringToInsert(tripleVT.sValue()))
+                        .append(",").append(formatStringToInsert(tripleVT.sType()))
+                        .append(",").append(formatStringToInsert(tripleVT.pValue()))
+                        .append(",").append(formatStringToInsert(tripleVT.pType()))
+                        .append(",").append(formatStringToInsert(tripleVT.oValue()))
+                        .append(",").append(formatStringToInsert(tripleVT.oType()))
+                        .append(",").append(formatStringToInsert(namedModel.getURI()))
+                        .append(",").append(version.getIndexVersion() - 1)
+                        .append(")");
+                if (stmtIterator.hasNext()) {
+                    quadsQuery.append(",\n");
+                } else {
+                    quadsQuery.append("\n");
+                }
+            }
+        }
+
+        String rlQuery = nodeSet.stream().map(node -> {
+            String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
+            String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
+            return "(" + formatStringToInsert(nValue) + "," + formatStringToInsert(nType) + ")";
+        }).collect(Collectors.joining(",\n"));
+
+        if (!rlQuery.isBlank()) {
+            versionedQuadComponent.saveResourceOrLiteral(rlQuery);
+        }
+
+        if (!quadsQuery.toString().isBlank()) {
+            versionedQuadComponent.saveQuads(quadsQuery.toString());
+        }
+    }
+
+    /**
+     * Extract and insert the versioned named graph
+     *
+     * @param file    The input file
+     * @param dataset The dataset
+     * @param version The version
+     */
+    private void extractAndInsertVersionedNamedGraph(MultipartFile file, Dataset dataset, Version version) {
+        StringBuilder ngQuery = new StringBuilder();
+        for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
+            Resource namedModel = i.next();
+            ngQuery.append("(").append(formatStringToInsert(namedModel.getURI()))
+                    .append(",").append(formatStringToInsert(file.getOriginalFilename()))
+                    .append(",").append(version.getIndexVersion() - 1)
+                    .append(")\n");
+        }
+
+        if (!ngQuery.toString().isBlank()) {
+            versionedNamedGraphComponent.saveVersionedNamedGraph(ngQuery.toString());
+        }
+    }
+
+    /**
+     * Format the string to insert
+     *
+     * @param value The value
+     * @return The formatted string
+     */
+    private String formatStringToInsert(String value) {
+        if (value == null)
+            return "null";
+        return "'" + value + "'";
+    }
+
+    /**
+     * Get the triple value type
+     *
+     * @param stmtIterator The statement iterator
+     * @param nodeSet      The node set
+     * @return The triple value type
+     */
+    private static TripleValueType getTripleValueType(StmtIterator stmtIterator, Set<RDFNode> nodeSet) {
+        Statement statement = stmtIterator.next();
         RDFNode subject = statement.getSubject();
         RDFNode predicate = statement.getPredicate();
         RDFNode object = statement.getObject();
 
-        ResourceOrLiteral savedRDFSubject = saveRDFResourceOrLiteralOrReturnExisting(subject, "Subject");
-        ResourceOrLiteral savedRDFPredicate = saveRDFResourceOrLiteralOrReturnExisting(predicate, "Predicate");
-        ResourceOrLiteral savedRDFObject = saveRDFResourceOrLiteralOrReturnExisting(object, "Object");
+        nodeSet.add(subject);
+        nodeSet.add(predicate);
+        nodeSet.add(object);
 
-        log.debug("Insert or updated (S: {}, P: {}, O: {})",
-                savedRDFSubject.getName(),
-                savedRDFPredicate.getName(),
-                savedRDFObject.getName()
-        );
+        String sValue = subject.isLiteral() ? subject.asLiteral().getString() : subject.toString();
+        String sType = subject.isLiteral() ? subject.asLiteral().getDatatype().getURI() : null;
 
-        return new RDFSavedTriple(savedRDFSubject, savedRDFPredicate, savedRDFObject);
-    }
+        String pValue = predicate.isLiteral() ? predicate.asLiteral().getString() : predicate.toString();
+        String pType = predicate.isLiteral() ? predicate.asLiteral().getDatatype().getURI() : null;
 
-    /**
-     * Saves and return the RDF node inside the database if it doesn't exist, else returns the existing one.
-     *
-     * @param spo  The RDF node
-     * @param type The RDF node type (logging purpose)
-     * @return The saved or existing RDFResourceOrLiteral element
-     */
-    private ResourceOrLiteral saveRDFResourceOrLiteralOrReturnExisting(RDFNode spo, String type) {
-        if (spo.isLiteral()) {
-            Literal literal = spo.asLiteral();
-            String literalValue = literal.getString();
-
-            log.debug("Upsert returning {} literal: {}", type, literalValue);
-            return rdfResourceRepository.save(literalValue, spo.asLiteral().getDatatype().getURI());
-        } else {
-
-            log.debug("Upsert {} resource: {}", type, spo);
-            return rdfResourceRepository.save(spo.toString(), null);
-        }
+        String oValue = object.isLiteral() ? object.asLiteral().getString() : object.toString();
+        String oType = object.isLiteral() ? object.asLiteral().getDatatype().getURI() : null;
+        return new TripleValueType(sValue, sType, pValue, pType, oValue, oType);
     }
 }

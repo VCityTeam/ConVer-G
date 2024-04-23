@@ -41,12 +41,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void setInitialBinding(QuerySolution binding) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setInitialBinding(Binding binding) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -192,12 +192,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void abort() {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void close() {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -207,22 +207,22 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void setTimeout(long timeout, TimeUnit timeoutUnits) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout1, TimeUnit timeUnit1, long timeout2, TimeUnit timeUnit2) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout1, long timeout2) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -249,9 +249,7 @@ public class VersioningQueryExecution implements QueryExecution {
                 yield "http://www.w3.org/2001/XMLSchema#float";
             case java.sql.Types.DOUBLE:
                 yield "http://www.w3.org/2001/XMLSchema#double";
-            case java.sql.Types.DECIMAL:
-                yield "http://www.w3.org/2001/XMLSchema#decimal";
-            case java.sql.Types.NUMERIC:
+            case java.sql.Types.DECIMAL, java.sql.Types.NUMERIC:
                 yield "http://www.w3.org/2001/XMLSchema#decimal";
             case java.sql.Types.REAL:
                 yield "http://www.w3.org/2001/XMLSchema#float";
@@ -263,19 +261,9 @@ public class VersioningQueryExecution implements QueryExecution {
                 yield "http://www.w3.org/2001/XMLSchema#time";
             case java.sql.Types.TIMESTAMP:
                 yield "http://www.w3.org/2001/XMLSchema#dateTime";
-            case java.sql.Types.CHAR:
+            case java.sql.Types.CHAR, java.sql.Types.VARCHAR, java.sql.Types.LONGVARCHAR:
                 yield "http://www.w3.org/2001/XMLSchema#string";
-            case java.sql.Types.VARCHAR:
-                yield "http://www.w3.org/2001/XMLSchema#string";
-            case java.sql.Types.LONGVARCHAR:
-                yield "http://www.w3.org/2001/XMLSchema#string";
-            case java.sql.Types.BINARY:
-                yield "http://www.w3.org/2001/XMLSchema#hexBinary";
-            case java.sql.Types.VARBINARY:
-                yield "http://www.w3.org/2001/XMLSchema#hexBinary";
-            case java.sql.Types.LONGVARBINARY:
-                yield "http://www.w3.org/2001/XMLSchema#hexBinary";
-            case java.sql.Types.BLOB:
+            case java.sql.Types.BINARY, java.sql.Types.VARBINARY, java.sql.Types.LONGVARBINARY, java.sql.Types.BLOB:
                 yield "http://www.w3.org/2001/XMLSchema#hexBinary";
             default:
                 yield "";

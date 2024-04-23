@@ -103,12 +103,28 @@ BEGIN
 END;
 ';
 
+CREATE OR REPLACE FUNCTION add_quad_to_rl(
+    node varchar, node_type varchar
+)
+    RETURNS SETOF resource_or_literal
+    LANGUAGE plpgsql
+AS
+'
+    DECLARE
+    BEGIN
+        RETURN QUERY
+            INSERT INTO resource_or_literal
+                VALUES (DEFAULT, node, node_type)
+                ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type
+                RETURNING *;
+    END;
+';
+
 CREATE OR REPLACE FUNCTION add_quad(
     subject varchar, subject_type varchar,
     property varchar, property_type varchar,
     object varchar, object_type varchar,
     named_graph varchar,
-    filename varchar,
     version integer
 )
     RETURNS setof versioned_quad
@@ -118,27 +134,70 @@ AS
 DECLARE
 BEGIN
     RETURN QUERY
-        WITH vng AS (SELECT id_named_graph, id_version, id_version_named_graph
-                     FROM version_named_graph(named_graph, filename, version)
-                     LIMIT 1),
-             s AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, subject, subject_type)
-                 LIMIT 1 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                 RETURNING *),
-             p AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, property, property_type)
-                 LIMIT 1 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                 RETURNING *),
-             o AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, object, object_type)
-                 LIMIT 1 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                 RETURNING *),
+        WITH vng AS (SELECT id_resource_or_literal
+                 FROM resource_or_literal
+                 WHERE name = named_graph AND type IS NULL
+                 ),
+             s AS (
+                   SELECT id_resource_or_literal
+                   FROM resource_or_literal
+                   WHERE name = subject AND (
+                         subject_type IS NULL OR type = subject_type
+                   )),
+             p AS (SELECT id_resource_or_literal
+                   FROM resource_or_literal
+                   WHERE name = property AND (
+                       property_type IS NULL OR type = property_type
+                   )),
+             o AS (SELECT id_resource_or_literal
+                   FROM resource_or_literal
+                   WHERE name = object AND (
+                       object_type IS NULL OR type = object_type
+                   )),
              q AS (INSERT INTO versioned_quad (id_subject, id_property, id_object, id_named_graph, validity)
-                 SELECT DISTINCT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal, vng.id_named_graph, LPAD('''', version, ''0'')::bit varying || B''1''
+                 SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal, vng.id_resource_or_literal, LPAD('''', version, ''0'')::bit varying || B''1''
                  FROM s, p, o, vng
-                 LIMIT 1 ON CONFLICT ON CONSTRAINT versioned_quad_pkey
+                 ON CONFLICT ON CONSTRAINT versioned_quad_pkey
                  DO UPDATE SET validity = versioned_quad.validity || B''1''
                  RETURNING *)
             TABLE q;
 END;
+';
+
+CREATE OR REPLACE FUNCTION add_triple(
+    subject varchar, subject_type varchar,
+    property varchar, property_type varchar,
+    object varchar, object_type varchar
+)
+    RETURNS setof workspace
+    LANGUAGE plpgsql
+AS
+'
+    DECLARE
+    BEGIN
+        RETURN QUERY
+            WITH s AS (
+                     SELECT id_resource_or_literal
+                     FROM resource_or_literal
+                     WHERE name = subject AND (
+                         subject_type IS NULL OR type = subject_type
+                         )),
+                 p AS (SELECT id_resource_or_literal
+                       FROM resource_or_literal
+                       WHERE name = property AND (
+                           property_type IS NULL OR type = property_type
+                           )),
+                 o AS (SELECT id_resource_or_literal
+                       FROM resource_or_literal
+                       WHERE name = object AND (
+                           object_type IS NULL OR type = object_type
+                           )),
+                 q AS (INSERT INTO workspace (id_subject, id_property, id_object)
+                     SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal
+                     FROM s, p, o
+                     ON CONFLICT ON CONSTRAINT workspace_pkey
+                         DO UPDATE SET id_subject = EXCLUDED.id_subject
+                     RETURNING *)
+                TABLE q;
+    END;
 ';
