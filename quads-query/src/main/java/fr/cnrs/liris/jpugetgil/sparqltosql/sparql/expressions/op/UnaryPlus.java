@@ -11,4 +11,9 @@ public class UnaryPlus extends AbstractFunction<E_UnaryPlus> {
     public UnaryPlus(E_UnaryPlus expr) {
         super(expr, true);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
 }

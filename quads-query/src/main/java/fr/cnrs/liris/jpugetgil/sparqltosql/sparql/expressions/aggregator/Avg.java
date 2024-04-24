@@ -4,6 +4,7 @@ import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.AbstractAggregator
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Expression;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggAvg;
 
 import java.util.List;
@@ -14,9 +15,10 @@ public class Avg extends AbstractAggregator<AggAvg> {
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
+     * @param var the variable associated to the aggregator
      */
-    public Avg(AggAvg aggr) {
-        super(aggr);
+    public Avg(AggAvg aggr, Var var) {
+        super(aggr, var);
     }
 
     @Override
@@ -27,13 +29,9 @@ public class Avg extends AbstractAggregator<AggAvg> {
 
         String joinedExpression = expressions.stream()
                 .map(expression -> expression.toSQLString(sqlVariables))
-                .collect(Collectors.joining(", "));
+                .collect(Collectors.joining(""));
 
-        expressions.forEach(expression -> sqlVariables.removeIf(
-                sqlVariable -> sqlVariable.getSqlVarName().equals(expression.getJenaExpr().getVarName()))
-        );
-
-        sqlVariables.add(new SQLVariable(SQLVarType.AGGREGATED, joinedExpression));
-        return this.getAggregator().getName() + "(" + joinedExpression + ") AS " + joinedExpression;
+        String varName = "agg" + getVar().getVarName().replace(".", "");
+        return this.getAggregator().getName() + "(" + joinedExpression + ") AS " + varName;
     }
 }

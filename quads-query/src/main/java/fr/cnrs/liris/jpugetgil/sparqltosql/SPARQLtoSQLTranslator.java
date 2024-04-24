@@ -83,7 +83,6 @@ public class SPARQLtoSQLTranslator {
             case OpDistinct opDistinct -> new StSDistinctOperator(
                     buildSPARQLContext(opDistinct.getSubOp(), context)
             ).buildSQLQuery();
-//            case OpExtend opExtend -> buildSPARQLContext(opExtend.getSubOp(), context);
             case OpExtend opExtend -> new StSExtendOperator(
                     opExtend,
                     buildSPARQLContext(opExtend.getSubOp(), context)

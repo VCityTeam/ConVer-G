@@ -11,4 +11,9 @@ public class Subtract extends AbstractFunction<E_Subtract> {
     public Subtract(E_Subtract expr) {
         super(expr, true);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
 }

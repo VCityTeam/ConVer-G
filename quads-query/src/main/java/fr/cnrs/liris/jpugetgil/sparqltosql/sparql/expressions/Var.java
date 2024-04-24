@@ -45,10 +45,15 @@ public class Var extends AbstractExpression<ExprVar> {
                                     sqlVariable.getSqlVarType() == SQLVarType.BIT_STRING
                     )
             ) {
-                return "id_versioned_named_graph";
+                return "v$id_versioned_named_graph";
             }
         }
 
         return "v$" + varName();
+    }
+
+    @Override
+    public String toSQLString() {
+        return varName();
     }
 }

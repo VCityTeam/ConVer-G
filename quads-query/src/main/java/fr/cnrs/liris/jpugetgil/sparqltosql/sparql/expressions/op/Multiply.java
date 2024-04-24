@@ -12,11 +12,11 @@ public class Multiply extends AbstractFunction<E_Multiply> {
 
     @Override
     public String toSQLString(List<SQLVariable> variables) {
-        return this.args[0].toSQLString() + getJenaExpr().getOpName() + this.args[1].toSQLString();
+        return this.args[0].toSQLString(variables) + getJenaExpr().getOpName() + this.args[1].toSQLString(variables);
     }
 
     @Override
     public String toSQLString() {
-        return this.args[0] + getJenaExpr().getOpName() + this.args[1];
+        return this.args[0].toSQLString() + getJenaExpr().getOpName() + this.args[1].toSQLString();
     }
 }

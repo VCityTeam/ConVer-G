@@ -6,4 +6,9 @@ public class LogicalNot extends AbstractFunction<E_LogicalNot> {
     public LogicalNot(E_LogicalNot expr) {
         super(expr, false);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
 }
