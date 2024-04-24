@@ -11,4 +11,9 @@ public class NotEquals extends AbstractFunction<E_NotEquals> {
     public String toSQLString() {
         return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
     }
+
+    @Override
+    public String toSQLStringAgg() {
+        return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
+    }
 }

@@ -12,10 +12,10 @@ public class CountDistinct extends AbstractAggregator<AggCountDistinct> {
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
-     * @param var the variable associated to the aggregator
+     * @param variable the variable associated to the aggregator
      */
-    public CountDistinct(AggCountDistinct aggr, Var var) {
-        super(aggr, var);
+    public CountDistinct(AggCountDistinct aggr, Var variable) {
+        super(aggr, variable);
     }
 
     @Override

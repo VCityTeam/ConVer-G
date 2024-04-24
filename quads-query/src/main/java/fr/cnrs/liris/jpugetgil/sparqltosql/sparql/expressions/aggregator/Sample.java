@@ -12,10 +12,10 @@ public class Sample extends AbstractAggregator<AggSample> {
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
-     * @param var the variable associated to the aggregator
+     * @param variable the variable associated to the aggregator
      */
-    public Sample(AggSample aggr, Var var) {
-        super(aggr, var);
+    public Sample(AggSample aggr, Var variable) {
+        super(aggr, variable);
     }
 
     @Override

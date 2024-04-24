@@ -12,10 +12,10 @@ public class Custom extends AbstractAggregator<AggCustom> {
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
-     * @param var the variable associated to the aggregator
+     * @param variable the variable associated to the aggregator
      */
-    public Custom(AggCustom aggr, Var var) {
-        super(aggr, var);
+    public Custom(AggCustom aggr, Var variable) {
+        super(aggr, variable);
     }
 
     @Override

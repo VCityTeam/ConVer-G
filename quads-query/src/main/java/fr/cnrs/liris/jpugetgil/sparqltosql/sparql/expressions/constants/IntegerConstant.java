@@ -16,4 +16,9 @@ public class IntegerConstant extends Constant<NodeValueInteger> {
     public String toSQLString() {
         return getJenaExpr().toString();
     }
+
+    @Override
+    public String toSQLStringAgg() {
+        return toSQLString();
+    }
 }

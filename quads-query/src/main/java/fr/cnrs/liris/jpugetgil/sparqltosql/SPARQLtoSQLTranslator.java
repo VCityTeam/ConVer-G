@@ -55,7 +55,7 @@ public class SPARQLtoSQLTranslator {
                     buildSPARQLContext(opJoin.getRight(), context)
             ).buildSQLQuery();
             case OpLeftJoin opLeftJoin -> {
-                // Jointure avec un/des var qui sont dans un optional
+                // Jointure avec un/des variable qui sont dans un optional
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
                 throw new IllegalArgumentException("TODO: OpLeftJoin not implemented");

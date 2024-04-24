@@ -99,8 +99,8 @@ class AppTest {
 
         assertEquals(rootBlazegraph.get("head").get("vars").size(), rootSPARQLtoSQL.get("head").get("vars").size());
 
-        rootSPARQLtoSQL.get("head").get("vars").forEach(var -> varsStS.add(var.asText()));
-        rootBlazegraph.get("head").get("vars").forEach(var -> varsBlazegraph.add(var.asText()));
+        rootSPARQLtoSQL.get("head").get("vars").forEach(variable -> varsStS.add(variable.asText()));
+        rootBlazegraph.get("head").get("vars").forEach(variable -> varsBlazegraph.add(variable.asText()));
         assertTrue(varsStS.containsAll(varsBlazegraph));
 
         assertEquals(rootBlazegraph.get("results").get("bindings").size(), rootSPARQLtoSQL.get("results").get("bindings").size());

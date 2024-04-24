@@ -1,13 +1,11 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
-import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.core.VarExprList;
@@ -98,7 +96,7 @@ public class StSGroupOperator extends StSOperator {
     private String getSelectDisaggregator() {
         return this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING)
-                .map((sqlVariable) -> {
+                .map(sqlVariable -> {
                     if (sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME) {
                         return (
                                 "vng.id_versioned_named_graph AS v$" + sqlVariable.getSqlVarName()

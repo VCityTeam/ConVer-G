@@ -12,10 +12,10 @@ public class Median extends AbstractAggregator<AggMedian> {
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
-     * @param var the variable associated to the aggregator
+     * @param variable the variable associated to the aggregator
      */
-    public Median(AggMedian aggr, Var var) {
-        super(aggr, var);
+    public Median(AggMedian aggr, Var variable) {
+        super(aggr, variable);
     }
 
     @Override
