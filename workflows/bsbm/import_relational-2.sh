@@ -18,6 +18,8 @@ do
     printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version $file"
     curl --location 'http://localhost:8080/import/version' \
       --header 'Content-Type: multipart/form-data' \
+      --connect-timeout 60 \
+      --max-time 300 \
       --form file=@"$file"
 done
 

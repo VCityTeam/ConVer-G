@@ -1,6 +1,6 @@
 #!/bin/bash
 
-start=$(date +%s)
+start=$(date +%s%3N)
 
 /bin/bash ./init_stack.sh
 
@@ -12,6 +12,6 @@ start=$(date +%s)
 
 /bin/bash ./gratte_ciel/import_triple.sh
 
-end=$(date +%s)
+end=$(date +%s%3N)
 
-echo "$((end-start))s"
+echo "$((end-start))ms"

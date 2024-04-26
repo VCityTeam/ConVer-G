@@ -15,6 +15,8 @@ do
     printf "%s\n$(date +%FT%T) - [Triple Store] $file."
     curl -X POST --location 'http://localhost:9999/blazegraph/sparql' \
       --header 'Content-Type:text/x-nquads' \
+      --connect-timeout 60 \
+      --max-time 300 \
       --data-binary @"$file"
 done
 
