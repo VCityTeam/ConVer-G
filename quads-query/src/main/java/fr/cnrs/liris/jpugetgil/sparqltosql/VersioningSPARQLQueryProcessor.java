@@ -48,13 +48,6 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
 
     @Override
     protected QueryExecution createQueryExecution(HttpAction action, Query query, DatasetGraph dataset) {
-//        try {
-//            return new VersioningQueryExecution(query);
-//        } catch (SQLException e) {
-//            log.error(e.getMessage());
-//            return null;
-//        }
         return new VersioningQueryExecution(query);
-
     }
 }

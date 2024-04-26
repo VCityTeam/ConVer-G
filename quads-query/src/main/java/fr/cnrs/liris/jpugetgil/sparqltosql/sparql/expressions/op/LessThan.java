@@ -6,4 +6,14 @@ public class LessThan extends AbstractFunction<E_LessThan> {
     public LessThan(E_LessThan expr) {
         super(expr, true);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
+
+    @Override
+    public String toSQLStringAgg() {
+        return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
+    }
 }

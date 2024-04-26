@@ -11,7 +11,7 @@ public abstract class AbstractFunction<E extends ExprFunction> extends AbstractE
 
     protected AbstractFunction(E expr, boolean requiresValue) {
         super(expr);
-        args = expr.getArgs().stream().map(Expression::fromJenaExpr).toArray(nargs -> new Expression[nargs]);
+        args = expr.getArgs().stream().map(Expression::fromJenaExpr).toArray(Expression[]::new);
         this.requiresValue = requiresValue;
     }
 

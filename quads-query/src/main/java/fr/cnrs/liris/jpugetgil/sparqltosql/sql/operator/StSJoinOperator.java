@@ -71,7 +71,6 @@ public class StSJoinOperator extends StSOperator {
                 )
         );
 
-//        String select = buildSelectVariables(leftSQLQuery.getContext(), rightSQLQuery.getContext(), commonVariables);
         String select = buildSelectVariablesWithoutGraph(leftSQLQuery.getContext(), rightSQLQuery.getContext());
         if (
                 graphLeftVariable != null && graphRightVariable != null &&

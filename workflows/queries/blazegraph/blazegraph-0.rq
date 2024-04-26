@@ -1,0 +1,7 @@
+# Query the graph store for all quads
+SELECT ?g ?s ?p ?o WHERE {
+    GRAPH ?g {
+      ?s ?p ?o .
+    }
+    FILTER(?g != <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace>)
+}

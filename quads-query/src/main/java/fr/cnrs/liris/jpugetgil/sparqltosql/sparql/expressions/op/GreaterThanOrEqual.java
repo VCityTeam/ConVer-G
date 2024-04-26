@@ -6,4 +6,14 @@ public class GreaterThanOrEqual extends AbstractFunction<E_GreaterThanOrEqual> {
     public GreaterThanOrEqual(E_GreaterThanOrEqual expr) {
         super(expr, true);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
+
+    @Override
+    public String toSQLStringAgg() {
+        return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
+    }
 }

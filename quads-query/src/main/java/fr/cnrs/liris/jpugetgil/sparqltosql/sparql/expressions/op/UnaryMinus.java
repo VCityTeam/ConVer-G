@@ -11,4 +11,14 @@ public class UnaryMinus extends AbstractFunction<E_UnaryMinus> {
     public UnaryMinus(E_UnaryMinus expr) {
         super(expr, true);
     }
+
+    @Override
+    public String toSQLString() {
+        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+    }
+
+    @Override
+    public String toSQLStringAgg() {
+        return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
+    }
 }

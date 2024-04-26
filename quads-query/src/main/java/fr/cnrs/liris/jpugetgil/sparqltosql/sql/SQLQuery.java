@@ -49,9 +49,17 @@ public class SQLQuery {
      */
     private String getSelectVariablesResourceOrLiteral() {
         return Streams.mapWithIndex(this.context.sqlVariables().stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> (
-                "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
-        )).collect(Collectors.joining(", "));
+                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> {
+            if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
+                return (
+                        sqlVariable.getSqlVarName() + " as name$" + sqlVariable.getSqlVarName()
+                );
+            } else {
+                return (
+                        "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
+                );
+            }
+        }).collect(Collectors.joining(", "));
     }
 
     /**
@@ -78,6 +86,7 @@ public class SQLQuery {
                         yield " JOIN resource_or_literal rl" + index + " ON " +
                                 "indexes_table.vng$" + sqlVariable.getSqlVarName() +
                                 " = rl" + index + ".id_resource_or_literal";
+                    case AGGREGATED:
                     default:
                         yield "";
                 }).collect(Collectors.joining(" \n"));

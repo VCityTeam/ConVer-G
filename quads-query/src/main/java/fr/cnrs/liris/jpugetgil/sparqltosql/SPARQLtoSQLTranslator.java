@@ -55,7 +55,7 @@ public class SPARQLtoSQLTranslator {
                     buildSPARQLContext(opJoin.getRight(), context)
             ).buildSQLQuery();
             case OpLeftJoin opLeftJoin -> {
-                // Jointure avec un/des var qui sont dans un optional
+                // Jointure avec un/des variable qui sont dans un optional
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
                 throw new IllegalArgumentException("TODO: OpLeftJoin not implemented");
@@ -89,7 +89,8 @@ public class SPARQLtoSQLTranslator {
             ).buildSQLQuery();
             case OpGroup opGroup -> new StSGroupOperator(opGroup, buildSPARQLContext(opGroup.getSubOp(), context))
                     .buildSQLQuery();
-            case OpQuadPattern opQuadPattern -> throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
+            case OpQuadPattern opQuadPattern ->
+                    throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
             case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
             case OpSlice opSlice -> throw new IllegalArgumentException("TODO: OpSlice not implemented");
             case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");

@@ -1,5 +1,3 @@
-version: '3.0'
-
 services:
   postgres:
     image: postgres:16.2
@@ -11,6 +9,12 @@ services:
       - POSTGRES_DB=sparqltosql
     volumes:
       - pg-volume:/var/lib/postgresql/data
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_min_duration_statement=250"]
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMITATION:-0.000}
+          memory: ${RAM_LIMITATION:-16Gb}
 
   postgres-test:
     image: postgres:16.2
@@ -22,6 +26,11 @@ services:
       - POSTGRES_DB=sparqltosql-test
     volumes:
       - pg-volume-test:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMITATION:-0.000}
+          memory: ${RAM_LIMITATION:-16Gb}
 
   blazegraph:
     image: vcity/blazegraph-cors
@@ -30,6 +39,11 @@ services:
     container_name: blazegraph
     volumes:
       - ./blazegraph.properties:/data/blazegraph.properties
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMITATION:-0.000}
+          memory: ${RAM_LIMITATION:-16Gb}
 
   sparql-to-sql-importer:
     build:
@@ -42,6 +56,11 @@ services:
     ports:
       - "8080:8080"
     container_name: sparql-to-sql-importer
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMITATION:-0.000}
+          memory: ${RAM_LIMITATION:-16Gb}
 
   sparql-to-sql-query:
     build:
@@ -60,6 +79,11 @@ services:
     ports:
       - "8081:8081"
     container_name: sparql-to-sql-query
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMITATION:-0.000}
+          memory: ${RAM_LIMITATION:-16Gb}
 
 volumes:
   pg-volume:

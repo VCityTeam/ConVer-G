@@ -41,12 +41,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void setInitialBinding(QuerySolution binding) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setInitialBinding(Binding binding) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -82,10 +82,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
             while (Objects.requireNonNull(rs).next()) {
                 ResultSetMetaData rsmd = rs.getMetaData();
+                List<String> allVariables = new ArrayList<>();
                 List<String> variables = new ArrayList<>();
                 int nbColumns = rsmd.getColumnCount();
                 for (int i = 1; i <= nbColumns; i++) {
                     String columnName = rsmd.getColumnName(i);
+                    allVariables.add(columnName);
                     if (columnName.startsWith("name$")) {
                         variables.add(columnName.substring(5));
                     }
@@ -98,7 +100,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
                     if (rs.getString("name$" + v) != null) {
                         String value = rs.getString("name$" + v);
-                        String valueType = rs.getString("type$" + v);
+                        String valueType;
+                        if (allVariables.contains("type$" + v)) {
+                            valueType = rs.getString("type$" + v);
+                        } else {
+                            valueType = getAssociatedRDFType(rsmd.getColumnType(rs.findColumn("name$" + v)));
+                        }
                         variableValue = valueType == null ?
                                 NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
@@ -185,12 +192,12 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void abort() {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void close() {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -200,22 +207,22 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public void setTimeout(long timeout, TimeUnit timeoutUnits) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout1, TimeUnit timeUnit1, long timeout2, TimeUnit timeUnit2) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
     public void setTimeout(long timeout1, long timeout2) {
-
+        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -226,5 +233,40 @@ public class VersioningQueryExecution implements QueryExecution {
     @Override
     public long getTimeout2() {
         return 0;
+    }
+
+    private String getAssociatedRDFType(int columnType) {
+        return switch (columnType) {
+            case java.sql.Types.INTEGER:
+                yield "http://www.w3.org/2001/XMLSchema#integer";
+            case java.sql.Types.BIGINT:
+                yield "http://www.w3.org/2001/XMLSchema#long";
+            case java.sql.Types.SMALLINT:
+                yield "http://www.w3.org/2001/XMLSchema#short";
+            case java.sql.Types.TINYINT:
+                yield "http://www.w3.org/2001/XMLSchema#byte";
+            case java.sql.Types.FLOAT:
+                yield "http://www.w3.org/2001/XMLSchema#float";
+            case java.sql.Types.DOUBLE:
+                yield "http://www.w3.org/2001/XMLSchema#double";
+            case java.sql.Types.DECIMAL, java.sql.Types.NUMERIC:
+                yield "http://www.w3.org/2001/XMLSchema#decimal";
+            case java.sql.Types.REAL:
+                yield "http://www.w3.org/2001/XMLSchema#float";
+            case java.sql.Types.BOOLEAN:
+                yield "http://www.w3.org/2001/XMLSchema#boolean";
+            case java.sql.Types.DATE:
+                yield "http://www.w3.org/2001/XMLSchema#date";
+            case java.sql.Types.TIME:
+                yield "http://www.w3.org/2001/XMLSchema#time";
+            case java.sql.Types.TIMESTAMP:
+                yield "http://www.w3.org/2001/XMLSchema#dateTime";
+            case java.sql.Types.CHAR, java.sql.Types.VARCHAR, java.sql.Types.LONGVARCHAR:
+                yield "http://www.w3.org/2001/XMLSchema#string";
+            case java.sql.Types.BINARY, java.sql.Types.VARBINARY, java.sql.Types.LONGVARBINARY, java.sql.Types.BLOB:
+                yield "http://www.w3.org/2001/XMLSchema#hexBinary";
+            default:
+                yield "";
+        };
     }
 }

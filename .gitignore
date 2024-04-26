@@ -40,3 +40,4 @@ build/
 
 ### direnv ###
 .envrc
+**/workflows/experiments/**

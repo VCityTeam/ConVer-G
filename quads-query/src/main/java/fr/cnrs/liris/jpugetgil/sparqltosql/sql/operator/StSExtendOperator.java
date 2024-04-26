@@ -1,13 +1,19 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
+import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Expression;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVarType;
+import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.algebra.op.OpExtend;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.core.VarExprList;
 import org.apache.jena.sparql.expr.Expr;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StSExtendOperator extends StSOperator {
     private final SQLQuery sqlQuery;
@@ -17,14 +23,31 @@ public class StSExtendOperator extends StSOperator {
     public StSExtendOperator(OpExtend op, SQLQuery sqlQuery) {
         this.sqlQuery = sqlQuery;
         this.op = op;
+        this.sqlVariables = sqlQuery.getContext().sqlVariables();
     }
 
     @Override
     public SQLQuery buildSQLQuery() {
         VarExprList varExprList = op.getVarExprList();
-        List<Var> vars = varExprList.getVars();
-        Map<Var, Expr> exprMap = varExprList.getExprs();
 
-        throw new IllegalArgumentException("TODO: implement StSExtendOperator.buildSQLQuery()");
+        String select = "SELECT *, " + getSelectExtend(varExprList.getExprs());
+        String from = " FROM (" + this.sqlQuery.getSql() + ") ext \n";
+
+        List<SQLVariable> newSQLVariables = new ArrayList<>(this.sqlVariables);
+        varExprList.getExprs().keySet()
+                .forEach(variable -> newSQLVariables.add(new SQLVariable(SQLVarType.AGGREGATED, variable.getVarName())));
+        SQLContext newSQLContext = sqlQuery.getContext()
+                .setSQLVariables(newSQLVariables);
+
+        return new SQLQuery(
+                select + from,
+                newSQLContext
+        );
+    }
+
+    private String getSelectExtend(Map<Var, Expr> exprs) {
+        return exprs.keySet().stream()
+                .map(variable -> Expression.fromJenaExpr(exprs.get(variable)).toSQLStringAgg() + " AS " + variable.getVarName())
+                .collect(Collectors.joining(", "));
     }
 }
