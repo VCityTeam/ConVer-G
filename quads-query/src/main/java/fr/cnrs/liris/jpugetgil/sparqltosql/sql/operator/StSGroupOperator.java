@@ -1,6 +1,5 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
@@ -34,14 +33,7 @@ public class StSGroupOperator extends StSOperator {
         VarExprList exprList = op.getGroupVars();
         List<Var> vars = exprList.getVars();
         String groupByVars = vars.stream()
-                .map(variable -> {
-                    if (sqlQuery.getContext().sparqlVarOccurrences().get(variable).stream()
-                            .anyMatch(sparqlOccurrence -> sparqlOccurrence.getType() == SPARQLPositionType.GRAPH_NAME)) {
-                        return "v$id_versioned_graph";
-                    } else {
-                        return "v$" + variable.getName();
-                    }
-                }).collect(Collectors.joining(", "));
+                .map(variable -> "v$" + variable.getName()).collect(Collectors.joining(", "));
         String aggregatorsString = op.getAggregators().stream()
                 .map(Aggregator::new)
                 .map(aggregator -> aggregator.toSQLString(sqlQuery.getContext().sqlVariables()))
@@ -83,8 +75,9 @@ public class StSGroupOperator extends StSOperator {
 
     private String getJoinDisaggregator() {
         return this.sqlQuery.getContext().sqlVariables().stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME).map((sqlVariable) -> (
-                        "JOIN versioned_named_graph vng ON vng.id_named_graph = disagg.ng$" + sqlVariable.getSqlVarName() + " AND get_bit(disagg.bs$" + sqlVariable.getSqlVarName() + ", vng.index_version) = 1"
+                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME).map(sqlVariable -> (
+                        "JOIN versioned_named_graph vng ON vng.id_named_graph = disagg.ng$" + sqlVariable.getSqlVarName() +
+                                " AND get_bit(disagg.bs$" + sqlVariable.getSqlVarName() + ", vng.index_version) = 1"
                 )).collect(Collectors.joining(" "));
     }
 

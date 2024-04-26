@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql;
 
 import org.apache.jena.fuseki.main.FusekiServer;
+import org.apache.jena.fuseki.main.sys.FusekiModules;
 import org.apache.jena.fuseki.server.Operation;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
@@ -18,13 +19,12 @@ public class App {
         log.info("Building Fuseki server...");
         DatasetGraph dsg = DatasetFactory.createGeneral().asDatasetGraph();
         Dataset ds = DatasetFactory.wrap(dsg);
-
+        FusekiModules modules = FusekiModules.create(new FusekiUI());
         FusekiServer server = FusekiServer.create()
                 .port(8081)
                 .add("/rdf", ds)
                 .registerOperation(Operation.Query, new VersioningSPARQLQueryProcessor())
-                .staticFileBase("src/main/resources/org.apache.jena.fuseki.ui")
-                // understand how to add static serving of fuseki ui files
+                .fusekiModules(modules)
                 .build();
         log.info("Fuseki server is built, starting...");
         server.start();

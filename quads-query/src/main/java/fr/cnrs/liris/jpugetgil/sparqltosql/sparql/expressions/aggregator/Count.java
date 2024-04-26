@@ -20,6 +20,7 @@ public class Count extends AbstractAggregator<AggCount> {
 
     @Override
     public String toSQLString(List<SQLVariable> sqlVariables) {
-        throw new IllegalStateException("Not implemented yet");
+        String varName = "agg" + getVariable().getVarName().replace(".", "");
+        return this.getAggregator().getName() + "(*) AS " + varName;
     }
 }
