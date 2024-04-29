@@ -1,6 +1,6 @@
 # Query the graph store for all quads in a specific versioned graph with a given subject and a join on the subject (predicate might be equal to predicate2 and object might be equal to object2)
 SELECT ?p ?o WHERE {
-    GRAPH <https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#76d098fdd8d19eee7834f78e43da07b44a7d4053d565e573e2c76efa79d14ec1> {
+    GRAPH <https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#14f2598964371b36e74abbf98e7e1d10acf1ad9a017ca0b03a0c76b1676f2140b4bc4d077614a363a7a62010477d879a3aad497762c07d0aef66d4d54ded0647> {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p ?o ;
         ?p2 ?o2 .
     }
