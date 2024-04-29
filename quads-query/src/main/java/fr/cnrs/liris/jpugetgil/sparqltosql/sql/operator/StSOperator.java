@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class StSOperator {
     private static final Logger log = LoggerFactory.getLogger(StSOperator.class);
 
-    public StSOperator() {
+    protected StSOperator() {
         log.info("Found {}.", this.getClass().getSimpleName());
     }
 
