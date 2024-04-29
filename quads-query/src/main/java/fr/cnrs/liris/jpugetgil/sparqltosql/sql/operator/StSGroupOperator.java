@@ -33,7 +33,8 @@ public class StSGroupOperator extends StSOperator {
         VarExprList exprList = op.getGroupVars();
         List<Var> vars = exprList.getVars();
         String groupByVars = vars.stream()
-                .map(variable -> "v$" + variable.getName()).collect(Collectors.joining(", "));
+                .map(variable -> "v$" + variable.getName())
+                .collect(Collectors.joining(", "));
         String aggregatorsString = op.getAggregators().stream()
                 .map(Aggregator::new)
                 .map(aggregator -> aggregator.toSQLString(sqlQuery.getContext().sqlVariables()))

@@ -17,7 +17,7 @@ public class StSSliceOperator extends StSOperator {
     @Override
     public SQLQuery buildSQLQuery() {
         String select = "SELECT * ";
-        String from = " FROM (" + this.sqlQuery.getSql() + ") slice \n";
+        String from = " FROM (" + this.sqlQuery.getSql() + ") sl \n";
         String limit;
         if (op.getStart() > 0) {
             limit = "LIMIT " + op.getLength() + " OFFSET " + op.getStart();

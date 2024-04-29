@@ -47,7 +47,8 @@ public class StSExtendOperator extends StSOperator {
 
     private String getSelectExtend(Map<Var, Expr> exprs) {
         return exprs.keySet().stream()
-                .map(variable -> Expression.fromJenaExpr(exprs.get(variable)).toSQLStringAgg() + " AS " + variable.getVarName())
-                .collect(Collectors.joining(", "));
+                .map(variable -> Expression.fromJenaExpr(exprs.get(variable)).toSQLStringAgg() +
+                        " AS " + variable.getVarName().replace(".", "agg")
+                ).collect(Collectors.joining(", "));
     }
 }

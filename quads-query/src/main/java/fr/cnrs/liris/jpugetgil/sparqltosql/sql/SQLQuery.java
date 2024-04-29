@@ -52,7 +52,7 @@ public class SQLQuery {
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> {
             if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
                 return (
-                        sqlVariable.getSqlVarName() + " as name$" + sqlVariable.getSqlVarName()
+                        sqlVariable.getSqlVarName().replace(".", "agg") + " as name$" + sqlVariable.getSqlVarName().replace(".", "agg")
                 );
             } else {
                 return (

@@ -56,15 +56,15 @@ public class StSProjectOperator extends StSOperator {
         return "SELECT " + sqlQuery.getContext().sqlVariables().stream()
                 .map(sqlVariable -> switch (sqlVariable.getSqlVarType()) {
                     case DATA:
-                        yield "project_table.v$" + sqlVariable.getSqlVarName();
+                        yield "project_table.v$" + sqlVariable.getSqlVarName().replace(".", "agg");
                     case BIT_STRING:
-                        yield "project_table.bs$" + sqlVariable.getSqlVarName();
+                        yield "project_table.bs$" + sqlVariable.getSqlVarName().replace(".", "agg");
                     case GRAPH_NAME:
-                        yield "project_table.ng$" + sqlVariable.getSqlVarName();
+                        yield "project_table.ng$" + sqlVariable.getSqlVarName().replace(".", "agg");
                     case VERSIONED_NAMED_GRAPH:
-                        yield "project_table.vng$" + sqlVariable.getSqlVarName();
+                        yield "project_table.vng$" + sqlVariable.getSqlVarName().replace(".", "agg");
                     case AGGREGATED:
-                        yield "project_table." + sqlVariable.getSqlVarName();
+                        yield "project_table." + sqlVariable.getSqlVarName().replace(".", "agg");
                 })
                 .collect(Collectors.joining(", "));
     }
