@@ -89,15 +89,8 @@ public class SPARQLtoSQLTranslator {
             ).buildSQLQuery();
             case OpGroup opGroup -> new StSGroupOperator(opGroup, buildSPARQLContext(opGroup.getSubOp(), context))
                     .buildSQLQuery();
-            case OpQuadPattern opQuadPattern ->
-                    throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
-            case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
-            case OpSlice opSlice -> throw new IllegalArgumentException("TODO: OpSlice not implemented");
-            case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");
-            case OpTopN opTopN -> throw new IllegalArgumentException("TODO: OpTopN not implemented");
-            case OpPath opPath -> throw new IllegalArgumentException("TODO: OpPath not implemented");
-            case OpLabel opLabel -> throw new IllegalArgumentException("TODO: OpLabel not implemented");
-            case OpList opList -> throw new IllegalArgumentException("TODO: OpList not implemented");
+            case OpSlice opSlice -> new StSSliceOperator(opSlice, buildSPARQLContext(opSlice.getSubOp(), context))
+                    .buildSQLQuery();
             case OpBGP opBGP -> new StSBGPOperator(opBGP, addURIsToContext(opBGP, context))
                     .buildSQLQuery();
             case OpGraph opGraph -> {
@@ -123,6 +116,14 @@ public class SPARQLtoSQLTranslator {
                 yield new StSGraphOperator(opGraph, buildSPARQLContext(opGraph.getSubOp(), cont))
                         .buildSQLQuery();
             }
+            case OpQuadPattern opQuadPattern ->
+                    throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
+            case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
+            case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");
+            case OpTopN opTopN -> throw new IllegalArgumentException("TODO: OpTopN not implemented");
+            case OpPath opPath -> throw new IllegalArgumentException("TODO: OpPath not implemented");
+            case OpLabel opLabel -> throw new IllegalArgumentException("TODO: OpLabel not implemented");
+            case OpList opList -> throw new IllegalArgumentException("TODO: OpList not implemented");
             default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
         };
     }
