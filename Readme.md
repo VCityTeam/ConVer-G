@@ -382,10 +382,10 @@ After some transformations, we have the following quads representing the theoret
 
 After the import inside the relational database, we have the following quads representing the implementation:
 
-| Subject                       | Predicate | Object                           | Named Graph                               | Validity |
-|-------------------------------|-----------|----------------------------------|-------------------------------------------|----------|
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
-| http://example.edu/Building#2 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#IGN        | 11       |
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#Grand-Lyon | 01       |
-| http://example.edu/Building#3 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 01       |
+| Subject                       | Predicate | Object | Named Graph                               | Validity |
+|-------------------------------|-----------|--------|-------------------------------------------|----------|
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon | 11       |
+| http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon | 10       |
+| http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        | 10       |
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#IGN        | 01       |
+| http://example.edu/Building#3 | height    | 15     | http://example.edu/Named-Graph#Grand-Lyon | 01       |
