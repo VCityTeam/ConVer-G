@@ -46,7 +46,7 @@ public class StSBGPOperator extends StSOperator {
      */
     private String generateSelect() {
         if (context.graph() instanceof Node_Variable) {
-            this.sqlVariables.add(new SQLVariable(SQLVarType.BIT_STRING, context.graph().getName()));
+            this.sqlVariables.add(new SQLVariable(SQLVarType.BIT_STRING, context.graph().getName(), false));
             return intersectionValidity() + " as bs$" + context.graph().getName() + ", " + getSelectVariables();
         } else {
             return getSelectVariables();

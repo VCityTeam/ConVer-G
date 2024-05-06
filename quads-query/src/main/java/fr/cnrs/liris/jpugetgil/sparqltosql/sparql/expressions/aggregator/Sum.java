@@ -26,7 +26,7 @@ public class Sum extends AbstractAggregator<AggSum> {
                 .toList();
 
         String joinedExpression = expressions.stream()
-                .map(Expression::toSQLString)
+                .map(expression -> expression.toSQLString() + "::float")
                 .collect(Collectors.joining(""));
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");

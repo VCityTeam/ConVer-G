@@ -26,7 +26,7 @@ public class Max extends AbstractAggregator<AggMax> {
                 .toList();
 
         String joinedExpression = expressions.stream()
-                .map(Expression::toSQLString)
+                .map(expression -> expression.toSQLString() + "::float")
                 .collect(Collectors.joining(""));
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");

@@ -30,7 +30,10 @@ public class GroupConcat extends AbstractAggregator<AggGroupConcat> {
                 .collect(Collectors.joining(""));
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");
-        return "GROUP_CONCAT('" + joinedExpression + "' SEPARATOR '" +
-                this.getAggregator().getSeparator() + "') AS " + varName;
+        if (this.getAggregator().getSeparator() == null) {
+            return "STRING_AGG(" + joinedExpression + ", ' ') AS " + varName;
+        } else {
+            return "STRING_AGG(" + joinedExpression + ", '" + this.getAggregator().getSeparator() + "') AS " + varName;
+        }
     }
 }

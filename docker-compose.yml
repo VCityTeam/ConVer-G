@@ -45,7 +45,7 @@ services:
           cpus: ${CPU_LIMITATION:-0.000}
           memory: ${RAM_LIMITATION:-16Gb}
 
-  sparql-to-sql-importer:
+  ud-quads-versioning:
     build:
       context: quads-importer
       dockerfile: Dockerfile
@@ -62,7 +62,7 @@ services:
           cpus: ${CPU_LIMITATION:-0.000}
           memory: ${RAM_LIMITATION:-16Gb}
 
-  sparql-to-sql-query:
+  ud-quads-query:
     build:
       context: quads-query
       dockerfile: Dockerfile

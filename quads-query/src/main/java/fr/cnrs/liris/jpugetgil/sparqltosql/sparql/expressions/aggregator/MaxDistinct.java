@@ -26,7 +26,7 @@ public class MaxDistinct extends AbstractAggregator<AggMaxDistinct> {
                 .toList();
 
         String joinedExpression = expressions.stream()
-                .map(Expression::toSQLString)
+                .map(expression -> expression.toSQLString() + "::float")
                 .collect(Collectors.joining(""));
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");

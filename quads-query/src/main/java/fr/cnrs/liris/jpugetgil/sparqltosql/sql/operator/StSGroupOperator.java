@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
+import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
@@ -30,6 +31,8 @@ public class StSGroupOperator extends StSOperator {
             disaggregateBitVector();
         }
 
+        getIdValues();
+
         VarExprList exprList = op.getGroupVars();
         List<Var> vars = exprList.getVars();
         String groupByVars = vars.stream()
@@ -46,11 +49,31 @@ public class StSGroupOperator extends StSOperator {
             projections = aggregatorsString + groupByVars;
         }
 
+
         return new SQLQuery(
                 "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
                         ") sq\n GROUP BY (" + groupByVars + ")",
                 sqlQuery.getContext()
         );
+    }
+
+    private void getIdValues() {
+        String select = "SELECT " + getSelectIdValues();
+        String from = " FROM (" + this.sqlQuery.getSql() + ") idValues \n";
+        String join = getJoinIdValues();
+
+        List<SQLVariable> sqlVariables = this.sqlQuery.getContext().sqlVariables().stream()
+                .filter(sqlVar -> sqlVar.getSqlVarType() != SQLVarType.BIT_STRING)
+                .map(sqlVar -> {
+                    if (sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME) {
+                        return new SQLVariable(SQLVarType.DATA, sqlVar.getSqlVarName(), true);
+                    } else {
+                        return new SQLVariable(sqlVar.getSqlVarType(), sqlVar.getSqlVarName(), true);
+                    }
+                }).toList();
+
+        SQLContext sqlContext = this.sqlQuery.getContext().setSQLVariables(sqlVariables);
+        this.sqlQuery = new SQLQuery(select + from + join, sqlContext);
     }
 
     private void disaggregateBitVector() {
@@ -100,5 +123,21 @@ public class StSGroupOperator extends StSOperator {
                         );
                     }
                 }).collect(Collectors.joining(", "));
+    }
+
+    private String getSelectIdValues() {
+        return Streams.mapWithIndex(this.sqlQuery.getContext().sqlVariables().stream()
+                                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING),
+                        (sqlVariable, index) -> "rol" + index + ".name AS v$" + sqlVariable.getSqlVarName())
+                .collect(Collectors.joining(", "));
+    }
+
+    private String getJoinIdValues() {
+        return Streams.mapWithIndex(this.sqlQuery.getContext().sqlVariables().stream()
+                                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING),
+                        (sqlVariable, index) -> "JOIN resource_or_literal rol" + index + " ON rol" + index +
+                                ".id_resource_or_literal = idValues.v$" + sqlVariable.getSqlVarName())
+                .collect(Collectors.joining(" "));
+
     }
 }
