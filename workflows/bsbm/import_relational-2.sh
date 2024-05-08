@@ -16,11 +16,13 @@ printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Versions import started."
 find . -type f -name "*.split.ttl.relational.nq" -print0 | while IFS= read -r -d '' file
 do
     printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Version $file"
+    start=$(date +%s%3N)
     curl --location 'http://localhost:8080/import/version' \
       --header 'Content-Type: multipart/form-data' \
       --connect-timeout 60 \
-      --max-time 300 \
       --form file=@"$file"
+    end=$(date +%s%3N)
+    printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"
 done
 
 printf "\n%s$(date +%FT%T) - [SPARQL-to-SQL] Versions import completed."

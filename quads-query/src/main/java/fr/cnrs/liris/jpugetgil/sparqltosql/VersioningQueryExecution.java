@@ -72,7 +72,12 @@ public class VersioningQueryExecution implements QueryExecution {
     @Override
     public org.apache.jena.query.ResultSet execSelect() {
         SPARQLtoSQLTranslator translator = new SPARQLtoSQLTranslator();
+
+        Long start = System.nanoTime();
         String sqlQuery = translator.translate(query);
+        Long end = System.nanoTime();
+
+        log.info("[Measure] (Query translation duration): {} ns;", end - start);
 
         try (ResultSet rs = jdbcConnection.executeSQL(sqlQuery)) {
 

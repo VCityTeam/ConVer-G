@@ -8,8 +8,16 @@ if [ "$#" -ne 2 ] && [ "$#" -ne 5 ]; then
     exit 1
 fi
 
+if [ "$#" -gt 3 ]; then
+  printf "[Init stack] {Limitation} Setting RAM to %smb and CPU number to %s\n" "$3" "$4"
+  echo "RAM_LIMITATION=$3" > .env
+  echo "CPU_LIMITATION=$4" >> .env
+
+  mv .env ../.env
+fi
+
 echo "----------------------------------------------------------------- [BEGIN WORKFLOW] -----------------------------------------------------------------"
-/bin/bash ./init_stack.sh $3 $4 $5
+/bin/bash ./init_stack.sh
 
 /bin/bash ./bsbm/download-2.sh "$1" "$2"
 

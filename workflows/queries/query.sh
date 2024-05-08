@@ -28,7 +28,7 @@ do
       --data "$content"
 
     end_query_relational=$(date +%s%3N)
-    printf "[Measure] {Query relational} Query %s duration: %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
+    printf "[Measure] (Query StS Query %s): %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
 done
 
 printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query completed."
@@ -49,7 +49,7 @@ do
       --header 'Accept: application/sparql-results+json'
 
     end_query_triple=$(date +%s%3N)
-    printf "[Measure] {Query triple} Query %s duration: %s ms\n" "$file" "$((end_query_triple-start_query_triple))s"
+    printf "[Measure] (Query triple Query %s): %s ms\n" "$file" "$((end_query_triple-start_query_triple))s"
 done
 
 printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query completed."

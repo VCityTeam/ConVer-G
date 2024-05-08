@@ -13,8 +13,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   postgres-test:
     image: postgres:16.2
@@ -29,8 +29,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   blazegraph:
     image: vcity/blazegraph-cors
@@ -42,8 +42,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   ud-quads-versioning:
     build:
@@ -56,11 +56,6 @@ services:
     ports:
       - "8080:8080"
     container_name: sparql-to-sql-importer
-    deploy:
-      resources:
-        limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
 
   ud-quads-query:
     build:
@@ -82,8 +77,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${QUERY_CPU_LIMITATION:-0.000}
+          memory: ${QUERY_RAM_LIMITATION:-16Gb}
 
 volumes:
   pg-volume:

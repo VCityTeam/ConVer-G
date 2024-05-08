@@ -91,7 +91,7 @@ public class QuadImportService implements IQuadImportService {
             extractAndInsertQuads(dataset, version);
 
             Long end = System.nanoTime();
-            log.info("Time of execution: {} ns for file: {}", end - start, file.getOriginalFilename());
+            log.info("[Measure] (Import relational internal): {} ns for file: {};", end - start, file.getOriginalFilename());
         } catch (RiotException | IOException e) {
             versionRepository.delete(version);
             throw new RiotException(e.getMessage());
@@ -146,7 +146,7 @@ public class QuadImportService implements IQuadImportService {
             }
 
             Long end = System.nanoTime();
-            log.info("Time of execution: {} ns for file: {}", end - start, file.getOriginalFilename());
+            log.info("[Measure] (Import relational internal): {} ns for file: {};", end - start, file.getOriginalFilename());
         } catch (RiotException | IOException e) {
             throw new RiotException(e.getMessage());
         }
