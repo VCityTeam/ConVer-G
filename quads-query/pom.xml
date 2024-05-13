@@ -9,7 +9,7 @@
 
     <name>quads-query</name>
     <description>A simple fuseki-test.</description>
-    <url>https://github.com/VCityTeam/SPARQL-to-SQL</url>
+    <url>https://github.com/VCityTeam/ConVer-G</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
