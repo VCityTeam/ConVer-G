@@ -370,9 +370,9 @@ After some transformations, we have the following quads representing the theoret
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#IGN                           |                                                                      |
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
-| http://example.edu/Building#1                                        | height                                                      | http://example.edu/Type#Tower                                | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#3                                        | height                                                      | http://example.edu/Type#Building                             | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#1                                        | height                                                      | http://example.edu/Type#Tower                                | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 |
+| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#3                                        | height                                                      | 15                                                           | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 |
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                    |                                                                      |
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2018 |                                                                      |
 | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#IGN                           |                                                                      |
@@ -382,10 +382,10 @@ After some transformations, we have the following quads representing the theoret
 
 After the import inside the relational database, we have the following quads representing the implementation:
 
-| Subject                       | Predicate | Object                           | Named Graph                               | Validity |
-|-------------------------------|-----------|----------------------------------|-------------------------------------------|----------|
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
-| http://example.edu/Building#2 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 10       |
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#IGN        | 11       |
-| http://example.edu/Building#1 | height    | http://example.edu/Type#Tower    | http://example.edu/Named-Graph#Grand-Lyon | 01       |
-| http://example.edu/Building#3 | height    | http://example.edu/Type#Building | http://example.edu/Named-Graph#Grand-Lyon | 01       |
+| Subject                       | Predicate | Object | Named Graph                               | Validity |
+|-------------------------------|-----------|--------|-------------------------------------------|----------|
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon | 11       |
+| http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon | 10       |
+| http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        | 10       |
+| http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#IGN        | 01       |
+| http://example.edu/Building#3 | height    | 15     | http://example.edu/Named-Graph#Grand-Lyon | 01       |
