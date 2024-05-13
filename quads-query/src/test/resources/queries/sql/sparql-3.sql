@@ -2,7 +2,7 @@
 
 SELECT rl2.name as predicate, rl3.name as object, rl4.name as graph -- récupération des noms des ressources (URI ou litéral)
 FROM (
-         SELECT t1.id_property as v$p, t1.id_object as v$o, t1.id_named_graph as gn$g, t1.validity & t2.validity as bs$g, t2.id_property as v$p2, t2.id_object as v$o2
+         SELECT t1.id_predicate as v$p, t1.id_object as v$o, t1.id_named_graph as gn$g, t1.validity & t2.validity as bs$g, t2.id_predicate as v$p2, t2.id_object as v$o2
          FROM versioned_quad t1, versioned_quad t2
          WHERE t1.id_subject = 1231796 AND t2.id_subject = 1231796
          AND bit_count(t1.validity & t2.validity) <> 0

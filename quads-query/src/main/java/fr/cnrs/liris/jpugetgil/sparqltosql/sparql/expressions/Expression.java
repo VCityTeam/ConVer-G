@@ -3,15 +3,12 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.constants.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.op.*;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.transformer.FilterConfiguration;
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.expr.*;
 import org.apache.jena.sparql.expr.nodevalue.*;
 
-import java.util.List;
-
 public interface Expression {
 
-    public static Expression fromJenaExpr(Expr expr) {
+    static Expression fromJenaExpr(Expr expr) {
         return switch (expr) {
             case E_Add add -> new Add(add);
             case E_Bound bound -> new Bound(bound);
@@ -91,15 +88,6 @@ public interface Expression {
      * @return expression represented in jena algebra
      */
     Expr getJenaExpr();
-
-    /**
-     * Builds the SQL associated to this expression
-     *
-     * @return the SQL representation of this expression
-     */
-    default String toSQLString(List<SQLVariable> sqlVariables) {
-        throw new IllegalArgumentException("This expression does not have a SQL representation.");
-    }
 
     default String toSQLString() {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");

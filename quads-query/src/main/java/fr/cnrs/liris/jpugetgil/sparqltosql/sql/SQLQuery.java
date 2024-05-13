@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
 import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SQLQuery {
@@ -50,15 +51,28 @@ public class SQLQuery {
     private String getSelectVariablesResourceOrLiteral() {
         return Streams.mapWithIndex(this.context.sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> {
-            if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
-                return (
-                        sqlVariable.getSqlVarName().replace(".", "agg") + " as name$" + sqlVariable.getSqlVarName().replace(".", "agg")
-                );
+            if (sqlVariable.isValue()) {
+                if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
+                    return (
+                            sqlVariable.getSqlVarName().replace(".", "agg") + " as name$" + sqlVariable.getSqlVarName().replace(".", "agg")
+                    );
+                } else {
+                    return (
+                           "v$" + sqlVariable.getSqlVarName()
+                    );
+                }
             } else {
-                return (
-                        "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
-                );
+                if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
+                    return (
+                            sqlVariable.getSqlVarName().replace(".", "agg") + " as name$" + sqlVariable.getSqlVarName().replace(".", "agg")
+                    );
+                } else {
+                    return (
+                            "rl" + index + ".name as name$" + sqlVariable.getSqlVarName() + ", rl" + index + ".type as type$" + sqlVariable.getSqlVarName()
+                    );
+                }
             }
+
         }).collect(Collectors.joining(", "));
     }
 
@@ -69,26 +83,28 @@ public class SQLQuery {
      */
     private String getJoinVariablesResourceOrLiteral() {
         return Streams.mapWithIndex(this.context.sqlVariables().stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) ->
-                switch (sqlVariable.getSqlVarType()) {
-                    case DATA:
-                        yield " JOIN resource_or_literal rl" + index + " ON indexes_table.v$" +
-                                sqlVariable.getSqlVarName() +
-                                " = rl" + index + ".id_resource_or_literal";
-                    case GRAPH_NAME:
-                        yield " JOIN versioned_named_graph vng" + index + " ON indexes_table.ng$" +
-                                sqlVariable.getSqlVarName() + " = vng" + index +
-                                ".id_named_graph AND get_bit(indexes_table.bs$" +
-                                sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
-                                " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
-                                index + ".id_resource_or_literal";
-                    case VERSIONED_NAMED_GRAPH:
-                        yield " JOIN resource_or_literal rl" + index + " ON " +
-                                "indexes_table.vng$" + sqlVariable.getSqlVarName() +
-                                " = rl" + index + ".id_resource_or_literal";
-                    case AGGREGATED:
-                    default:
-                        yield "";
-                }).collect(Collectors.joining(" \n"));
+                        .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING), (sqlVariable, index) -> {
+                    if (sqlVariable.isValue()) {
+                        return null;
+                    } else {
+                        return switch (sqlVariable.getSqlVarType()) {
+                            case DATA -> " JOIN resource_or_literal rl" + index + " ON indexes_table.v$" +
+                                    sqlVariable.getSqlVarName() +
+                                    " = rl" + index + ".id_resource_or_literal";
+                            case GRAPH_NAME -> " JOIN versioned_named_graph vng" + index + " ON indexes_table.ng$" +
+                                    sqlVariable.getSqlVarName() + " = vng" + index +
+                                    ".id_named_graph AND get_bit(indexes_table.bs$" +
+                                    sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
+                                    " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
+                                    index + ".id_resource_or_literal";
+                            case VERSIONED_NAMED_GRAPH -> " JOIN resource_or_literal rl" + index + " ON " +
+                                    "indexes_table.vng$" + sqlVariable.getSqlVarName() +
+                                    " = rl" + index + ".id_resource_or_literal";
+                            default -> "";
+                        };
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" \n"));
     }
 }

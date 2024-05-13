@@ -13,8 +13,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   postgres-test:
     image: postgres:16.2
@@ -29,8 +29,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   blazegraph:
     image: vcity/blazegraph-cors
@@ -42,12 +42,12 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
-  sparql-to-sql-importer:
+  ud-quads-versioning:
     build:
-      context: quads-importer
+      context: quads-versioning
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -55,14 +55,9 @@ services:
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
     ports:
       - "8080:8080"
-    container_name: sparql-to-sql-importer
-    deploy:
-      resources:
-        limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+    container_name: quads-versioning
 
-  sparql-to-sql-query:
+  ud-quads-query:
     build:
       context: quads-query
       dockerfile: Dockerfile
@@ -78,12 +73,12 @@ services:
       - "DATASOURCE_PASSWORD=password"
     ports:
       - "8081:8081"
-    container_name: sparql-to-sql-query
+    container_name: quads-query
     deploy:
       resources:
         limits:
-          cpus: ${CPU_LIMITATION:-0.000}
-          memory: ${RAM_LIMITATION:-16Gb}
+          cpus: ${QUERY_CPU_LIMITATION:-0.000}
+          memory: ${QUERY_RAM_LIMITATION:-16Gb}
 
 volumes:
   pg-volume:

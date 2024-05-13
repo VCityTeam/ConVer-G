@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ######################################################
-# Find all the queries and send them to the SPARQL-to-SQL and Blazegraph servers
+# Find all the queries and send them to the quads-query and Blazegraph servers
 ######################################################
 
 log_folder="."
@@ -9,13 +9,13 @@ log_folder="."
 if [ "$#" -eq 1 ] ; then
     echo "Logs will be saved in the folder $1"
     log_folder="$1"
-fi
+fis
 
-printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query started."
+printf "\n%s$(date +%FT%T) - [quads-query] Query started."
 
 find . -type f -name "sts*.rq" -print0 | while IFS= read -r -d '' file
 do
-    printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query $file"
+    printf "\n%s$(date +%FT%T) - [quads-query] Query $file"
     name=$(basename "$file")
 
     start_query_relational=$(date +%s%3N)
@@ -28,10 +28,10 @@ do
       --data "$content"
 
     end_query_relational=$(date +%s%3N)
-    printf "[Measure] {Query relational} Query %s duration: %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
+    printf "[Measure] (Query StS Query %s): %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
 done
 
-printf "\n%s$(date +%FT%T) - [Query - SPARQL-to-SQL] Query completed."
+printf "\n%s$(date +%FT%T) - [quads-query] Query completed."
 
 
 printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query started."
@@ -49,7 +49,7 @@ do
       --header 'Accept: application/sparql-results+json'
 
     end_query_triple=$(date +%s%3N)
-    printf "[Measure] {Query triple} Query %s duration: %s ms\n" "$file" "$((end_query_triple-start_query_triple))s"
+    printf "[Measure] (Query triple Query %s): %s ms\n" "$file" "$((end_query_triple-start_query_triple))s"
 done
 
 printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query completed."

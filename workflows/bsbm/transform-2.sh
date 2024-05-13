@@ -42,9 +42,9 @@ printf "\n%s$(date +%FT%T) - [Transformations] Version annotation completed."
 printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace started."
 ### Adds BSBM tagged data in test workspace
 
-rm -rf ../quads-importer/src/test/resources/dataset
-mkdir -p ../quads-importer/src/test/resources/dataset
-cp quads/relational/* ../quads-importer/src/test/resources/dataset
+rm -rf ../quads-versioning/src/test/resources/dataset
+mkdir -p ../quads-versioning/src/test/resources/dataset
+cp quads/relational/* ../quads-versioning/src/test/resources/dataset
 
 printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace completed."
 echo "----------------------------------------------------------------- [END TRANSFORM] -----------------------------------------------------------------"

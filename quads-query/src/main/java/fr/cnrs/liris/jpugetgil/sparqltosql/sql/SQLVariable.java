@@ -19,9 +19,17 @@ public class SQLVariable {
 
     private String sqlVarName;
 
+    private boolean isValue = false;
+
     public SQLVariable(SQLVarType sqlVarType, String sqlVarName) {
         this.sqlVarType = sqlVarType;
         this.sqlVarName = sqlVarName;
+    }
+
+    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isValue) {
+        this.sqlVarType = sqlVarType;
+        this.sqlVarName = sqlVarName;
+        this.isValue = isValue;
     }
 
     public SQLVarType getSqlVarType() {
@@ -38,6 +46,10 @@ public class SQLVariable {
 
     public void setSqlVarName(String sqlVarName) {
         this.sqlVarName = sqlVarName;
+    }
+
+    public boolean isValue() {
+        return isValue;
     }
 
     public String join(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {

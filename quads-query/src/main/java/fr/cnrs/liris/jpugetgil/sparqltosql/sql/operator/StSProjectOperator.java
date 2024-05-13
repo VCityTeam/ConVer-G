@@ -25,8 +25,9 @@ public class StSProjectOperator extends StSOperator {
     public SQLQuery buildSQLQuery() {
         List<SQLVariable> sqlVariables = new ArrayList<>();
         for (SQLVariable sqlVariable : this.sqlVariables) {
-            if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED ||
-                    op.getVars().stream()
+            if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
+                sqlVariables.add(new SQLVariable(sqlVariable.getSqlVarType(), sqlVariable.getSqlVarName(), true));
+            } else if (op.getVars().stream()
                             .anyMatch(variable -> variable.getName().equals(sqlVariable.getSqlVarName()))) {
                 sqlVariables.add(sqlVariable);
             }

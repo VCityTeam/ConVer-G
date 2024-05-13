@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.cnrs.liris.jpugetgil</groupId>
-    <artifactId>sparql-to-sql-query</artifactId>
+    <artifactId>quads-query</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>sparql-to-sql-query</name>
+    <name>quads-query</name>
     <description>A simple fuseki-test.</description>
-    <url>https://github.com/VCityTeam/SPARQL-to-SQL</url>
+    <url>https://github.com/VCityTeam/ConVer-G</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

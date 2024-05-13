@@ -1,14 +1,11 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions;
 
-import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLVariable;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.Aggregator;
 
-import java.util.List;
-
 public abstract class AbstractAggregator<E extends Aggregator> {
-    private E aggr;
-    private Var variable;
+    private final E aggr;
+    private final Var variable;
 
     /**
      * Build an aggregator from a Jena aggregator.
@@ -28,5 +25,5 @@ public abstract class AbstractAggregator<E extends Aggregator> {
         return variable;
     }
 
-    public abstract String toSQLString(List<SQLVariable> sqlVariables);
+    public abstract String toSQLString();
 }

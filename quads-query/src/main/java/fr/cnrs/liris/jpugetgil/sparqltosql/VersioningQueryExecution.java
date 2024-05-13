@@ -72,7 +72,12 @@ public class VersioningQueryExecution implements QueryExecution {
     @Override
     public org.apache.jena.query.ResultSet execSelect() {
         SPARQLtoSQLTranslator translator = new SPARQLtoSQLTranslator();
+
+        Long start = System.nanoTime();
         String sqlQuery = translator.translate(query);
+        Long end = System.nanoTime();
+
+        log.info("[Measure] (Query translation duration): {} ns;", end - start);
 
         try (ResultSet rs = jdbcConnection.executeSQL(sqlQuery)) {
 
@@ -245,14 +250,12 @@ public class VersioningQueryExecution implements QueryExecution {
                 yield "http://www.w3.org/2001/XMLSchema#short";
             case java.sql.Types.TINYINT:
                 yield "http://www.w3.org/2001/XMLSchema#byte";
-            case java.sql.Types.FLOAT:
+            case java.sql.Types.REAL, java.sql.Types.FLOAT:
                 yield "http://www.w3.org/2001/XMLSchema#float";
             case java.sql.Types.DOUBLE:
                 yield "http://www.w3.org/2001/XMLSchema#double";
             case java.sql.Types.DECIMAL, java.sql.Types.NUMERIC:
                 yield "http://www.w3.org/2001/XMLSchema#decimal";
-            case java.sql.Types.REAL:
-                yield "http://www.w3.org/2001/XMLSchema#float";
             case java.sql.Types.BOOLEAN:
                 yield "http://www.w3.org/2001/XMLSchema#boolean";
             case java.sql.Types.DATE:
