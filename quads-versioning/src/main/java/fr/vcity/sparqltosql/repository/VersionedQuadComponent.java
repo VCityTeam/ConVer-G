@@ -23,7 +23,7 @@ public class VersionedQuadComponent {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
-                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
+                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_predicate
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
                             LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                                 """,
@@ -35,7 +35,7 @@ public class VersionedQuadComponent {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
-                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
+                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_predicate
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
                             LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                             WHERE v.validity = CAST(:validity as bit varying)
@@ -49,7 +49,7 @@ public class VersionedQuadComponent {
         return namedParameterJdbcTemplate.query("""
                         SELECT rls.name, rlp.name, rlo.name, rlong.name, v.validity
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
-                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_property
+                            LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_predicate
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
                             LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
                             WHERE get_bit(v.validity, :requestedVersion) = 1
@@ -86,7 +86,7 @@ public class VersionedQuadComponent {
         jdbcTemplate.execute("""
                 WITH a (
                      subject, subject_type,
-                     property, property_type,
+                     predicate, predicate_type,
                      object, object_type,
                      named_graph,
                      version
@@ -96,7 +96,7 @@ public class VersionedQuadComponent {
                         )
                         SELECT add_quad(
                             a.subject, a.subject_type,
-                            a.property, a.property_type,
+                            a.predicate, a.predicate_type,
                             a.object, a.object_type,
                             a.named_graph,
                             a.version

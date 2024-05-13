@@ -12,15 +12,15 @@ public class Workspace {
     @Schema(name = "Subject ID", example = "1")
     private Integer idSubject;
 
-    @Schema(name = "Property ID", example = "2")
-    private Integer idProperty;
+    @Schema(name = "Predicate ID", example = "2")
+    private Integer idPredicate;
 
     @Schema(name = "Object ID", example = "3")
     private Integer idObject;
 
-    public Workspace(Integer idSubject, Integer idProperty, Integer idObject) {
+    public Workspace(Integer idSubject, Integer idPredicate, Integer idObject) {
         this.idSubject = idSubject;
-        this.idProperty = idProperty;
+        this.idPredicate = idPredicate;
         this.idObject = idObject;
     }
 }

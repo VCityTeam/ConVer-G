@@ -35,21 +35,4 @@ public class VersionedNamedGraphComponent {
                     ) FROM a;"""
         );
     }
-
-    public RDFVersionedNamedGraph save(Integer idVersionedNamedGraph, Integer index, Integer idNamedGraph) {
-        return namedParameterJdbcTemplate.queryForObject("""
-                        INSERT INTO versioned_named_graph VALUES (:idVersionedNamedGraph, :idNamedGraph, :index)
-                        ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
-                        RETURNING *
-                        """,
-                new MapSqlParameterSource()
-                        .addValue("idVersionedNamedGraph", idVersionedNamedGraph)
-                        .addValue("index", index)
-                        .addValue("idNamedGraph", idNamedGraph),
-                (rs, i) -> new RDFVersionedNamedGraph(
-                        rs.getInt("id_versioned_named_graph"),
-                        rs.getInt("index_version"),
-                        rs.getInt("id_named_graph")
-                ));
-    }
 }

@@ -19,7 +19,7 @@
   </properties>
 
   <modules>
-    <module>quads-importer</module>
+    <module>quads-versioning</module>
     <module>quads-query</module>
   </modules>
 

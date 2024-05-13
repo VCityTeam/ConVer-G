@@ -1,7 +1,7 @@
 -- # Query the graph store for all quads
 SELECT rl1.name as subject, rl2.name as predicate, rl3.name as object, rl4.name as graph -- récupération des noms des ressources (URI ou litéral)
 FROM (
-     SELECT t1.id_subject as v$s, t1.id_property as v$p, t1.id_object as v$o, t1.id_named_graph as ng$g, t1.validity as bs$g
+     SELECT t1.id_subject as v$s, t1.id_predicate as v$p, t1.id_object as v$o, t1.id_named_graph as ng$g, t1.validity as bs$g
      FROM versioned_quad t1 -- contexte de quad (OpGraph)
 ) sq1
 JOIN resource_or_literal rl1 ON rl1.id_resource_or_literal = sq1.v$s

@@ -15,7 +15,7 @@ public class WorkspaceComponent {
         jdbcTemplate.execute("""
                 WITH a (
                      subject, subject_type,
-                     property, property_type,
+                     predicate, predicate_type,
                      object, object_type
                  ) AS (
                  VALUES""" + "\n" + triplesQuery +
@@ -23,7 +23,7 @@ public class WorkspaceComponent {
                 )
                 SELECT add_triple(
                     a.subject, a.subject_type,
-                    a.property, a.property_type,
+                    a.predicate, a.predicate_type,
                     a.object, a.object_type
                 ) FROM a;""");
     }

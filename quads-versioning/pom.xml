@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>fr.vcity</groupId>
-    <artifactId>sparql-to-sql-importer</artifactId>
+    <artifactId>quads-versioning</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sparql-to-sql-importer</name>
-    <description>sparql-to-sql-importer</description>
+    <name>quads-versioning</name>
+    <description>quads-versioning</description>
     <url>https://github.com/VCityTeam/SPARQL-to-SQL</url>
 
     <properties>

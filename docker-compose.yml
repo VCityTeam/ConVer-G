@@ -47,7 +47,7 @@ services:
 
   ud-quads-versioning:
     build:
-      context: quads-importer
+      context: quads-versioning
       dockerfile: Dockerfile
     depends_on:
       - postgres
@@ -55,7 +55,7 @@ services:
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
     ports:
       - "8080:8080"
-    container_name: sparql-to-sql-importer
+    container_name: quads-versioning
 
   ud-quads-query:
     build:
@@ -73,7 +73,7 @@ services:
       - "DATASOURCE_PASSWORD=password"
     ports:
       - "8081:8081"
-    container_name: sparql-to-sql-query
+    container_name: quads-query
     deploy:
       resources:
         limits:

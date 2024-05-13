@@ -74,7 +74,7 @@ sdk use java 21.0.1-amzn
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
 
 ### Maven
-#### Quads-importer
+#### ⌛ Quads-Versioning
 
 This project uses:
 
@@ -89,12 +89,11 @@ This project has been tested with:
 - `sonarqube`, assuring the code quality,
 - `JaCoCo`, testing the code coverage.
 
-#### Quads-query
+#### 🦆 Quads-Query
 
 This project uses:
 
 - the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
-- the `hibernate-core` powerful object/relational mapping solution for Java,
 - a [Dockerized PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html), so the `postgresql` driver is
   installed too.
 
@@ -102,7 +101,7 @@ This project has been tested with: `junit-jupiter-engine`
 
 ### Start the application
 
-#### (Quads-importer) Dockerized database + Java Spring
+#### ⌛ Quads-Versioning
 
 ```shell
 # at the root of the project
@@ -110,14 +109,14 @@ This project has been tested with: `junit-jupiter-engine`
 docker compose up -d
 
 # if you want to hack the import program
-cd quads-importer
+cd quads-versioning
 
 ## wait until the PostgreSQL database is up
 ## starts the Java Spring application locally (http://localhost:8080/)
 mvn spring-boot:run
 ```
 
-#### (Quads-importer) Dockerized database + Java Spring
+#### 🦆 Quads-Query
 
 ```shell
 # at the root of the project
@@ -132,7 +131,7 @@ cd quads-query
 mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
-java -jar target/sparql-to-sql-query-1.0-SNAPSHOT-jar-with-dependencies.jar
+java -jar target/quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Implementation
@@ -146,7 +145,7 @@ erDiagram
     Version ||--|{ VersionedNamedGraph: "index"
     VersionedQuad {
         text subject
-        text property
+        text predicate
         text object
         text named_graph
         bitstring validity
@@ -317,7 +316,7 @@ theoretical model and the implementation.
 
 We add a quad for each triple (the graph name).
 Its semantic is the link between the triple and the source of the data.
-The transformation has been made with the [annotate python program](quads-importer/python/annotate_graph.py).
+The transformation has been made with the [annotate python program](quads-creator/annotate_graph.py).
 We used a virtual environment with pip 23.3.1 from Python 3.10.12.
 
 ```shell

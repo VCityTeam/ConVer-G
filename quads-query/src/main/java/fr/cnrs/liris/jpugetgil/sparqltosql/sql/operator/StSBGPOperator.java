@@ -122,7 +122,7 @@ public class StSBGPOperator extends StSOperator {
     private String getColumnByOccurrence(SPARQLOccurrence sparqlOccurrence) {
         return switch (sparqlOccurrence.getType()) {
             case SUBJECT -> "id_subject";
-            case PROPERTY -> "id_property";
+            case PROPERTY -> "id_predicate";
             case OBJECT -> "id_object";
             default -> throw new IllegalArgumentException();
         };
@@ -270,7 +270,7 @@ public class StSBGPOperator extends StSOperator {
             sqlClauseBuilder.and(
                     new EqualToOperator()
                             .buildComparisonOperatorSQL(
-                                    "t" + i + ".id_property",
+                                    "t" + i + ".id_predicate",
                                     """
                                             (
                                                 SELECT id_resource_or_literal

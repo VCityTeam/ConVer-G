@@ -1,12 +1,12 @@
 PREFIX gtyp: <https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#>
 PREFIX val: <https://github.com/VCityTeam/SPARQL-to-SQL/Validity#>
 
-SELECT ?graphName ?subject ?property ?object WHERE {
+SELECT ?graphName ?subject ?predicate ?object WHERE {
 	 ?graphName <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> gtyp:Version ;
 		 val:beginsAt "2023" ;
 		 val:endsAt "2024" .
 	 GRAPH ?graphName {
-		?subject ?property ?object .
+		?subject ?predicate ?object .
 	}
  }
 
@@ -49,11 +49,11 @@ SELECT (SUM(?height) AS ?sum) WHERE {
 }
 
 # Across multiple concurrent versions, find all the quads that were not valid once (or more) before the '2023-07-03 13:18'
-SELECT ?version ?subject ?property ?object WHERE {
+SELECT ?version ?subject ?predicate ?object WHERE {
     ?version <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#Version> .
     ?version <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#commited_at> ?date_commit .
 	GRAPH ?version {
-	    ?subject ?property ?object .
+	    ?subject ?predicate ?object .
   	}
   	FILTER(?date_commit < '2023-07-03 13:18')
 }
