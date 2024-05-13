@@ -46,7 +46,7 @@ class AppTest {
     /**
      * Send the request to the two endpoints and compare the results.
      *
-     * @param requestStS        The request to the SPARQL-to-SQL endpoint.
+     * @param requestStS        The request to the quads-query endpoint.
      * @param requestBlazegraph The request to the Blazegraph endpoint.
      */
     private void sendRequestAndCompareResults(HttpRequest requestStS, HttpRequest requestBlazegraph) {
@@ -85,7 +85,7 @@ class AppTest {
     /**
      * Check if the two JSON strings are equal.
      *
-     * @param actual   The JSON string of the SPARQL-to-SQL endpoint.
+     * @param actual   The JSON string of the quads-query endpoint.
      * @param expected The JSON string of the Blazegraph endpoint.
      * @throws JsonProcessingException If the JSON string cannot be processed.
      */

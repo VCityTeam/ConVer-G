@@ -86,11 +86,11 @@ AS
                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
                 RETURNING *),
                  v AS (INSERT INTO resource_or_literal
-                     VALUES (DEFAULT, ''https://github.com/VCityTeam/SPARQL-to-SQL/Version#'' || filename, NULL)
+                     VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || filename, NULL)
                      ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
                      RETURNING *),
                  vng AS (INSERT INTO resource_or_literal
-                     VALUES (DEFAULT, ''https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#'' ||
+                     VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'' ||
                                       encode(sha512((named_graph || filename)::bytea), ''hex''), NULL)
                      ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
                      RETURNING *),
@@ -101,11 +101,11 @@ AS
                  workspace AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
                      VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
                                                                         FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/SPARQL-to-SQL#is-version-of''),
+                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G#is-version-of''),
                              (SELECT id_resource_or_literal FROM ng)),
                             ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
                                                                         FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/SPARQL-to-SQL#is-in-version''),
+                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G#is-in-version''),
                              (SELECT v.id_resource_or_literal FROM v))
                      ON CONFLICT ON CONSTRAINT workspace_pkey
                          DO UPDATE SET id_subject = EXCLUDED.id_subject

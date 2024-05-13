@@ -1,5 +1,5 @@
-PREFIX gtyp: <https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#>
-PREFIX val: <https://github.com/VCityTeam/SPARQL-to-SQL/Validity#>
+PREFIX gtyp: <https://github.com/VCityTeam/ConVer-G/GraphType#>
+PREFIX val: <https://github.com/VCityTeam/ConVer-G/Validity#>
 
 SELECT ?graphName ?subject ?predicate ?object WHERE {
 	 ?graphName <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> gtyp:Version ;
@@ -13,7 +13,7 @@ SELECT ?graphName ?subject ?predicate ?object WHERE {
 # Which city versions have a metro station accessible to people with disabilities?
 PREFIX transp: <http://www.opengis.net/citygml/transportation/2.0/transportation#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX gtyp: <https://github.com/VCityTeam/SPARQL-to-SQL/GraphType#>
+PREFIX gtyp: <https://github.com/VCityTeam/ConVer-G/GraphType#>
 
 SELECT ?version WHERE {
 	 ?version rdf:type gtyp:Version .
@@ -26,8 +26,8 @@ SELECT ?version WHERE {
 # Which city versions have a metro station accessible to people with disabilities between the 2021-05-04 and the 2023-08-23?
 PREFIX transp: <http://www.opengis.net/citygml/transportation/2.0/transportation#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX gtyp: <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#>
-PREFIX val: <https://github.com/VCityTeam/SPARQL-to-SQL/Validity#>
+PREFIX gtyp: <https://github.com/VCityTeam/ConVer-G/graph-type#>
+PREFIX val: <https://github.com/VCityTeam/ConVer-G/Validity#>
 
 SELECT ?version WHERE {
 	?version rdf:type gtyp:Version ;
@@ -41,7 +41,7 @@ SELECT ?version WHERE {
 
 # TODO
 SELECT (SUM(?height) AS ?sum) WHERE {
-    ?validity <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#Validity> .
+    ?validity <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/VCityTeam/ConVer-G/graph-type#Validity> .
 	GRAPH ?validity {
   		<https://github.com/VCityTeam/UD-Graph/LYON_1ER_BATI_2015-1_bldg#BU_69381AB243_1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Geometry> ;
             <http://www.opengis.net/citygml/building/2.0/building#AbstractBuilding.measuredHeight> ?height .
@@ -50,8 +50,8 @@ SELECT (SUM(?height) AS ?sum) WHERE {
 
 # Across multiple concurrent versions, find all the quads that were not valid once (or more) before the '2023-07-03 13:18'
 SELECT ?version ?subject ?predicate ?object WHERE {
-    ?version <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#Version> .
-    ?version <https://github.com/VCityTeam/SPARQL-to-SQL/graph-type#commited_at> ?date_commit .
+    ?version <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/VCityTeam/ConVer-G/graph-type#Version> .
+    ?version <https://github.com/VCityTeam/ConVer-G/graph-type#commited_at> ?date_commit .
 	GRAPH ?version {
 	    ?subject ?predicate ?object .
   	}

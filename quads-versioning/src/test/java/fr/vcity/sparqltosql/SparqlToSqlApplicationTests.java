@@ -107,10 +107,10 @@ class SparqlToSqlApplicationTests {
         List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
 
         for (CompleteVersionedQuad quad : quads) {
-            if (quad.getS().equals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#BSBM")) {
+            if (quad.getS().equals("https://github.com/VCityTeam/ConVer-G/Named-Graph#BSBM")) {
                 assertEquals("default", quad.getNamedGraph());
             } else {
-                assertEquals("https://github.com/VCityTeam/SPARQL-to-SQL/Named-Graph#BSBM", quad.getNamedGraph());
+                assertEquals("https://github.com/VCityTeam/ConVer-G/Named-Graph#BSBM", quad.getNamedGraph());
             }
             assertNotNull(quad.getS());
             assertNotNull(quad.getP());

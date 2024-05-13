@@ -1,13 +1,14 @@
-# SPARQL to SQL Project
+# ConVer-G project
+> Which means Concurrent Versioning of knowledge Graphs
 
-This project aims to create a Java parser that can convert SPARQL queries into SQL queries.
+This project aims to create a knowledge hub that can store and query a set of RDF datasets with a versioning system.
 The project is part of the BD team's research efforts within the [LIRIS](https://liris.cnrs.fr/)
 and [VCity project](https://projet.liris.cnrs.fr/vcity/).
 The aim of this POC is to query a set of city version and extract associated knowledge.
 
 ## Motivations
 
-### Why create a "SPARQL-to-SQL" translator rather than a from scratch engine?
+### Why create a "SPARQL to SQL" translator rather than a from scratch engine?
 
 Our motivation is to find a method for *retrieving knowledge* from a *set of urban data versions* stored in *RDF
 format*.
@@ -42,9 +43,9 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   SELECT queries over that RDF to SQL queries over the original relational data.
   The goal is to provide a specification for SPARQL tool vendors and a foundation for the Semantic Web. It highlights
   the importance of creating a computable mapping from SPARQL semantics to SQL semantics.
-- **[Evaluating SPARQL-to-SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
+- **[Evaluating SPARQL to SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
   This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
-  It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL-to-SQL translation in
+  It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL to SQL translation in
   the Ontop system.
 - **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
   This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
@@ -282,7 +283,7 @@ This dataset as been transformed to be compatible with the designed conceptual m
 sequenceDiagram
     title Transformation and Import workflow
     autonumber
-    box SPARQL-to-SQL
+    box ConVer-G
         participant Version Import API
         participant Workspace Import API
     end
@@ -360,22 +361,22 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 
 After some transformations, we have the following quads representing the theoretical model:
 
-| Subject                                                                   | Predicate                                                        | Object                                                            | Named Graph                                                               | 
-|---------------------------------------------------------------------------|------------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------------------|
-| http://example.edu/Building#1                                             | height                                                           | 10.5                                                              | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#2                                             | height                                                           | 9.1                                                               | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#1                                             | height                                                           | 11                                                                | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                         |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#IGN                                |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2015 |                                                                           |
-| http://example.edu/Building#1                                             | height                                                           | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#3                                             | height                                                           | http://example.edu/Type#Building                                  | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#1                                             | height                                                           | http://example.edu/Type#Tower                                     | https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                         |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-version-of | http://example.edu/Named-Graph#IGN                                |                                                                           |
-| https://github.com/VCityTeam/SPARQL-to-SQL/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/SPARQL-to-SQL/Version#is-in-version | https://github.com/VCityTeam/SPARQL-to-SQL/Version#buildings-2018 |                                                                           |
+| Subject                                                              | Predicate                                                   | Object                                                       | Named Graph                                                          | 
+|----------------------------------------------------------------------|-------------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------------|
+| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#2                                        | height                                                      | 9.1                                                          | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#1                                        | height                                                      | 11                                                           | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                    |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#IGN                           |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
+| http://example.edu/Building#1                                        | height                                                      | http://example.edu/Type#Tower                                | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#3                                        | height                                                      | http://example.edu/Type#Building                             | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#1                                        | height                                                      | http://example.edu/Type#Tower                                | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#Grand-Lyon                    |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2018 |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/ConVer-G/Version#is-version-of | http://example.edu/Named-Graph#IGN                           |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | https://github.com/VCityTeam/ConVer-G/Version#is-in-version | https://github.com/VCityTeam/ConVer-G/Version#buildings-2018 |                                                                      |
 
 ##### Implementation
 
