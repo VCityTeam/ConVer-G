@@ -9,6 +9,7 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>conver-g</name>
+  <description>ConVer-G is a set of tools for versioning and querying Concurrent Versioning of knowledge Graphs</description>
   <url>https://github.com/VCityTeam/ConVer-G</url>
   <packaging>pom</packaging>
 

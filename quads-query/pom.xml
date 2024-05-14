@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>quads-query</name>
-    <description>A simple fuseki-test.</description>
+    <description>Quads query is a tool to convert SPARQL queries into another query language</description>
     <url>https://github.com/VCityTeam/ConVer-G</url>
 
     <properties>

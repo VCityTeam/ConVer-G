@@ -58,7 +58,7 @@ public class SQLQuery {
                     );
                 } else {
                     return (
-                           "v$" + sqlVariable.getSqlVarName()
+                           "v$" + sqlVariable.getSqlVarName() + " as " + sqlVariable.getSqlVarName()
                     );
                 }
             } else {

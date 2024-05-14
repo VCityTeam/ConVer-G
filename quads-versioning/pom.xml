@@ -12,7 +12,7 @@
     <artifactId>quads-versioning</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>quads-versioning</name>
-    <description>quads-versioning</description>
+    <description>Quads Versioning is a tool that allows to version RDF quads in a relational database</description>
     <url>https://github.com/VCityTeam/ConVer-G</url>
 
     <properties>

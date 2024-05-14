@@ -95,6 +95,8 @@ public class VersioningQueryExecution implements QueryExecution {
                     allVariables.add(columnName);
                     if (columnName.startsWith("name$")) {
                         variables.add(columnName.substring(5));
+                    } else {
+                        variables.add(columnName);
                     }
                 }
 
@@ -103,7 +105,7 @@ public class VersioningQueryExecution implements QueryExecution {
                     Var variable = Var.alloc(v);
                     Node variableValue;
 
-                    if (rs.getString("name$" + v) != null) {
+                    if (hasColumn(rs, "name$" + v) && rs.getString("name$" + v) != null) {
                         String value = rs.getString("name$" + v);
                         String valueType;
                         if (allVariables.contains("type$" + v)) {
@@ -113,6 +115,10 @@ public class VersioningQueryExecution implements QueryExecution {
                         }
                         variableValue = valueType == null ?
                                 NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
+                    } else if (hasColumn(rs, v) && rs.getString(v) != null) {
+                        String value = rs.getString(v);
+                        String valueType = getAssociatedRDFType(rsmd.getColumnType(rs.findColumn(v)));
+                        variableValue = NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
                         variableValue = null;
                     }
@@ -271,5 +277,16 @@ public class VersioningQueryExecution implements QueryExecution {
             default:
                 yield "";
         };
+    }
+
+    public static boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columns = rsmd.getColumnCount();
+        for (int x = 1; x <= columns; x++) {
+            if (columnName.equals(rsmd.getColumnName(x))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
