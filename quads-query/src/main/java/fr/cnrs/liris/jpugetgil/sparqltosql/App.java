@@ -22,6 +22,7 @@ public class App {
         FusekiModules modules = FusekiModules.create(new FusekiUI());
         FusekiServer server = FusekiServer.create()
                 .port(8081)
+                .enableCors(true)
                 .add("/rdf", ds)
                 .registerOperation(Operation.Query, new VersioningSPARQLQueryProcessor())
                 .fusekiModules(modules)

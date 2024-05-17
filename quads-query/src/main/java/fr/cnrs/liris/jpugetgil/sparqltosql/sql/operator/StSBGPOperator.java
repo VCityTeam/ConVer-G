@@ -122,7 +122,7 @@ public class StSBGPOperator extends StSOperator {
     private String getColumnByOccurrence(SPARQLOccurrence sparqlOccurrence) {
         return switch (sparqlOccurrence.getType()) {
             case SUBJECT -> "id_subject";
-            case PROPERTY -> "id_predicate";
+            case PREDICATE -> "id_predicate";
             case OBJECT -> "id_object";
             default -> throw new IllegalArgumentException();
         };

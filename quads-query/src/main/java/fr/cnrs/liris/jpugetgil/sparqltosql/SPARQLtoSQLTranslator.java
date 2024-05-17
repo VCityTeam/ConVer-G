@@ -148,7 +148,7 @@ public class SPARQLtoSQLTranslator {
             newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
                     .add(new SPARQLOccurrence(SPARQLPositionType.SUBJECT, i, sparqlContextType));
             newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.PROPERTY, i, sparqlContextType));
+                    .add(new SPARQLOccurrence(SPARQLPositionType.PREDICATE, i, sparqlContextType));
             newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
                     .add(new SPARQLOccurrence(SPARQLPositionType.OBJECT, i, sparqlContextType));
 

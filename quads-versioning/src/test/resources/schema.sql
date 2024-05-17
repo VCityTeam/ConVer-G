@@ -182,7 +182,7 @@ AS
 
 CREATE OR REPLACE FUNCTION add_triple(
     subject varchar, subject_type varchar,
-    property varchar, property_type varchar,
+    property varchar, predicate_type varchar,
     object varchar, object_type varchar
 )
     RETURNS setof workspace
@@ -201,7 +201,7 @@ AS
                  p AS (SELECT id_resource_or_literal
                        FROM resource_or_literal
                        WHERE name = property AND (
-                           property_type IS NULL OR type = property_type
+                           predicate_type IS NULL OR type = predicate_type
                            )),
                  o AS (SELECT id_resource_or_literal
                        FROM resource_or_literal

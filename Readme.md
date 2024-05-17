@@ -164,7 +164,7 @@ erDiagram
     }
     Workspace {
         text subject
-        text property
+        text predicate
         text object
     }
 ```
@@ -175,17 +175,17 @@ erDiagram
 erDiagram
     VersionedQuad ||--|{ ResourceOrLiteral: "subject"
     VersionedQuad ||--|{ ResourceOrLiteral: "object"
-    VersionedQuad ||--|{ ResourceOrLiteral: "property"
+    VersionedQuad ||--|{ ResourceOrLiteral: "predicate"
     VersionedQuad ||--|{ ResourceOrLiteral: "named graph"
     VersionedNamedGraph ||--|{ ResourceOrLiteral: "named graph"
     VersionedNamedGraph ||--|{ ResourceOrLiteral: "versioned named graph"
     Workspace }|--|{ ResourceOrLiteral: "subject"
     Workspace }|--|{ ResourceOrLiteral: "object"
-    Workspace }|--|{ ResourceOrLiteral: "property"
+    Workspace }|--|{ ResourceOrLiteral: "predicate"
     VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
     VersionedQuad {
         int id_subject PK, FK
-        int id_property PK, FK
+        int id_predicate PK, FK
         int id_object PK, FK
         int id_named_graph FK
         bitstring validity
@@ -208,7 +208,7 @@ erDiagram
     }
     Workspace {
         int id_subject PK, FK
-        int id_property PK, FK
+        int id_predicate PK, FK
         int id_object PK, FK
     }
 ```

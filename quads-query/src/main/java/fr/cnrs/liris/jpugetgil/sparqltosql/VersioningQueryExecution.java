@@ -95,7 +95,7 @@ public class VersioningQueryExecution implements QueryExecution {
                     allVariables.add(columnName);
                     if (columnName.startsWith("name$")) {
                         variables.add(columnName.substring(5));
-                    } else {
+                    } else if (!columnName.startsWith("type$")) {
                         variables.add(columnName);
                     }
                 }

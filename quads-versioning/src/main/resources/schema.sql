@@ -185,7 +185,7 @@ AS
                  p AS (SELECT id_resource_or_literal
                        FROM resource_or_literal
                        WHERE name = predicate AND (
-                           predicate_type IS NULL OR type = property_type
+                           predicate_type IS NULL OR type = predicate_type
                            )),
                  o AS (SELECT id_resource_or_literal
                        FROM resource_or_literal

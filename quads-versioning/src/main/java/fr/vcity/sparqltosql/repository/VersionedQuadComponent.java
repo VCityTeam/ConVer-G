@@ -71,6 +71,8 @@ public class VersionedQuadComponent {
     }
 
     public void saveResourceOrLiteral(String rlQuery) {
+        // should use a batch insert
+        // https://www.baeldung.com/jdbc-batch-processing
         jdbcTemplate.execute("""
                 WITH a (
                      node, node_type

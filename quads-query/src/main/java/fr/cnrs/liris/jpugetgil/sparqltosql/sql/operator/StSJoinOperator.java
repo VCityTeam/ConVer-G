@@ -48,7 +48,8 @@ public class StSJoinOperator extends StSOperator {
             graphVariable = leftSQLQuery.getContext().graph();
         }
 
-        SQLClause.SQLClauseBuilder sqlJoinClauseBuilder = new SQLClause.SQLClauseBuilder();
+        // FIXME : produit cartésien
+        SQLClause.SQLClauseBuilder sqlJoinClauseBuilder = new SQLClause.SQLClauseBuilder("1 = 1");
 
         commonVariablesWithoutGraph.forEach(commonNodeWithoutGraph ->
                 sqlJoinClauseBuilder.and(

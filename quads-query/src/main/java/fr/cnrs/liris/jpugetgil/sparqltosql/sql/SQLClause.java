@@ -14,6 +14,9 @@ public class SQLClause {
             this.clause = "";
         }
 
+        public SQLClauseBuilder(String clause) {
+            this.clause = clause;
+        }
 
         public SQLClauseBuilder and(String clause) {
             if (this.clause.isEmpty()) {
