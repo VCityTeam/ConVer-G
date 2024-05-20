@@ -11,9 +11,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StSJoinOperator extends StSOperator {
-    private final SQLQuery leftSQLQuery;
+    private SQLQuery leftSQLQuery;
 
-    private final SQLQuery rightSQLQuery;
+    private SQLQuery rightSQLQuery;
 
     public StSJoinOperator(SQLQuery leftSQLQuery, SQLQuery rightSQLQuery) {
         this.leftSQLQuery = leftSQLQuery;
@@ -48,8 +48,7 @@ public class StSJoinOperator extends StSOperator {
             graphVariable = leftSQLQuery.getContext().graph();
         }
 
-        // FIXME : produit cartésien
-        SQLClause.SQLClauseBuilder sqlJoinClauseBuilder = new SQLClause.SQLClauseBuilder("1 = 1");
+        SQLClause.SQLClauseBuilder sqlJoinClauseBuilder = new SQLClause.SQLClauseBuilder();
 
         commonVariablesWithoutGraph.forEach(commonNodeWithoutGraph ->
                 sqlJoinClauseBuilder.and(
@@ -97,12 +96,46 @@ public class StSJoinOperator extends StSOperator {
                             )
             );
         } else if (graphLeftVariable != null && graphRightVariable != null) {
+            // TODO: check if this is correct
             select += getContextSelectGraphVariable(leftSQLQuery.getContext(), "left_table") +
                     getContextSelectGraphVariable(rightSQLQuery.getContext(), "right_table");
         } else if (graphLeftVariable != null) {
-            select += getContextSelectGraphVariable(leftSQLQuery.getContext(), "left_table");
+            leftSQLQuery = new StSFlattenOperator(leftSQLQuery).buildSQLQuery();
+            List<SQLVariable> commonVariables = new ArrayList<>();
+
+            leftSQLQuery.getContext().sqlVariables().stream()
+                    .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.DATA)
+                    .forEach(leftSQLVar -> {
+                        if (rightSQLQuery.getContext().sqlVariables().stream()
+                                .anyMatch(rightSQLVar -> rightSQLVar.getSqlVarName().equals(leftSQLVar.getSqlVarName()))) {
+                            commonVariables.add(leftSQLVar);
+                        }
+                    });
+            commonVariables.forEach(commonVariable -> sqlJoinClauseBuilder.and(
+                    new EqualToOperator()
+                            .buildComparisonOperatorSQL(
+                                    "left_table.v$" + commonVariable.getSqlVarName(),
+                                    "right_table.v$" + commonVariable.getSqlVarName()
+                            )
+            ));
         } else if (graphRightVariable != null) {
-            select += getContextSelectGraphVariable(rightSQLQuery.getContext(), "right_table");
+            rightSQLQuery = new StSFlattenOperator(rightSQLQuery).buildSQLQuery();
+            List<SQLVariable> commonVariables = new ArrayList<>();
+            rightSQLQuery.getContext().sqlVariables().stream()
+                    .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.DATA)
+                    .forEach(rightSQLVar -> {
+                        if (leftSQLQuery.getContext().sqlVariables().stream()
+                                .anyMatch(leftSQLVar -> leftSQLVar.getSqlVarName().equals(rightSQLVar.getSqlVarName()))) {
+                            commonVariables.add(rightSQLVar);
+                        }
+                    });
+            commonVariables.forEach(commonVariable -> sqlJoinClauseBuilder.and(
+                    new EqualToOperator()
+                            .buildComparisonOperatorSQL(
+                                    "left_table.v$" + commonVariable.getSqlVarName(),
+                                    "right_table.v$" + commonVariable.getSqlVarName()
+                            )
+            ));
         }
 
         String sql = "SELECT " + select + " FROM (" + leftSQLQuery.getSql() + ") left_table JOIN (" +
