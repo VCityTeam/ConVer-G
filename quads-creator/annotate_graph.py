@@ -103,7 +103,7 @@ class RdfConverter:
         workspace_ds.add(
             (
                 named_graph,
-                URIRef('https://github.com/VCityTeam/ConVer-G#is-version-of'),
+                URIRef('https://github.com/VCityTeam/ConVer-G/Version#is-version-of'),
                 URIRef(self.annotation),
                 workspace_uri
             )
@@ -111,7 +111,7 @@ class RdfConverter:
         workspace_ds.add(
             (
                 named_graph,
-                URIRef('https://github.com/VCityTeam/ConVer-G#is-in-version'),
+                URIRef('https://github.com/VCityTeam/ConVer-G/Version#is-in-version'),
                 URIRef(self.version),
                 workspace_uri
             )

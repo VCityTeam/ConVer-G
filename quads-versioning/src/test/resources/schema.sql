@@ -101,11 +101,11 @@ AS
                  workspace AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
                      VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
                                                                         FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G#is-version-of''),
+                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-version-of''),
                              (SELECT id_resource_or_literal FROM ng)),
                             ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
                                                                         FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G#is-in-version''),
+                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-in-version''),
                              (SELECT v.id_resource_or_literal FROM v))
                      ON CONFLICT ON CONSTRAINT workspace_pkey
                          DO UPDATE SET id_subject = EXCLUDED.id_subject

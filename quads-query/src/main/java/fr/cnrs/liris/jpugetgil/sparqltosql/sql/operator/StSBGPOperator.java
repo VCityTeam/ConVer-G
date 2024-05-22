@@ -158,6 +158,8 @@ public class StSBGPOperator extends StSOperator {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
         List<Triple> triples = op.getPattern().getList();
 
+        getEqualitiesBGP(sqlClauseBuilder);
+
         for (int i = 0; i < triples.size(); i++) {
             sqlClauseBuilder.and(buildFiltersOnIds(triples, i));
         }
@@ -184,15 +186,7 @@ public class StSBGPOperator extends StSOperator {
             );
         }
 
-        for (Node node : this.context.sparqlVarOccurrences().keySet()) {
-            if (node instanceof Node_Variable && context.sparqlVarOccurrences().get(node).size() > 1) {
-                sqlClauseBuilder.and(context.sparqlVarOccurrences().get(node).stream()
-                        .map(occurrence ->
-                                "t" + occurrence.getPosition() + "." +
-                                        getColumnByOccurrence(occurrence)).collect(Collectors.joining(" = "))
-                );
-            }
-        }
+        getEqualitiesBGP(sqlClauseBuilder);
 
         for (int i = 0; i < triples.size(); i++) {
             switch (context.graph()) {
@@ -238,6 +232,26 @@ public class StSBGPOperator extends StSOperator {
         }
 
         return sqlClauseBuilder.build().clause;
+    }
+
+    /**
+     * Get the equalities between the variables of the BGP
+     *
+     * @param sqlClauseBuilder the SQL clause builder
+     */
+    private void getEqualitiesBGP(SQLClause.SQLClauseBuilder sqlClauseBuilder) {
+        for (Node node : this.context.sparqlVarOccurrences().keySet()) {
+            if (node instanceof Node_Variable && context.sparqlVarOccurrences().get(node).size() > 1) {
+                for (int i = 1; i < context.sparqlVarOccurrences().get(node).size(); i++) {
+                    sqlClauseBuilder.and(
+                            "t" + context.sparqlVarOccurrences().get(node).get(i - 1).getPosition() + "." +
+                                    getColumnByOccurrence(context.sparqlVarOccurrences().get(node).get(i - 1)) +
+                                    " = t" + context.sparqlVarOccurrences().get(node).get(i).getPosition() + "." +
+                                    getColumnByOccurrence(context.sparqlVarOccurrences().get(node).get(i))
+                    );
+                }
+            }
+        }
     }
 
     /**

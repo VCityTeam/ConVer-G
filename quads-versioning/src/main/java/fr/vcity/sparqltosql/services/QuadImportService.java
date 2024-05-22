@@ -61,8 +61,8 @@ public class QuadImportService implements IQuadImportService {
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
 
-        this.workspaceIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G#is-in-version", null);
-        this.workspaceIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G#is-version-of", null);
+        this.workspaceIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
+        this.workspaceIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
     }
 
     /**
@@ -112,8 +112,8 @@ public class QuadImportService implements IQuadImportService {
         rdfVersionedQuadRepository.deleteAll();
         rdfVersionedNamedGraphRepository.deleteAll();
         versionRepository.deleteAll();
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G#is-in-version", null);
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G#is-version-of", null);
+        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
+        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
     }
 
     /**
