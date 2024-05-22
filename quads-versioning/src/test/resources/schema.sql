@@ -170,7 +170,7 @@ AS
                        WHERE name = object AND (
                            object_type IS NULL OR type = object_type
                            )),
-                 q AS (INSERT INTO versioned_quad (id_subject, id_property, id_object, id_named_graph, validity)
+                 q AS (INSERT INTO versioned_quad (id_subject, id_predicate, id_object, id_named_graph, validity)
                      SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal, vng.id_resource_or_literal, LPAD('''', version, ''0'')::bit varying || B''1''
                      FROM s, p, o, vng
                      ON CONFLICT ON CONSTRAINT versioned_quad_pkey
@@ -208,7 +208,7 @@ AS
                        WHERE name = object AND (
                            object_type IS NULL OR type = object_type
                            )),
-                 q AS (INSERT INTO workspace (id_subject, id_property, id_object)
+                 q AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
                      SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal
                      FROM s, p, o
                      ON CONFLICT ON CONSTRAINT workspace_pkey

@@ -192,7 +192,7 @@ AS
                        WHERE name = object AND (
                            object_type IS NULL OR type = object_type
                            )),
-                 q AS (INSERT INTO workspace (id_subject, id_property, id_object)
+                 q AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
                      SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal
                      FROM s, p, o
                      ON CONFLICT ON CONSTRAINT workspace_pkey

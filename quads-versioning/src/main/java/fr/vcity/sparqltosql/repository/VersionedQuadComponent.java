@@ -1,12 +1,16 @@
 package fr.vcity.sparqltosql.repository;
 
 import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
+import fr.vcity.sparqltosql.services.QuadImportService;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
 @Component
@@ -70,22 +74,30 @@ public class VersionedQuadComponent {
         );
     }
 
-    public void saveResourceOrLiteral(String rlQuery) {
-        // should use a batch insert
-        // https://www.baeldung.com/jdbc-batch-processing
-        jdbcTemplate.execute("""
+    public void saveResourceOrLiteral(List<QuadImportService.Node> nodes) {
+        jdbcTemplate.batchUpdate("""
                 WITH a (
                      node, node_type
                  ) AS (
-                 VALUES""" + "\n" + rlQuery + """
+                 VALUES (?, ?)
                 )
                 SELECT add_quad_to_rl(
                     a.node, a.node_type
-                ) FROM a;""");
+                ) FROM a;""",
+                new BatchPreparedStatementSetter() {
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setString(1, nodes.get(i).value());
+                        ps.setString(2, nodes.get(i).type());
+                    }
+
+                    public int getBatchSize() {
+                        return 250;
+                    }
+                });
     }
 
-    public void saveQuads(String quadsQuery) {
-        jdbcTemplate.execute("""
+    public void saveQuads(List<QuadImportService.QuadValueType> quadValueTypes) {
+        jdbcTemplate.batchUpdate("""
                 WITH a (
                      subject, subject_type,
                      predicate, predicate_type,
@@ -93,8 +105,7 @@ public class VersionedQuadComponent {
                      named_graph,
                      version
                  ) AS (
-                 VALUES""" + "\n" + quadsQuery +
-                """
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         )
                         SELECT add_quad(
                             a.subject, a.subject_type,
@@ -102,6 +113,22 @@ public class VersionedQuadComponent {
                             a.object, a.object_type,
                             a.named_graph,
                             a.version
-                        ) FROM a;""");
+                        ) FROM a;""",
+                new BatchPreparedStatementSetter() {
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setString(1, quadValueTypes.get(i).tripleValueType().sValue());
+                        ps.setString(2, quadValueTypes.get(i).tripleValueType().sType());
+                        ps.setString(3, quadValueTypes.get(i).tripleValueType().pValue());
+                        ps.setString(4, quadValueTypes.get(i).tripleValueType().pType());
+                        ps.setString(5, quadValueTypes.get(i).tripleValueType().oValue());
+                        ps.setString(6, quadValueTypes.get(i).tripleValueType().oType());
+                        ps.setString(7, quadValueTypes.get(i).namedGraph());
+                        ps.setInt(8, quadValueTypes.get(i).version());
+                    }
+
+                    public int getBatchSize() {
+                        return 250;
+                    }
+                });
     }
 }

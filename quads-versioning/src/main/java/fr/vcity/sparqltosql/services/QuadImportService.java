@@ -17,17 +17,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @Slf4j
 public class QuadImportService implements IQuadImportService {
 
-    private record TripleValueType(String sValue, String sType, String pValue, String pType, String oValue,
+    public record Node(String value, String type) {
+    }
+
+    public record TripleValueType(String sValue, String sType, String pValue, String pType, String oValue,
                                    String oType) {
+    }
+
+    public record QuadValueType(TripleValueType tripleValueType, String namedGraph, Integer version) {
     }
 
     ResourceOrLiteral workspaceIsInVersion;
@@ -166,37 +169,25 @@ public class QuadImportService implements IQuadImportService {
      */
     private void importDefaultModel(Model defaultModel) {
         Set<RDFNode> nodeSet = new HashSet<>();
-        StringBuilder triplesQuery = new StringBuilder();
+        List<Node> nodes = new ArrayList<>();
+        List<TripleValueType> tripleValueTypes = new ArrayList<>();
 
         for (StmtIterator stmtIterator = defaultModel.listStatements(); stmtIterator.hasNext(); ) {
-            TripleValueType tripleVT = getTripleValueType(stmtIterator, nodeSet);
-
-            triplesQuery.append("(").append(formatStringToInsert(tripleVT.sValue()))
-                    .append(",").append(formatStringToInsert(tripleVT.sType()))
-                    .append(",").append(formatStringToInsert(tripleVT.pValue()))
-                    .append(",").append(formatStringToInsert(tripleVT.pType()))
-                    .append(",").append(formatStringToInsert(tripleVT.oValue()))
-                    .append(",").append(formatStringToInsert(tripleVT.oType()))
-                    .append(")");
-            if (stmtIterator.hasNext()) {
-                triplesQuery.append(",\n");
-            } else {
-                triplesQuery.append("\n");
-            }
+            tripleValueTypes.add(getTripleValueType(stmtIterator, nodeSet));
         }
 
-        String rlQuery = nodeSet.stream().map(node -> {
+        nodeSet.forEach(node -> {
             String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
             String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
-            return "(" + formatStringToInsert(nValue) + "," + formatStringToInsert(nType) + ")";
-        }).collect(Collectors.joining(",\n"));
+            nodes.add(new Node(nValue, nType));
+        });
 
-        if (!rlQuery.isBlank()) {
-            versionedQuadComponent.saveResourceOrLiteral(rlQuery);
+        if (!nodes.isEmpty()) {
+            versionedQuadComponent.saveResourceOrLiteral(nodes);
         }
 
-        if (!triplesQuery.toString().isBlank()) {
-            workspaceComponent.saveTriples(triplesQuery.toString());
+        if (!tripleValueTypes.isEmpty()) {
+            workspaceComponent.saveTriples(tripleValueTypes);
         }
     }
 
@@ -208,7 +199,8 @@ public class QuadImportService implements IQuadImportService {
      */
     private void extractAndInsertQuads(Dataset dataset, Version version) {
         Set<RDFNode> nodeSet = new HashSet<>();
-        StringBuilder quadsQuery = new StringBuilder();
+        List<Node> nodes = new ArrayList<>();
+        List<QuadValueType> quadValueTypes = new ArrayList<>();
 
         for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
             Resource namedModel = i.next();
@@ -216,37 +208,23 @@ public class QuadImportService implements IQuadImportService {
             log.info("Name Graph : {}", namedModel.getURI());
 
             for (StmtIterator stmtIterator = model.listStatements(); stmtIterator.hasNext(); ) {
-                TripleValueType tripleVT = getTripleValueType(stmtIterator, nodeSet);
-
-                quadsQuery.append("(").append(formatStringToInsert(tripleVT.sValue()))
-                        .append(",").append(formatStringToInsert(tripleVT.sType()))
-                        .append(",").append(formatStringToInsert(tripleVT.pValue()))
-                        .append(",").append(formatStringToInsert(tripleVT.pType()))
-                        .append(",").append(formatStringToInsert(tripleVT.oValue()))
-                        .append(",").append(formatStringToInsert(tripleVT.oType()))
-                        .append(",").append(formatStringToInsert(namedModel.getURI()))
-                        .append(",").append(version.getIndexVersion() - 1)
-                        .append(")");
-                if (stmtIterator.hasNext()) {
-                    quadsQuery.append(",\n");
-                } else {
-                    quadsQuery.append("\n");
-                }
+                QuadValueType quadValueType = new QuadValueType(getTripleValueType(stmtIterator, nodeSet), namedModel.getURI(), version.getIndexVersion() - 1);
+                quadValueTypes.add(quadValueType);
             }
         }
 
-        String rlQuery = nodeSet.stream().map(node -> {
+        nodeSet.forEach(node -> {
             String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
             String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
-            return "(" + formatStringToInsert(nValue) + "," + formatStringToInsert(nType) + ")";
-        }).collect(Collectors.joining(",\n"));
+            nodes.add(new Node(nValue, nType));
+        });
 
-        if (!rlQuery.isBlank()) {
-            versionedQuadComponent.saveResourceOrLiteral(rlQuery);
+        if (!nodes.isEmpty()) {
+            versionedQuadComponent.saveResourceOrLiteral(nodes);
         }
 
-        if (!quadsQuery.toString().isBlank()) {
-            versionedQuadComponent.saveQuads(quadsQuery.toString());
+        if (!quadValueTypes.isEmpty()) {
+            versionedQuadComponent.saveQuads(quadValueTypes);
         }
     }
 
@@ -258,30 +236,15 @@ public class QuadImportService implements IQuadImportService {
      * @param version The version
      */
     private void extractAndInsertVersionedNamedGraph(MultipartFile file, Dataset dataset, Version version) {
-        StringBuilder ngQuery = new StringBuilder();
+        List<String> namedGraphs = new ArrayList<>();
         for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
             Resource namedModel = i.next();
-            ngQuery.append("(").append(formatStringToInsert(namedModel.getURI()))
-                    .append(",").append(formatStringToInsert(file.getOriginalFilename()))
-                    .append(",").append(version.getIndexVersion() - 1)
-                    .append(")\n");
+            namedGraphs.add(namedModel.getURI());
         }
 
-        if (!ngQuery.toString().isBlank()) {
-            versionedNamedGraphComponent.saveVersionedNamedGraph(ngQuery.toString());
+        if (!namedGraphs.isEmpty()) {
+            versionedNamedGraphComponent.saveVersionedNamedGraph(namedGraphs, file.getOriginalFilename(), version.getIndexVersion());
         }
-    }
-
-    /**
-     * Format the string to insert
-     *
-     * @param value The value
-     * @return The formatted string
-     */
-    private String formatStringToInsert(String value) {
-        if (value == null)
-            return "null";
-        return "'" + value + "'";
     }
 
     /**
