@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
+import com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLOccurrence;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.*;

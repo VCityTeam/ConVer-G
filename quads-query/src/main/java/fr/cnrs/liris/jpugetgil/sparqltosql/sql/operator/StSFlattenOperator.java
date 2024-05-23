@@ -63,7 +63,7 @@ public class StSFlattenOperator extends StSOperator {
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME)
                 .map(sqlVariable -> " JOIN versioned_named_graph vng ON flatten_table.ng$" +
                         sqlVariable.getSqlVarName() + " = vng.id_named_graph AND get_bit(flatten_table.bs$" +
-                        sqlVariable.getSqlVarName() + ", vng.index_version) = 1 \n")
+                        sqlVariable.getSqlVarName() + ", vng.index_version - 1) = 1 \n")
                 .collect(Collectors.joining(" \n"));
     }
 }

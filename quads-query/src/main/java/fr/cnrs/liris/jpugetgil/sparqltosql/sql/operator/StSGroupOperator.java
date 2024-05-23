@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql.operator;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
+import com.google.common.collect.Streams;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.sparqltosql.sql.SQLQuery;
@@ -100,7 +100,7 @@ public class StSGroupOperator extends StSOperator {
         return this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME).map(sqlVariable -> (
                         "JOIN versioned_named_graph vng ON vng.id_named_graph = disagg.ng$" + sqlVariable.getSqlVarName() +
-                                " AND get_bit(disagg.bs$" + sqlVariable.getSqlVarName() + ", vng.index_version) = 1"
+                                " AND get_bit(disagg.bs$" + sqlVariable.getSqlVarName() + ", vng.index_version - 1) = 1"
                 )).collect(Collectors.joining(" "));
     }
 

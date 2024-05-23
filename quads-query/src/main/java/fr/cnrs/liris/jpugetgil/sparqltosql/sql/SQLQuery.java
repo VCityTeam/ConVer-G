@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.sparqltosql.sql;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Streams;
+import com.google.common.collect.Streams;
 
 import java.util.Objects;
 import java.util.stream.Collectors;

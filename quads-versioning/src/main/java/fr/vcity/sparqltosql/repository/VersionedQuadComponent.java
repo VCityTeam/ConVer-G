@@ -76,22 +76,20 @@ public class VersionedQuadComponent {
 
     public void saveResourceOrLiteral(List<QuadImportService.Node> nodes) {
         jdbcTemplate.batchUpdate("""
-                WITH a (
-                     node, node_type
-                 ) AS (
-                 VALUES (?, ?)
-                )
-                SELECT add_quad_to_rl(
-                    a.node, a.node_type
-                ) FROM a;""",
+                INSERT INTO resource_or_literal (name, type)
+                        VALUES (?, ?)
+                        ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type
+                        RETURNING *;
+                """,
                 new BatchPreparedStatementSetter() {
                     public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        ps.setString(1, nodes.get(i).value());
-                        ps.setString(2, nodes.get(i).type());
+                        QuadImportService.Node node = nodes.get(i);
+                        ps.setString(1, node.value());
+                        ps.setString(2, node.type());
                     }
 
                     public int getBatchSize() {
-                        return 250;
+                        return nodes.size() - 1;
                     }
                 });
     }

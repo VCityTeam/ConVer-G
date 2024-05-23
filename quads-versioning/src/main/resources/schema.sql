@@ -103,23 +103,6 @@ BEGIN
 END;
 ';
 
-CREATE OR REPLACE FUNCTION add_quad_to_rl(
-    node varchar, node_type varchar
-)
-    RETURNS SETOF resource_or_literal
-    LANGUAGE plpgsql
-AS
-'
-    DECLARE
-    BEGIN
-        RETURN QUERY
-            INSERT INTO resource_or_literal
-                VALUES (DEFAULT, node, node_type)
-                ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type
-                RETURNING *;
-    END;
-';
-
 CREATE OR REPLACE FUNCTION add_quad(
     subject varchar, subject_type varchar,
     predicate varchar, predicate_type varchar,

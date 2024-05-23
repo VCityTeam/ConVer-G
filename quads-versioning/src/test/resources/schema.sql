@@ -11,7 +11,6 @@ DROP TABLE IF EXISTS resource_or_literal CASCADE;
 DROP TABLE IF EXISTS version CASCADE;
 DROP TABLE IF EXISTS workspace CASCADE;
 DROP FUNCTION IF EXISTS version_named_graph;
-DROP FUNCTION IF EXISTS add_quad_to_rl;
 DROP FUNCTION IF EXISTS add_quad;
 DROP FUNCTION IF EXISTS add_triple;
 
@@ -116,23 +115,6 @@ AS
                      FROM ng, v, vng
                  )
                 TABLE result;
-    END;
-';
-
-CREATE OR REPLACE FUNCTION add_quad_to_rl(
-    node varchar, node_type varchar
-)
-    RETURNS SETOF resource_or_literal
-    LANGUAGE plpgsql
-AS
-'
-    DECLARE
-    BEGIN
-        RETURN QUERY
-            INSERT INTO resource_or_literal
-                VALUES (DEFAULT, node, node_type)
-                ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type
-                RETURNING *;
     END;
 ';
 

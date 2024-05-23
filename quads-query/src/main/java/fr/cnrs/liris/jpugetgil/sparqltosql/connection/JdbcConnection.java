@@ -30,7 +30,6 @@ public class JdbcConnection {
      * @throws SQLException exception can be thrown during DB transaction
      */
     private JdbcConnection() throws SQLException {
-        log.info(CONNECTION_URL);
         try {
             connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USERNAME, CONNECTION_PASSWORD);
             statement = connection.createStatement();

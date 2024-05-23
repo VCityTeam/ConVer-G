@@ -13,5 +13,5 @@ ENV DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
 ENV DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
 
 RUN mkdir /opt/app
-COPY --from=build-query /app/target/quads-query-1.0-SNAPSHOT-spring-boot.jar /opt/app/quads-query.jar
+COPY --from=build-query /app/target/quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/app/quads-query.jar
 CMD [ "java", "-jar", "/opt/app/quads-query.jar" ]

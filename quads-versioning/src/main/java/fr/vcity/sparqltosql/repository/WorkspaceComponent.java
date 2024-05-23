@@ -42,7 +42,7 @@ public class WorkspaceComponent {
                     }
 
                     public int getBatchSize() {
-                        return 250;
+                        return tripleValueTypes.size();
                     }
                 });
     }

@@ -9,7 +9,6 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
@@ -23,8 +22,10 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 public class VersioningQueryExecution implements QueryExecution {
 
@@ -37,16 +38,6 @@ public class VersioningQueryExecution implements QueryExecution {
     public VersioningQueryExecution(Query query) {
         this.query = query;
         this.jdbcConnection = JdbcConnection.getInstance();
-    }
-
-    @Override
-    public void setInitialBinding(QuerySolution binding) {
-        // Override engine execution, ignoring this method
-    }
-
-    @Override
-    public void setInitialBinding(Binding binding) {
-        // Override engine execution, ignoring this method
     }
 
     @Override
@@ -214,26 +205,6 @@ public class VersioningQueryExecution implements QueryExecution {
     @Override
     public boolean isClosed() {
         return false;
-    }
-
-    @Override
-    public void setTimeout(long timeout, TimeUnit timeoutUnits) {
-        // Override engine execution, ignoring this method
-    }
-
-    @Override
-    public void setTimeout(long timeout) {
-        // Override engine execution, ignoring this method
-    }
-
-    @Override
-    public void setTimeout(long timeout1, TimeUnit timeUnit1, long timeout2, TimeUnit timeUnit2) {
-        // Override engine execution, ignoring this method
-    }
-
-    @Override
-    public void setTimeout(long timeout1, long timeout2) {
-        // Override engine execution, ignoring this method
     }
 
     @Override

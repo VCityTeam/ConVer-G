@@ -28,27 +28,27 @@
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-cmds</artifactId>
-            <version>4.10.0</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-text</artifactId>
-            <version>4.10.0</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-fuseki-ui</artifactId>
-            <version>4.10.0</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-fuseki-access</artifactId>
-            <version>4.10.0</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-fuseki-main</artifactId>
-            <version>4.10.0</version>
+            <version>5.0.0</version>
         </dependency>
         <!-- Unit testing -->
         <dependency>
@@ -63,28 +63,55 @@
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.17.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.1</version>
+            <scope>test</scope>
+        </dependency>
         <!-- db access -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.1</version>
+            <version>42.7.3</version>
+        </dependency>
+
+        <!--  Google guava  -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.1.0-jre</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>fr.cnrs.liris.jpugetgil.sparqltosql.App</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>repackage</goal>
+                            <goal>single</goal>
                         </goals>
-                        <configuration>
-                            <classifier>spring-boot</classifier>
-                            <mainClass>fr.cnrs.liris.jpugetgil.sparqltosql.App</mainClass>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
