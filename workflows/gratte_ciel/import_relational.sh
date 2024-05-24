@@ -44,12 +44,6 @@ curl --location 'http://localhost:8080/import/version' \
 printf "\n%s$(date +%FT%T) - [quads-versioning] Versions import completed."
 
 ### Import the workspace
-printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace cleaning started."
-
-curl --location --request DELETE 'http://localhost:8080/import/workspace'
-
-printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace cleaning completed."
-
 printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace import started."
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace GratteCiel_2009_2018_Workspace."

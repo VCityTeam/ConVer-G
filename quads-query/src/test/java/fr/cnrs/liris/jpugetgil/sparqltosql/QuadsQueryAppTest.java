@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit test for SPARQL queries.
  */
-class AppTest {
-    private static final Logger log = LoggerFactory.getLogger(AppTest.class);
+class QuadsQueryAppTest {
+    private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppTest.class);
 
     @Order(1)
     @ParameterizedTest

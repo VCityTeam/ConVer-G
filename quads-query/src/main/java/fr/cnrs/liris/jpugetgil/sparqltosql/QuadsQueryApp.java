@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Query main class
  */
-public class App {
-    private static final Logger log = LoggerFactory.getLogger(App.class);
+public class QuadsQueryApp {
+    private static final Logger log = LoggerFactory.getLogger(QuadsQueryApp.class);
 
     public static void main(String[] args) {
         log.info("Building Fuseki server...");
