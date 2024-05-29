@@ -55,6 +55,27 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   database.
 
 ## Getting started
+### Architecture
+```mermaid
+sequenceDiagram
+    actor Data Scientist
+    participant QuaVer
+
+    Data Scientist->>+QuaVer: Sends new dataset for versioning
+    QuaVer->>+PostgreSQL: Version all new quads
+    PostgreSQL-->>-QuaVer: Validate the insert
+    QuaVer-->>-Data Scientist: Receives the confirmation of the insertion
+
+    participant QuaQue
+    actor Urban planner
+    
+    Urban planner->>+QuaQue: Sends a SPARQL query
+    QuaQue->>QuaQue: Translates the SPARQL query into SQL
+    QuaQue->>+PostgreSQL: Sends the SQL query
+    PostgreSQL-->>-QuaQue: Returns the queried versioned graphs
+    QuaQue->>QuaQue: Transform the returned data into SPARQL 
+    QuaQue-->>-Urban planner: Returns the SPARQL formatted data
+```
 
 ### Installation
 
@@ -222,7 +243,7 @@ flowchart BT
     CS[Computer Scientist] -->|Sends the SPARQL query to the endpoint| SE
     SE -->|Sends the quads to the Computer Scientist| CS
     subgraph Server
-        SE -->|Sends the SPARQL query for translation| ARQ[Jena ARQ]
+        SE -->|Sends the SPARQL query for translation| ARQ[SPARQL to SQL translator]
         ARQ -->|Sends the SQL translated query to JDBC| JDBC[Java Database Connectivity]
         JDBC -->|The filtered quads| ARQ
         ARQ -->|The filtered quads| SE

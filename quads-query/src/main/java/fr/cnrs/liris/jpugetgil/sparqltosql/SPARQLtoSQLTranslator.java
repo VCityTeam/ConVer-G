@@ -116,6 +116,10 @@ public class SPARQLtoSQLTranslator {
                 yield new StSGraphOperator(opGraph, buildSPARQLContext(opGraph.getSubOp(), cont))
                         .buildSQLQuery();
             }
+            case OpMinus opMinus -> new StSMinusOperator(
+                    buildSPARQLContext(opMinus.getLeft(), context),
+                    buildSPARQLContext(opMinus.getRight(), context)
+            ).buildSQLQuery();
             case OpQuadPattern opQuadPattern ->
                     throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
             case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
