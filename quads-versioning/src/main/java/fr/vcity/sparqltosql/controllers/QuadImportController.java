@@ -59,7 +59,7 @@ public class QuadImportController {
             @ApiResponse(responseCode = "200", description = "The triple were added to a new workspace"),
             @ApiResponse(responseCode = "400", description = "Invalid content")}
     )
-    @PostMapping(value = {"/workspace"})
+    @PostMapping(value = {"/metadata"})
     ResponseEntity<Void> importWorkspace(
             @Parameter(description = "The file containing all the triple to import as valid in a new workspace", name = "file")
             @RequestParam("file") MultipartFile file
@@ -81,7 +81,7 @@ public class QuadImportController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The workspace have been cleaned")
     })
-    @DeleteMapping(value = {"/workspace"})
+    @DeleteMapping(value = {"/metadata"})
     void removeWorkspace() {
         quadImportService.removeWorkspace();
     }

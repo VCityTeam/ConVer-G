@@ -125,7 +125,7 @@ public class VersionedQuadComponent {
                     }
 
                     public int getBatchSize() {
-                        return 250;
+                        return quadValueTypes.size();
                     }
                 });
     }

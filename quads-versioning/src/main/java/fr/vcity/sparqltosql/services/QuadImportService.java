@@ -35,6 +35,7 @@ public class QuadImportService implements IQuadImportService {
 
     ResourceOrLiteral workspaceIsInVersion;
     ResourceOrLiteral workspaceIsVersionOf;
+    ResourceOrLiteral defaultGraphURI;
 
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
@@ -66,6 +67,7 @@ public class QuadImportService implements IQuadImportService {
 
         this.workspaceIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
         this.workspaceIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
+        this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
     }
 
     /**
@@ -213,6 +215,13 @@ public class QuadImportService implements IQuadImportService {
             }
         }
 
+        if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
+            for (StmtIterator stmtIterator = dataset.getDefaultModel().listStatements(); stmtIterator.hasNext(); ) {
+                QuadValueType quadValueType = new QuadValueType(getTripleValueType(stmtIterator, nodeSet), defaultGraphURI.getName(), version.getIndexVersion() - 1);
+                quadValueTypes.add(quadValueType);
+            }
+        }
+
         nodeSet.forEach(node -> {
             String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
             String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
@@ -240,6 +249,10 @@ public class QuadImportService implements IQuadImportService {
         for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
             Resource namedModel = i.next();
             namedGraphs.add(namedModel.getURI());
+        }
+
+        if (!dataset.getDefaultModel().listStatements().toList().isEmpty()) {
+            namedGraphs.add(defaultGraphURI.getName());
         }
 
         if (!namedGraphs.isEmpty()) {

@@ -47,7 +47,7 @@ printf "\n%s$(date +%FT%T) - [quads-versioning] Versions import completed."
 printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace import started."
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace GratteCiel_2009_2018_Workspace."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/GratteCiel_2009_2018_Workspace.ttl"'
 
@@ -57,32 +57,32 @@ printf "\n%s$(date +%FT%T) - [quads-versioning] Workspace import completed."
 printf "\n%s$(date +%FT%T) - [quads-versioning] Version transitions import started."
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2009_2009b."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2009_2009b.ttl"'
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2009_2012."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2009_2012.ttl"'
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2009b_2012b."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2009b_2012b.ttl"'
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2012_2015."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2012_2015.ttl"'
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2012b_2015."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2012b_2015.ttl"'
 
 printf "\n%s$(date +%FT%T) - [quads-versioning] Transition Transition_2015_2018."
-curl --location 'http://localhost:8080/import/workspace' \
+curl --location 'http://localhost:8080/import/metadata' \
   --header 'Content-Type: multipart/form-data' \
   --form 'file=@"triples/Transition_2015_2018.ttl"'
 
