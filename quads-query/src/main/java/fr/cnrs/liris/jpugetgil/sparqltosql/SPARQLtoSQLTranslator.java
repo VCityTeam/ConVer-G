@@ -141,7 +141,7 @@ public class SPARQLtoSQLTranslator {
      */
     private SQLContext addURIsToContext(OpBGP opBGP, SQLContext context) {
         Map<Node, List<SPARQLOccurrence>> newVarOccurrences = new HashMap<>(context.sparqlVarOccurrences());
-        SPARQLContextType sparqlContextType = context.graph() == null ? SPARQLContextType.WORKSPACE : SPARQLContextType.DATASET;
+        SPARQLContextType sparqlContextType = context.graph() == null ? SPARQLContextType.METADATA : SPARQLContextType.DATASET;
 
         for (int i = 0; i < opBGP.getPattern().getList().size(); i++) {
             Triple triple = opBGP.getPattern().getList().get(i);

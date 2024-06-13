@@ -52,20 +52,20 @@ public class QuadImportController {
     }
 
     @Operation(
-            summary = "Adds triple and creates a new workspace",
-            description = "Adds all triple as a new workspace and considered as valid"
+            summary = "Adds triple and creates a new metadata",
+            description = "Adds all triple as a new metadata and considered as valid"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "The triple were added to a new workspace"),
+            @ApiResponse(responseCode = "200", description = "The triple were added to a new metadata"),
             @ApiResponse(responseCode = "400", description = "Invalid content")}
     )
     @PostMapping(value = {"/metadata"})
-    ResponseEntity<Void> importWorkspace(
-            @Parameter(description = "The file containing all the triple to import as valid in a new workspace", name = "file")
+    ResponseEntity<Void> importMetadata(
+            @Parameter(description = "The file containing all the triple to import as valid in a new metadata", name = "file")
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            quadImportService.importWorkspace(file);
+            quadImportService.importMetadata(file);
             return ResponseEntity.ok().build();
         } catch (RiotException e) {
             return ResponseEntity
@@ -75,14 +75,14 @@ public class QuadImportController {
     }
 
     @Operation(
-            summary = "Remove the current workspace",
-            description = "Make the current workspace as null"
+            summary = "Remove the current metadata",
+            description = "Make the current metadata as null"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "The workspace have been cleaned")
+            @ApiResponse(responseCode = "200", description = "The metadata have been cleaned")
     })
     @DeleteMapping(value = {"/metadata"})
-    void removeWorkspace() {
-        quadImportService.removeWorkspace();
+    void removeMetadata() {
+        quadImportService.removeMetadata();
     }
 }

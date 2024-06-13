@@ -8,11 +8,11 @@ FROM versioned_quad vq1
          JOIN resource_or_literal rl5 ON vq2.id_object = rl5.id_resource_or_literal AND rl5.name = 'true'
          JOIN version ve ON (ve.begin_version_date, COALESCE(ve.end_version_date, NOW())) OVERLAPS (date '2021-05-04 00:00', date '2023-08-23 00:00');
 
--- Get the workspace scenarios information
+-- Get the metadata scenarios information
 SELECT rl4.name, rl5.name, rl6.name
-FROM workspace w
+FROM metadata w
          JOIN resource_or_literal rl3 ON w.id_object = rl3.id_resource_or_literal AND rl3.name = 'https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace#Scenario'
-         JOIN workspace w2 on w.id_subject = w2.id_subject
+         JOIN metadata w2 on w.id_subject = w2.id_subject
          JOIN resource_or_literal rl4 ON w2.id_subject = rl4.id_resource_or_literal
          JOIN resource_or_literal rl5 ON w2.id_predicate = rl5.id_resource_or_literal
          JOIN resource_or_literal rl6 ON w2.id_object = rl6.id_resource_or_literal

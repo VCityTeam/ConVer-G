@@ -37,7 +37,7 @@ done
 cp save/* .
 rm -rf save
 
-# Cleaning workspace
+# Cleaning metadata
 docker ps --filter name=bsbm-* -aq | xargs docker stop | xargs docker rm
 
 printf "\versions_number%s$(date +%FT%T) - [Copy] Dataset generation completed."

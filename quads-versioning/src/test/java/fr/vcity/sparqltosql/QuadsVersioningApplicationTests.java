@@ -187,13 +187,13 @@ class QuadsVersioningApplicationTests {
     }
 
 //    /**
-//     * Tests the import of the workspace
+//     * Tests the import of the metadata
 //     *
 //     * @throws Exception a input stream or MVC exception
 //     */
 //    @Test
 //    @Order(6)
-//    void importWorkspace() throws Exception {
+//    void importMetadata() throws Exception {
 //        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
 //
 //        MockMultipartFile file1
@@ -204,7 +204,7 @@ class QuadsVersioningApplicationTests {
 //                resource.getInputStream().readAllBytes()
 //        );
 //
-//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/metadata")
 //                        .file(file1))
 //                .andExpect(status().isOk());
 //    }
@@ -221,8 +221,8 @@ class QuadsVersioningApplicationTests {
 
     @Test
     @Order(8)
-    void removeWorkspace() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.delete("http://localhost:8080/import/workspace"))
+    void removeMetadata() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.delete("http://localhost:8080/import/metadata"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -247,7 +247,7 @@ class QuadsVersioningApplicationTests {
 
     @Test
     @Order(10)
-    void sendCorruptedFileWorkspace() throws Exception {
+    void sendCorruptedFileMetadata() throws Exception {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
@@ -256,19 +256,19 @@ class QuadsVersioningApplicationTests {
                 new byte[]{0, 1}
         );
 
-        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/metadata")
                         .file(file))
                 .andExpect(status().isBadRequest());
     }
 
 //    /**
-//     * Tests the import of the workspace
+//     * Tests the import of the metadata
 //     *
 //     * @throws Exception a input stream or MVC exception
 //     */
 //    @Test
 //    @Order(11)
-//    void importWorkspace2() throws Exception {
+//    void importMetadata2() throws Exception {
 //        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
 //        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-1.nt.relational.nq");
 //
@@ -288,11 +288,11 @@ class QuadsVersioningApplicationTests {
 //                resource2.getInputStream().readAllBytes()
 //        );
 //
-//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/metadata")
 //                        .file(file1))
 //                .andExpect(status().isOk());
 //
-//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/workspace")
+//        mockMvc.perform(MockMvcRequestBuilders.multipart("http://localhost:8080/import/metadata")
 //                        .file(file2))
 //                .andExpect(status().isOk());
 //    }

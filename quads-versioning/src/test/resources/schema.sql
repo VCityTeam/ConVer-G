@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS versioned_named_graph CASCADE;
 DROP INDEX IF EXISTS resource_or_literal_idx;
 DROP TABLE IF EXISTS resource_or_literal CASCADE;
 DROP TABLE IF EXISTS version CASCADE;
-DROP TABLE IF EXISTS workspace CASCADE;
+DROP TABLE IF EXISTS metadata CASCADE;
 DROP FUNCTION IF EXISTS version_named_graph;
 DROP FUNCTION IF EXISTS add_quad;
 DROP FUNCTION IF EXISTS add_triple;
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS version
     transaction_time_end   timestamptz default NULL
 );
 
-CREATE TABLE IF NOT EXISTS workspace
+CREATE TABLE IF NOT EXISTS metadata
 (
     id_object   integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_predicate integer REFERENCES resource_or_literal (id_resource_or_literal),
@@ -97,7 +97,7 @@ AS
                      VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal FROM ng), version)
                      ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
                      RETURNING *),
-                 workspace AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
+                 metadata AS (INSERT INTO metadata (id_subject, id_predicate, id_object)
                      VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
                                                                         FROM resource_or_literal
                                                                         WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-version-of''),
@@ -106,7 +106,7 @@ AS
                                                                         FROM resource_or_literal
                                                                         WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-in-version''),
                              (SELECT v.id_resource_or_literal FROM v))
-                     ON CONFLICT ON CONSTRAINT workspace_pkey
+                     ON CONFLICT ON CONSTRAINT metadata_pkey
                          DO UPDATE SET id_subject = EXCLUDED.id_subject
                      RETURNING *
                  ),
@@ -167,7 +167,7 @@ CREATE OR REPLACE FUNCTION add_triple(
     property varchar, predicate_type varchar,
     object varchar, object_type varchar
 )
-    RETURNS setof workspace
+    RETURNS setof metadata
     LANGUAGE plpgsql
 AS
 '
@@ -190,10 +190,10 @@ AS
                        WHERE name = object AND (
                            object_type IS NULL OR type = object_type
                            )),
-                 q AS (INSERT INTO workspace (id_subject, id_predicate, id_object)
+                 q AS (INSERT INTO metadata (id_subject, id_predicate, id_object)
                      SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal
                      FROM s, p, o
-                     ON CONFLICT ON CONSTRAINT workspace_pkey
+                     ON CONFLICT ON CONSTRAINT metadata_pkey
                          DO UPDATE SET id_subject = EXCLUDED.id_subject
                      RETURNING *)
                 TABLE q;

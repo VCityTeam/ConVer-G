@@ -33,40 +33,40 @@ public class QuadImportService implements IQuadImportService {
     public record QuadValueType(TripleValueType tripleValueType, String namedGraph, Integer version) {
     }
 
-    ResourceOrLiteral workspaceIsInVersion;
-    ResourceOrLiteral workspaceIsVersionOf;
+    ResourceOrLiteral metadataIsInVersion;
+    ResourceOrLiteral metadataIsVersionOf;
     ResourceOrLiteral defaultGraphURI;
 
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
-    IWorkspaceRepository workspaceRepository;
+    IMetadataRepository metadataRepository;
     IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository;
     VersionedNamedGraphComponent versionedNamedGraphComponent;
-    WorkspaceComponent workspaceComponent;
+    MetadataComponent metadataComponent;
     IVersionRepository versionRepository;
     VersionedQuadComponent versionedQuadComponent;
 
     public QuadImportService(
             IResourceOrLiteralRepository rdfResourceRepository,
             IVersionedQuadRepository rdfVersionedQuadRepository,
-            IWorkspaceRepository workspaceRepository,
+            IMetadataRepository metadataRepository,
             IVersionedNamedGraphRepository rdfVersionedNamedGraphRepository,
             VersionedNamedGraphComponent versionedNamedGraphComponent,
-            WorkspaceComponent workspaceComponent,
+            MetadataComponent metadataComponent,
             IVersionRepository versionRepository,
             VersionedQuadComponent versionedQuadComponent
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
-        this.workspaceRepository = workspaceRepository;
+        this.metadataRepository = metadataRepository;
         this.rdfVersionedNamedGraphRepository = rdfVersionedNamedGraphRepository;
         this.versionedNamedGraphComponent = versionedNamedGraphComponent;
-        this.workspaceComponent = workspaceComponent;
+        this.metadataComponent = metadataComponent;
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
 
-        this.workspaceIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
-        this.workspaceIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
+        this.metadataIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
+        this.metadataIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
         this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
     }
 
@@ -122,12 +122,12 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Import RDF statements represented in language <code>of the file extension</code> to the model as valid in the new workspace.
+     * Import RDF statements represented in language <code>of the file extension</code> to the model as valid in the new metadata.
      *
      * @param file The input file
      */
     @Override
-    public void importWorkspace(MultipartFile file) throws RiotException {
+    public void importMetadata(MultipartFile file) throws RiotException {
         log.info("Current file: {}", file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
@@ -158,10 +158,10 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Reset the workspace.
+     * Reset the metadata.
      */
-    public void removeWorkspace() {
-        workspaceRepository.deleteAll();
+    public void removeMetadata() {
+        metadataRepository.deleteAll();
     }
 
     /**
@@ -189,7 +189,7 @@ public class QuadImportService implements IQuadImportService {
         }
 
         if (!tripleValueTypes.isEmpty()) {
-            workspaceComponent.saveTriples(tripleValueTypes);
+            metadataComponent.saveTriples(tripleValueTypes);
         }
     }
 

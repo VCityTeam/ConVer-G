@@ -1,7 +1,7 @@
 package fr.vcity.sparqltosql.repository;
 
 import fr.vcity.sparqltosql.dao.ScenarioVersion;
-import fr.vcity.sparqltosql.dao.Workspace;
+import fr.vcity.sparqltosql.dao.Metadata;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -9,32 +9,32 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface IWorkspaceRepository extends CrudRepository<Workspace, Integer> {
+public interface IMetadataRepository extends CrudRepository<Metadata, Integer> {
 
     @Query(value = """
                 WITH version_transitions AS (
                 SELECT rl18.name as space_type, rl4.name as scenario, rl6.name as version_transition, rl9.name as version_from, rl12.name as version_to
-                FROM workspace wo
+                FROM metadata wo
                          JOIN resource_or_literal rl1 ON wo.id_subject = rl1.id_resource_or_literal
                          JOIN resource_or_literal rl2 ON wo.id_predicate = rl2.id_resource_or_literal
                          JOIN resource_or_literal rl3 ON wo.id_object = rl3.id_resource_or_literal
-                         JOIN workspace wo2 on wo.id_subject = wo2.id_subject
+                         JOIN metadata wo2 on wo.id_subject = wo2.id_subject
                          JOIN resource_or_literal rl4 ON wo2.id_subject = rl4.id_resource_or_literal
                          JOIN resource_or_literal rl5 ON wo2.id_predicate = rl5.id_resource_or_literal
                          JOIN resource_or_literal rl6 ON wo2.id_object = rl6.id_resource_or_literal
-                         JOIN workspace wo3 on wo2.id_object = wo3.id_subject
+                         JOIN metadata wo3 on wo2.id_object = wo3.id_subject
                          JOIN resource_or_literal rl7 ON wo3.id_subject = rl7.id_resource_or_literal
                          JOIN resource_or_literal rl8 ON wo3.id_predicate = rl8.id_resource_or_literal
                          JOIN resource_or_literal rl9 ON wo3.id_object = rl9.id_resource_or_literal
-                         JOIN workspace wo4 on wo2.id_object = wo4.id_subject
+                         JOIN metadata wo4 on wo2.id_object = wo4.id_subject
                          JOIN resource_or_literal rl10 ON wo4.id_subject = rl10.id_resource_or_literal
                          JOIN resource_or_literal rl11 ON wo4.id_predicate = rl11.id_resource_or_literal
                          JOIN resource_or_literal rl12 ON wo4.id_object = rl12.id_resource_or_literal
-                         JOIN workspace wo5 ON wo2.id_subject = wo5.id_object
+                         JOIN metadata wo5 ON wo2.id_subject = wo5.id_object
                          JOIN resource_or_literal rl13 ON wo5.id_subject = rl13.id_resource_or_literal
                          JOIN resource_or_literal rl14 ON wo5.id_predicate = rl14.id_resource_or_literal
                          JOIN resource_or_literal rl15 ON wo5.id_object = rl15.id_resource_or_literal
-                         JOIN workspace wo6 ON wo5.id_subject = wo6.id_subject
+                         JOIN metadata wo6 ON wo5.id_subject = wo6.id_subject
                          JOIN resource_or_literal rl16 ON wo6.id_subject = rl16.id_resource_or_literal
                          JOIN resource_or_literal rl17 ON wo6.id_predicate = rl17.id_resource_or_literal
                          JOIN resource_or_literal rl18 ON wo6.id_object = rl18.id_resource_or_literal

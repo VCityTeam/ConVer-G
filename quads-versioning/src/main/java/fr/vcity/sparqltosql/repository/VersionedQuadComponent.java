@@ -18,6 +18,7 @@ public class VersionedQuadComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final JdbcTemplate jdbcTemplate;
 
+
     public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate, JdbcTemplate jdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.jdbcTemplate = jdbcTemplate;
@@ -89,7 +90,7 @@ public class VersionedQuadComponent {
                     }
 
                     public int getBatchSize() {
-                        return nodes.size() - 1;
+                        return nodes.size();
                     }
                 });
     }

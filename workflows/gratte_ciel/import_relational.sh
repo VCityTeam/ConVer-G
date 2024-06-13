@@ -9,7 +9,7 @@ cd ../dataset || exit
 printf "\n%s$(date +%FT%T) - [quads-versioning] Dataset import started."
 
 ## Grand-Lyon tagged data
-### Import the versions of Grand-Lyon workspace
+### Import the versions of Grand-Lyon metadata
 printf "\n%s$(date +%FT%T) - [quads-versioning] Versions import started."
 printf "\n%s$(date +%FT%T) - [quads-versioning] Version GratteCiel_2018_split."
 curl --location 'http://localhost:8080/import/version' \

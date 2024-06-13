@@ -10,10 +10,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
-public class WorkspaceComponent {
+public class MetadataComponent {
     private final JdbcTemplate jdbcTemplate;
 
-    public WorkspaceComponent(JdbcTemplate jdbcTemplate) {
+    public MetadataComponent(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

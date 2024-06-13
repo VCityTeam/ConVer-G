@@ -33,7 +33,7 @@ public class StSBGPOperator extends StSOperator {
             String tables = generateFromTables(false);
             return getSqlProjectionsQuery(select, tables, false);
         } else {
-            String select = generateSelectWorkspace();
+            String select = generateSelectMetadata();
             String tables = generateFromTables(true);
             return getSqlProjectionsQuery(select, tables, true);
         }
@@ -54,11 +54,11 @@ public class StSBGPOperator extends StSOperator {
     }
 
     /**
-     * Generate the SELECT clause of the SQL query in a workspace context
+     * Generate the SELECT clause of the SQL query in a metadata context
      *
      * @return the SELECT clause of the SQL query
      */
-    private String generateSelectWorkspace() {
+    private String generateSelectMetadata() {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
                         .filter(Node_Variable.class::isInstance), (node, index) -> {
                     this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
@@ -73,13 +73,13 @@ public class StSBGPOperator extends StSOperator {
     /**
      * Generate the FROM clause of the SQL query
      *
-     * @param isWorkspace true if the query is in a workspace context, false otherwise
+     * @param isMetadata true if the query is in a metadata context, false otherwise
      * @return the FROM clause of the SQL query
      */
-    private String generateFromTables(boolean isWorkspace) {
+    private String generateFromTables(boolean isMetadata) {
         return Streams.mapWithIndex(op.getPattern().getList().stream(), (triple, index) -> {
-            if (isWorkspace) {
-                return ("workspace t" + index);
+            if (isMetadata) {
+                return ("metadata t" + index);
             } else {
                 return ("versioned_quad t" + index);
             }
@@ -133,13 +133,13 @@ public class StSBGPOperator extends StSOperator {
      *
      * @param select      the SELECT clause of the SQL query
      * @param tables      the FROM clause of the SQL query
-     * @param isWorkspace true if the query is in a workspace context, false otherwise
+     * @param isMetadata true if the query is in a metadata context, false otherwise
      * @return the SQL query
      */
-    private SQLQuery getSqlProjectionsQuery(String select, String tables, boolean isWorkspace) {
+    private SQLQuery getSqlProjectionsQuery(String select, String tables, boolean isMetadata) {
         String query = "SELECT " + select + " FROM " + tables;
 
-        String where = isWorkspace ? generateWhereWorkspace() : generateWhere();
+        String where = isMetadata ? generateWhereMetadata() : generateWhere();
         if (!where.isEmpty()) {
             query += " WHERE " + where;
         }
@@ -150,11 +150,11 @@ public class StSBGPOperator extends StSOperator {
     }
 
     /**
-     * Generate the WHERE clause of the SQL query in a workspace context
+     * Generate the WHERE clause of the SQL query in a metadata context
      *
      * @return the WHERE clause of the SQL query
      */
-    private String generateWhereWorkspace() {
+    private String generateWhereMetadata() {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
         List<Triple> triples = op.getPattern().getList();
 

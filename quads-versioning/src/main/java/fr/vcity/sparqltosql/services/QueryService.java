@@ -21,7 +21,7 @@ public class QueryService implements IQueryService {
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
     IVersionedNamedGraphRepository rdfNamedGraphRepository;
-    IWorkspaceRepository workspaceRepository;
+    IMetadataRepository metadataRepository;
     IVersionRepository versionRepository;
     VersionedQuadComponent versionedQuadComponent;
 
@@ -31,14 +31,14 @@ public class QueryService implements IQueryService {
             IVersionedNamedGraphRepository rdfNamedGraphRepository,
             IVersionRepository versionRepository,
             VersionedQuadComponent versionedQuadComponent,
-            IWorkspaceRepository workspaceRepository
+            IMetadataRepository metadataRepository
     ) {
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.rdfNamedGraphRepository = rdfNamedGraphRepository;
         this.versionRepository = versionRepository;
         this.versionedQuadComponent = versionedQuadComponent;
-        this.workspaceRepository = workspaceRepository;
+        this.metadataRepository = metadataRepository;
     }
 
     /**
@@ -73,7 +73,7 @@ public class QueryService implements IQueryService {
      */
     @Override
     public Workspace getGraphVersion() {
-        List<ScenarioVersion> scenarios = workspaceRepository.getAllScenarios();
+        List<ScenarioVersion> scenarios = metadataRepository.getAllScenarios();
 
         Workspace workspace = new Workspace();
 
