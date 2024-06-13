@@ -1,49 +1,54 @@
 package fr.vcity.sparqltosql.repository;
 
+import fr.vcity.sparqltosql.connection.JdbcConnection;
 import fr.vcity.sparqltosql.services.QuadImportService;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Component;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
+@Slf4j
 @Component
 public class MetadataComponent {
-    private final JdbcTemplate jdbcTemplate;
-
-    public MetadataComponent(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public void saveTriples(List<QuadImportService.TripleValueType> tripleValueTypes) {
-        jdbcTemplate.batchUpdate("""
-                WITH a (
+        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
+        Connection connection = jdbcConnection.getConnection();
+
+        for (List<QuadImportService.TripleValueType> partition : ListUtils.partition(tripleValueTypes, 100)) {
+            String insertTriplesSQL = """
+                    WITH a (
                      subject, subject_type,
                      predicate, predicate_type,
                      object, object_type
                  ) AS (
-                 VALUES (?, ?, ?, ?, ?, ?)
+                """ + "VALUES (?, ?, ?, ?, ?, ?)" + """
                 )
                 SELECT add_triple(
                     a.subject, a.subject_type,
                     a.predicate, a.predicate_type,
                     a.object, a.object_type
-                ) FROM a;""",
-                new BatchPreparedStatementSetter() {
-                    public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        ps.setString(1, tripleValueTypes.get(i).sValue());
-                        ps.setString(2, tripleValueTypes.get(i).sType());
-                        ps.setString(3, tripleValueTypes.get(i).pValue());
-                        ps.setString(4, tripleValueTypes.get(i).pType());
-                        ps.setString(5, tripleValueTypes.get(i).oValue());
-                        ps.setString(6, tripleValueTypes.get(i).oType());
-                    }
+                ) FROM a;""";
+            try {
+                PreparedStatement ps = connection.prepareStatement(insertTriplesSQL);
+                for (QuadImportService.TripleValueType tripleValueType : partition) {
+                    ps.setString(1, tripleValueType.sValue());
+                    ps.setString(2, tripleValueType.sType());
+                    ps.setString(3, tripleValueType.pValue());
+                    ps.setString(4, tripleValueType.pType());
+                    ps.setString(5, tripleValueType.oValue());
+                    ps.setString(6, tripleValueType.oType());
+                    ps.addBatch();
+                }
 
-                    public int getBatchSize() {
-                        return tripleValueTypes.size();
-                    }
-                });
+                ps.executeBatch();
+            } catch (SQLException e) {
+                log.error("Error occurred in statement", e);
+            }
+        }
     }
 }

@@ -1,27 +1,27 @@
 package fr.vcity.sparqltosql.repository;
 
+import fr.vcity.sparqltosql.connection.JdbcConnection;
 import fr.vcity.sparqltosql.dto.CompleteVersionedQuad;
 import fr.vcity.sparqltosql.services.QuadImportService;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
 @Component
+@Slf4j
 public class VersionedQuadComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final JdbcTemplate jdbcTemplate;
 
-
-    public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate, JdbcTemplate jdbcTemplate) {
+    public VersionedQuadComponent(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     public List<CompleteVersionedQuad> findAll() {
@@ -30,8 +30,7 @@ public class VersionedQuadComponent {
                             FROM versioned_quad v LEFT JOIN resource_or_literal rls ON rls.id_resource_or_literal = v.id_subject
                             LEFT JOIN resource_or_literal rlp ON rlp.id_resource_or_literal = v.id_predicate
                             LEFT JOIN resource_or_literal rlo ON rlo.id_resource_or_literal = v.id_object
-                            LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph
-                                """,
+                            LEFT JOIN resource_or_literal rlong ON rlong.id_resource_or_literal = v.id_named_graph""",
                 getRdfCompleteVersionedQuadRowMapper()
         );
     }
@@ -76,58 +75,70 @@ public class VersionedQuadComponent {
     }
 
     public void saveResourceOrLiteral(List<QuadImportService.Node> nodes) {
-        jdbcTemplate.batchUpdate("""
-                INSERT INTO resource_or_literal (name, type)
-                        VALUES (?, ?)
-                        ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type
-                        RETURNING *;
-                """,
-                new BatchPreparedStatementSetter() {
-                    public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        QuadImportService.Node node = nodes.get(i);
-                        ps.setString(1, node.value());
-                        ps.setString(2, node.type());
-                    }
+        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
+        Connection connection = jdbcConnection.getConnection();
 
-                    public int getBatchSize() {
-                        return nodes.size();
-                    }
-                });
+        for (List<QuadImportService.Node> partition : ListUtils.partition(nodes, 5000)) {
+            String insertNodesSQL = " INSERT INTO resource_or_literal (name, type) "
+                    + "VALUES (?,?) " +
+                    "ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type";
+            try {
+                PreparedStatement ps = connection.prepareStatement(insertNodesSQL);
+                for (QuadImportService.Node node : partition) {
+                    ps.setString(1, node.value());
+                    ps.setString(2, node.type());
+                    ps.addBatch();
+                }
+
+                ps.executeBatch();
+            } catch (SQLException e) {
+                log.error("Error occurred in statement", e);
+            }
+        }
     }
 
     public void saveQuads(List<QuadImportService.QuadValueType> quadValueTypes) {
-        jdbcTemplate.batchUpdate("""
-                WITH a (
-                     subject, subject_type,
-                     predicate, predicate_type,
-                     object, object_type,
-                     named_graph,
-                     version
-                 ) AS (
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        )
-                        SELECT add_quad(
-                            a.subject, a.subject_type,
-                            a.predicate, a.predicate_type,
-                            a.object, a.object_type,
-                            a.named_graph,
-                            a.version
-                        ) FROM a;""",
-                new BatchPreparedStatementSetter() {
-                    public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        ps.setString(1, quadValueTypes.get(i).tripleValueType().sValue());
-                        ps.setString(2, quadValueTypes.get(i).tripleValueType().sType());
-                        ps.setString(3, quadValueTypes.get(i).tripleValueType().pValue());
-                        ps.setString(4, quadValueTypes.get(i).tripleValueType().pType());
-                        ps.setString(5, quadValueTypes.get(i).tripleValueType().oValue());
-                        ps.setString(6, quadValueTypes.get(i).tripleValueType().oType());
-                        ps.setString(7, quadValueTypes.get(i).namedGraph());
-                        ps.setInt(8, quadValueTypes.get(i).version());
-                    }
+        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
+        Connection connection = jdbcConnection.getConnection();
 
-                    public int getBatchSize() {
-                        return quadValueTypes.size();
-                    }
-                });
+        for (List<QuadImportService.QuadValueType> partition : ListUtils.partition(quadValueTypes, 10000)) {
+            String insertQuadValueSQL = """
+                   WITH a (
+                            subject, subject_type,
+                            predicate, predicate_type,
+                            object, object_type,
+                            named_graph,
+                            version
+                        ) AS (
+                   """ + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)" + """
+                   )
+                   SELECT add_quad(
+                       a.subject, a.subject_type,
+                       a.predicate, a.predicate_type,
+                       a.object, a.object_type,
+                       a.named_graph,
+                       a.version
+                   ) FROM a;""";
+
+            try {
+                PreparedStatement ps = connection.prepareStatement(insertQuadValueSQL);
+
+                for (QuadImportService.QuadValueType quadValueType : partition) {
+                    ps.setString(1, quadValueType.tripleValueType().sValue());
+                    ps.setString(2, quadValueType.tripleValueType().sType());
+                    ps.setString(3, quadValueType.tripleValueType().pValue());
+                    ps.setString(4, quadValueType.tripleValueType().pType());
+                    ps.setString(5, quadValueType.tripleValueType().oValue());
+                    ps.setString(6, quadValueType.tripleValueType().oType());
+                    ps.setString(7, quadValueType.namedGraph());
+                    ps.setInt(8, quadValueType.version());
+                    ps.addBatch();
+                }
+
+                ps.executeBatch();
+            } catch (SQLException e) {
+                log.error("Error occurred in statement", e);
+            }
+        }
     }
 }

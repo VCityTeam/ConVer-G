@@ -53,6 +53,9 @@ services:
       - postgres
     environment:
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+      - "DATASOURCE_USERNAME=postgres"
+      - "DATASOURCE_PASSWORD=password"
     ports:
       - "8080:8080"
     container_name: quads-versioning
