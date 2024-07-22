@@ -33,4 +33,10 @@ printf "\n%s$(date +%FT%T) - [quads-versioning] Versions import completed."
 #
 #printf "\n%s$(date +%FT%T) - [quads-versioning] Version transitions import completed."
 printf "\n%s$(date +%FT%T) - [quads-versioning] Dataset import completed."
+
+### Condense dataset
+printf "\n%s$(date +%FT%T) - [quads-versioning] Dataset condensation started."
+curl --location 'http://localhost:8080/import/condense'
+printf "\n%s$(date +%FT%T) - [quads-versioning] Dataset condensation completed."
+
 echo "------------------------------------------------------------- [END IMPORT RELATIONAL] -------------------------------------------------------------"

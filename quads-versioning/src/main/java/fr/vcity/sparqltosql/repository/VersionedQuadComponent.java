@@ -78,7 +78,7 @@ public class VersionedQuadComponent {
         JdbcConnection jdbcConnection = JdbcConnection.getInstance();
         Connection connection = jdbcConnection.getConnection();
 
-        for (List<QuadImportService.Node> partition : ListUtils.partition(nodes, 5000)) {
+        for (List<QuadImportService.Node> partition : ListUtils.partition(nodes, 1000)) {
             String insertNodesSQL = " INSERT INTO resource_or_literal (name, type) "
                     + "VALUES (?,?) " +
                     "ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type";
@@ -103,22 +103,8 @@ public class VersionedQuadComponent {
 
         for (List<QuadImportService.QuadValueType> partition : ListUtils.partition(quadValueTypes, 10000)) {
             String insertQuadValueSQL = """
-                   WITH a (
-                            subject, subject_type,
-                            predicate, predicate_type,
-                            object, object_type,
-                            named_graph,
-                            version
-                        ) AS (
-                   """ + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)" + """
-                   )
-                   SELECT add_quad(
-                       a.subject, a.subject_type,
-                       a.predicate, a.predicate_type,
-                       a.object, a.object_type,
-                       a.named_graph,
-                       a.version
-                   ) FROM a;""";
+                   INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)"""
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
             try {
                 PreparedStatement ps = connection.prepareStatement(insertQuadValueSQL);

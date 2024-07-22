@@ -12,4 +12,6 @@ public interface IQuadImportService {
     void importMetadata(MultipartFile file) throws RiotException;
 
     void removeMetadata();
+
+    void condenseModel();
 }

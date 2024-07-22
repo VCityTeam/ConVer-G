@@ -29,11 +29,7 @@ public class QuadImportController {
             description = "Adds all quads as a new version and considered as valid"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "The quads were added to a new version",
-                    content = {
-                            @Content(mediaType = "text/plain",
-                                    schema = @Schema(implementation = Integer.class)
-                            )}),
+            @ApiResponse(responseCode = "200", description = "The quads were added to a new version"),
             @ApiResponse(responseCode = "400", description = "Invalid content")}
     )
     @PostMapping(value = {"/version"})
@@ -50,6 +46,31 @@ public class QuadImportController {
                     .body(null);
         }
     }
+
+    @Operation(
+            summary = "Condense all the quads into the versioned_quad table",
+            description = "Transform all the quads stored in the flat_model_quad into the versioned_quad table"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The quads were condensed into the versioned_quad table",
+                    content = {
+                            @Content(mediaType = "text/plain",
+                                    schema = @Schema(implementation = Integer.class)
+                            )}),
+            @ApiResponse(responseCode = "400", description = "Invalid content")}
+    )
+    @GetMapping(value = {"/condense"})
+    ResponseEntity<Void> condenseModel() {
+        try {
+            quadImportService.condenseModel();
+            return ResponseEntity.ok().build();
+        } catch (RiotException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
+        }
+    }
+
 
     @Operation(
             summary = "Adds triple and creates a new metadata",

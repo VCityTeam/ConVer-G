@@ -18,11 +18,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS resource_or_literal_idx ON resource_or_literal
 CREATE TABLE IF NOT EXISTS versioned_quad
 (
     id_object      integer REFERENCES resource_or_literal (id_resource_or_literal),
-    id_predicate    integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_predicate   integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_subject     integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_named_graph integer REFERENCES resource_or_literal (id_resource_or_literal),
     validity       bit varying,
     PRIMARY KEY (id_object, id_predicate, id_subject, id_named_graph)
+);
+
+CREATE TABLE IF NOT EXISTS flat_model_quad
+(
+    id_record      integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    subject        text,
+    subject_type   varchar,
+    predicate      text,
+    predicate_type varchar,
+    object         text,
+    object_type    varchar,
+    named_graph    text,
+    version        integer
 );
 
 CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object);
@@ -42,9 +55,9 @@ CREATE TABLE IF NOT EXISTS version
 
 CREATE TABLE IF NOT EXISTS metadata
 (
-    id_object   integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_object    integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_predicate integer REFERENCES resource_or_literal (id_resource_or_literal),
-    id_subject  integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_subject   integer REFERENCES resource_or_literal (id_resource_or_literal),
     PRIMARY KEY (id_object, id_predicate, id_subject)
 );
 
@@ -103,54 +116,10 @@ BEGIN
 END;
 ';
 
-CREATE OR REPLACE FUNCTION add_quad(
-    subject varchar, subject_type varchar,
-    predicate varchar, predicate_type varchar,
-    object varchar, object_type varchar,
-    named_graph varchar,
-    version integer
-)
-    RETURNS setof versioned_quad
-    LANGUAGE plpgsql
-AS
-'
-DECLARE
-BEGIN
-    RETURN QUERY
-        WITH vng AS (SELECT id_resource_or_literal
-                 FROM resource_or_literal
-                 WHERE name = named_graph AND type IS NULL
-                 ),
-             s AS (
-                   SELECT id_resource_or_literal
-                   FROM resource_or_literal
-                   WHERE name = subject AND (
-                         subject_type IS NULL OR type = subject_type
-                   )),
-             p AS (SELECT id_resource_or_literal
-                   FROM resource_or_literal
-                   WHERE name = predicate AND (
-                       predicate_type IS NULL OR type = predicate_type
-                   )),
-             o AS (SELECT id_resource_or_literal
-                   FROM resource_or_literal
-                   WHERE name = object AND (
-                       object_type IS NULL OR type = object_type
-                   )),
-             q AS (INSERT INTO versioned_quad (id_subject, id_predicate, id_object, id_named_graph, validity)
-                 SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal, vng.id_resource_or_literal, LPAD('''', version, ''0'')::bit varying || B''1''
-                 FROM s, p, o, vng
-                 ON CONFLICT ON CONSTRAINT versioned_quad_pkey
-                 DO UPDATE SET validity = versioned_quad.validity || B''1''
-                 RETURNING *)
-            TABLE q;
-END;
-';
-
 CREATE OR REPLACE FUNCTION add_triple(
-    subject varchar, subject_type varchar,
-    predicate varchar, predicate_type varchar,
-    object varchar, object_type varchar
+    subject text, subject_type varchar,
+    predicate text, predicate_type varchar,
+    object text, object_type varchar
 )
     RETURNS setof metadata
     LANGUAGE plpgsql

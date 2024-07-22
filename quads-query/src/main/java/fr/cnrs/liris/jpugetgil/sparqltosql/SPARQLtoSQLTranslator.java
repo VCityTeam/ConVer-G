@@ -122,7 +122,10 @@ public class SPARQLtoSQLTranslator {
             ).buildSQLQuery();
             case OpQuadPattern opQuadPattern ->
                     throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
-            case OpFilter opFilter -> throw new IllegalArgumentException("TODO: OpFilter not implemented");
+            case OpFilter opFilter -> new StSFilterOperator(
+                    buildSPARQLContext(opFilter.getSubOp()),
+                    opFilter
+            ).buildSQLQuery();
             case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");
             case OpTopN opTopN -> throw new IllegalArgumentException("TODO: OpTopN not implemented");
             case OpPath opPath -> throw new IllegalArgumentException("TODO: OpPath not implemented");

@@ -29,9 +29,9 @@ public class MetadataComponent {
                 """ + "VALUES (?, ?, ?, ?, ?, ?)" + """
                 )
                 SELECT add_triple(
-                    a.subject, a.subject_type,
-                    a.predicate, a.predicate_type,
-                    a.object, a.object_type
+                    a.subject::text, a.subject_type::character varying,
+                    a.predicate::text, a.predicate_type::character varying,
+                    a.object::text, a.object_type::character varying
                 ) FROM a;""";
             try {
                 PreparedStatement ps = connection.prepareStatement(insertTriplesSQL);

@@ -165,6 +165,21 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
+     * Condense the dataset
+     */
+    @Override
+    public void condenseModel() {
+        Long start = System.nanoTime();
+        rdfVersionedQuadRepository.deleteAll();
+        rdfResourceRepository.flatModelSubjectToCatalog();
+        rdfResourceRepository.flatModelPredicateToCatalog();
+        rdfResourceRepository.flatModelObjectToCatalog();
+        rdfVersionedQuadRepository.condenseModel();
+        Long end = System.nanoTime();
+        log.info("[Measure] (Condense relational internal): {} ns;", end - start);
+    }
+
+    /**
      * Import RDF default model statements
      *
      * @param defaultModel The default graph
@@ -201,7 +216,6 @@ public class QuadImportService implements IQuadImportService {
      */
     private void extractAndInsertQuads(Dataset dataset, Version version) {
         Set<RDFNode> nodeSet = new HashSet<>();
-        List<Node> nodes = new ArrayList<>();
         List<QuadValueType> quadValueTypes = new ArrayList<>();
 
         for (Iterator<Resource> i = dataset.listModelNames(); i.hasNext(); ) {
@@ -220,16 +234,6 @@ public class QuadImportService implements IQuadImportService {
                 QuadValueType quadValueType = new QuadValueType(getTripleValueType(stmtIterator, nodeSet), defaultGraphURI.getName(), version.getIndexVersion() - 1);
                 quadValueTypes.add(quadValueType);
             }
-        }
-
-        nodeSet.forEach(node -> {
-            String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
-            String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
-            nodes.add(new Node(nValue, nType));
-        });
-
-        if (!nodes.isEmpty()) {
-            versionedQuadComponent.saveResourceOrLiteral(nodes);
         }
 
         if (!quadValueTypes.isEmpty()) {
