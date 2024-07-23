@@ -74,29 +74,6 @@ public class VersionedQuadComponent {
         );
     }
 
-    public void saveResourceOrLiteral(List<QuadImportService.Node> nodes) {
-        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
-        Connection connection = jdbcConnection.getConnection();
-
-        for (List<QuadImportService.Node> partition : ListUtils.partition(nodes, 1000)) {
-            String insertNodesSQL = " INSERT INTO resource_or_literal (name, type) "
-                    + "VALUES (?,?) " +
-                    "ON CONFLICT (sha512(resource_or_literal.name::bytea), (resource_or_literal.type)) DO UPDATE SET type = EXCLUDED.type";
-            try {
-                PreparedStatement ps = connection.prepareStatement(insertNodesSQL);
-                for (QuadImportService.Node node : partition) {
-                    ps.setString(1, node.value());
-                    ps.setString(2, node.type());
-                    ps.addBatch();
-                }
-
-                ps.executeBatch();
-            } catch (SQLException e) {
-                log.error("Error occurred in statement", e);
-            }
-        }
-    }
-
     public void saveQuads(List<QuadImportService.QuadValueType> quadValueTypes) {
         JdbcConnection jdbcConnection = JdbcConnection.getInstance();
         Connection connection = jdbcConnection.getConnection();

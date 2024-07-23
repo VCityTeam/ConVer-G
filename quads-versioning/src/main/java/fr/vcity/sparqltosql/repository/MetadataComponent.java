@@ -20,21 +20,13 @@ public class MetadataComponent {
         Connection connection = jdbcConnection.getConnection();
 
         for (List<QuadImportService.TripleValueType> partition : ListUtils.partition(tripleValueTypes, 100)) {
-            String insertTriplesSQL = """
-                    WITH a (
-                     subject, subject_type,
-                     predicate, predicate_type,
-                     object, object_type
-                 ) AS (
-                """ + "VALUES (?, ?, ?, ?, ?, ?)" + """
-                )
-                SELECT add_triple(
-                    a.subject::text, a.subject_type::character varying,
-                    a.predicate::text, a.predicate_type::character varying,
-                    a.object::text, a.object_type::character varying
-                ) FROM a;""";
+            String insertTripleValueSQL = """
+                    INSERT INTO flat_model_triple (subject, subject_type, predicate, predicate_type, object, object_type)"""
+                    + "VALUES (?, ?, ?, ?, ?, ?);";
+
             try {
-                PreparedStatement ps = connection.prepareStatement(insertTriplesSQL);
+                PreparedStatement ps = connection.prepareStatement(insertTripleValueSQL);
+
                 for (QuadImportService.TripleValueType tripleValueType : partition) {
                     ps.setString(1, tripleValueType.sValue());
                     ps.setString(2, tripleValueType.sType());

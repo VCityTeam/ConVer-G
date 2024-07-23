@@ -11,8 +11,8 @@ DROP TABLE IF EXISTS resource_or_literal CASCADE;
 DROP TABLE IF EXISTS version CASCADE;
 DROP TABLE IF EXISTS metadata CASCADE;
 DROP TABLE IF EXISTS flat_model_quad CASCADE;
+DROP TABLE IF EXISTS flat_model_triple CASCADE;
 DROP FUNCTION IF EXISTS version_named_graph;
-DROP FUNCTION IF EXISTS add_triple;
 
 CREATE TABLE IF NOT EXISTS resource_or_literal
 (
@@ -51,6 +51,17 @@ CREATE TABLE IF NOT EXISTS flat_model_quad
     object_type    varchar,
     named_graph    text,
     version        integer
+);
+
+CREATE TABLE IF NOT EXISTS flat_model_triple
+(
+    id_record      integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    subject        text,
+    subject_type   varchar,
+    predicate      text,
+    predicate_type varchar,
+    object         text,
+    object_type    varchar
 );
 
 CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object);
@@ -128,43 +139,5 @@ AS
                      FROM ng, v, vng
                  )
                 TABLE result;
-    END;
-';
-
-CREATE OR REPLACE FUNCTION add_triple(
-    subject varchar, subject_type varchar,
-    property varchar, predicate_type varchar,
-    object varchar, object_type varchar
-)
-    RETURNS setof metadata
-    LANGUAGE plpgsql
-AS
-'
-    DECLARE
-    BEGIN
-        RETURN QUERY
-            WITH s AS (
-                SELECT id_resource_or_literal
-                FROM resource_or_literal
-                WHERE name = subject AND (
-                    subject_type IS NULL OR type = subject_type
-                    )),
-                 p AS (SELECT id_resource_or_literal
-                       FROM resource_or_literal
-                       WHERE name = property AND (
-                           predicate_type IS NULL OR type = predicate_type
-                           )),
-                 o AS (SELECT id_resource_or_literal
-                       FROM resource_or_literal
-                       WHERE name = object AND (
-                           object_type IS NULL OR type = object_type
-                           )),
-                 q AS (INSERT INTO metadata (id_subject, id_predicate, id_object)
-                     SELECT s.id_resource_or_literal, p.id_resource_or_literal, o.id_resource_or_literal
-                     FROM s, p, o
-                     ON CONFLICT ON CONSTRAINT metadata_pkey
-                         DO UPDATE SET id_subject = EXCLUDED.id_subject
-                     RETURNING *)
-                TABLE q;
     END;
 ';

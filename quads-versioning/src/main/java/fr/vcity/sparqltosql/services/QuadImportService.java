@@ -171,12 +171,15 @@ public class QuadImportService implements IQuadImportService {
     public void condenseModel() {
         Long start = System.nanoTime();
         rdfVersionedQuadRepository.deleteAll();
-        rdfResourceRepository.flatModelSubjectToCatalog();
-        rdfResourceRepository.flatModelPredicateToCatalog();
-        rdfResourceRepository.flatModelObjectToCatalog();
+        rdfResourceRepository.flatModelQuadsSubjectToCatalog();
+        rdfResourceRepository.flatModelQuadsPredicateToCatalog();
+        rdfResourceRepository.flatModelQuadsObjectToCatalog();
+        rdfResourceRepository.flatModelTriplesSubjectToCatalog();
+        rdfResourceRepository.flatModelTriplesPredicateToCatalog();
+        rdfResourceRepository.flatModelTriplesObjectToCatalog();
         rdfVersionedQuadRepository.condenseModel();
         Long end = System.nanoTime();
-        log.info("[Measure] (Condense relational internal): {} ns;", end - start);
+        log.info("[Measure] (Catalog dataset + Condense relational internal): {} ns;", end - start);
     }
 
     /**
@@ -186,21 +189,10 @@ public class QuadImportService implements IQuadImportService {
      */
     private void importDefaultModel(Model defaultModel) {
         Set<RDFNode> nodeSet = new HashSet<>();
-        List<Node> nodes = new ArrayList<>();
         List<TripleValueType> tripleValueTypes = new ArrayList<>();
 
         for (StmtIterator stmtIterator = defaultModel.listStatements(); stmtIterator.hasNext(); ) {
             tripleValueTypes.add(getTripleValueType(stmtIterator, nodeSet));
-        }
-
-        nodeSet.forEach(node -> {
-            String nValue = node.isLiteral() ? node.asLiteral().getString() : node.toString();
-            String nType = node.isLiteral() ? node.asLiteral().getDatatype().getURI() : null;
-            nodes.add(new Node(nValue, nType));
-        });
-
-        if (!nodes.isEmpty()) {
-            versionedQuadComponent.saveResourceOrLiteral(nodes);
         }
 
         if (!tripleValueTypes.isEmpty()) {
