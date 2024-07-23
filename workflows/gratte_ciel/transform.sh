@@ -31,15 +31,23 @@ printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 find . -type f -name "*.ttl" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" ttl relational Grand-Lyon
+    docker run --name "relational_annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" ttl relational Grand-Lyon
 done
+docker ps --filter name=relational_annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
-find . -type f -name "version*split.ttl" -print0 | while IFS= read -r -d '' file
+find . -type f -name "Transition*.ttl" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" "$file" ttl theoretical Grand-Lyon
+    docker run --name "relational_annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" "$file" ttl relational Metadata
 done
-docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
+docker ps --filter name=relational_annotate_graph-* -aq | xargs docker stop | xargs docker rm
+
+find . -type f -name "*split.ttl" -print0 | while IFS= read -r -d '' file
+do
+    file=$(basename "$file")
+    docker run --name "theoretical_annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" "$file" ttl theoretical Grand-Lyon
+done
+docker ps --filter name=theoretical_annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 find . -type f -name "*.nt" -print0 | while IFS= read -r -d '' file
 do

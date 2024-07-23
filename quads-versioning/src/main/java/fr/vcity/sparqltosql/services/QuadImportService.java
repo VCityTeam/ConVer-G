@@ -179,7 +179,7 @@ public class QuadImportService implements IQuadImportService {
         rdfResourceRepository.flatModelTriplesObjectToCatalog();
         rdfVersionedQuadRepository.condenseModel();
         Long end = System.nanoTime();
-        log.info("[Measure] (Catalog dataset + Condense relational internal): {} ns;", end - start);
+        log.info("[Measure] (Catalog + Condense relational internal): {} ns;", end - start);
     }
 
     /**

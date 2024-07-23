@@ -91,7 +91,7 @@ class RdfConverter:
         """
         theoretical_annotations_filename = 'theoretical_annotations.nq'
         metadata_ds = Dataset()
-        metadata_uri = URIRef('https://github.com/VCityTeam/ConVer-G/Context-Type#Metadata')
+        metadata_uri = URIRef('https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata')
         if os.path.exists(os.path.join(output_folder + '/', theoretical_annotations_filename)):
             self.metadata_graph.parse(
                 os.path.join(output_folder + '/', theoretical_annotations_filename), format='nquads')

@@ -4,5 +4,5 @@ SELECT ?g ?p ?o WHERE {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p ?o ;
         ?p2 ?o2 .
     }
-    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Context-Type#Metadata>)
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
 }

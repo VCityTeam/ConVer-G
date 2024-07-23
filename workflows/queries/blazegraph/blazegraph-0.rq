@@ -3,5 +3,5 @@ SELECT ?g ?s ?p ?o WHERE {
     GRAPH ?g {
       ?s ?p ?o .
     }
-    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Context-Type#Metadata>)
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
 }

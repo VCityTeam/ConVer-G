@@ -4,5 +4,5 @@ SELECT ?graph ?subject ?predicate ?object ?object2 WHERE {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?predicate ?object .
       ?subject ?predicate ?object2 .
     }
-    FILTER(?graph != <https://github.com/VCityTeam/ConVer-G/Context-Type#Metadata>)
+    FILTER(?graph != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
 }
