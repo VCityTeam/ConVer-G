@@ -20,4 +20,7 @@ else
   docker compose up -d
 fi
 
+cd quads-creator || exit
+docker build -t vcity/annotate_graph .
+
 echo "----------------------------------------------------------------- [END INIT STACK] -----------------------------------------------------------------"

@@ -1,4 +1,4 @@
-# Query for all workspace triples
+# Query for all metadata triples
 SELECT ?s ?p ?o WHERE {
       ?s ?p ?o .
 }

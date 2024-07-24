@@ -3,6 +3,6 @@ SELECT ?graph ?predicate ?object WHERE {
     GRAPH ?graph {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?predicate ?object ;
         ?predicate2 ?object2 .
-      FILTER(?predicate != ?predicate2 && ?object != ?object2 && ?graph != <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace>)
+      FILTER(?predicate != ?predicate2 && ?object != ?object2 && ?graph != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
     }
 }

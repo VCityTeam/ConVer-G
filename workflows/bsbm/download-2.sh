@@ -20,24 +20,14 @@ fi
 versions_number=$1
 products_number=$2
 
-# Create the save directory if it doesn't exist
-rm -rf save
-mkdir -p save
-
-echo "------- Generating $versions_number versions -------"
-
 # Run the command versions_number times
-for ((i=0;i<versions_number;i++)); do
-    echo "Generating version $i"
-    echo "Generating $((products_number + i)) products"
-    docker run --name "bsbm-$i" -v "$PWD:/data" vcity/bsbm generate -s ttl -pc $((products_number + i)) -tc $((i)) -ppt $((i))
-    mv dataset.ttl "save/version-$i.split.ttl"
+docker run --name "bsbm-$versions_number-$products_number" -v "$PWD:/app/data" vcity/bsbm generate-n "$versions_number" "$products_number"
+for i in $(seq 1 "$versions_number")
+do
+  mv "dataset-$i.ttl" "version-$i.split.ttl"
 done
 
-cp save/* .
-rm -rf save
-
-# Cleaning workspace
+# Cleaning metadata
 docker ps --filter name=bsbm-* -aq | xargs docker stop | xargs docker rm
 
 printf "\versions_number%s$(date +%FT%T) - [Copy] Dataset generation completed."

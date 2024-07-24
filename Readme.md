@@ -55,7 +55,6 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   database.
 
 ## Getting started
-
 ### Installation
 
 This project uses Java 21 JDK + Maven and
@@ -75,7 +74,7 @@ sdk use java 21.0.1-amzn
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
 
 ### Maven
-#### ⌛ Quads-Versioning
+#### ⌛ Quads-Loader
 
 This project uses:
 
@@ -102,7 +101,7 @@ This project has been tested with: `junit-jupiter-engine`
 
 ### Start the application
 
-#### ⌛ Quads-Versioning
+#### ⌛ Quads-Loader
 
 ```shell
 # at the root of the project
@@ -110,7 +109,7 @@ This project has been tested with: `junit-jupiter-engine`
 docker compose up -d
 
 # if you want to hack the import program
-cd quads-versioning
+cd quads-loader
 
 ## wait until the PostgreSQL database is up
 ## starts the Java Spring application locally (http://localhost:8080/)
@@ -162,7 +161,7 @@ erDiagram
         timestamptz transaction_time_start
         timestamptz transaction_time_end
     }
-    Workspace {
+    Metadata {
         text subject
         text predicate
         text object
@@ -179,9 +178,9 @@ erDiagram
     VersionedQuad ||--|{ ResourceOrLiteral: "named graph"
     VersionedNamedGraph ||--|{ ResourceOrLiteral: "named graph"
     VersionedNamedGraph ||--|{ ResourceOrLiteral: "versioned named graph"
-    Workspace }|--|{ ResourceOrLiteral: "subject"
-    Workspace }|--|{ ResourceOrLiteral: "object"
-    Workspace }|--|{ ResourceOrLiteral: "predicate"
+    Metadata }|--|{ ResourceOrLiteral: "subject"
+    Metadata }|--|{ ResourceOrLiteral: "object"
+    Metadata }|--|{ ResourceOrLiteral: "predicate"
     VersionedQuad ||--|{ VersionedNamedGraph: "foreign key"
     VersionedQuad {
         int id_subject PK, FK
@@ -206,7 +205,7 @@ erDiagram
         timestamptz transaction_time_start
         timestamptz transaction_time_end
     }
-    Workspace {
+    Metadata {
         int id_subject PK, FK
         int id_predicate PK, FK
         int id_object PK, FK
@@ -222,7 +221,7 @@ flowchart BT
     CS[Computer Scientist] -->|Sends the SPARQL query to the endpoint| SE
     SE -->|Sends the quads to the Computer Scientist| CS
     subgraph Server
-        SE -->|Sends the SPARQL query for translation| ARQ[Jena ARQ]
+        SE -->|Sends the SPARQL query for translation| ARQ[SPARQL to SQL translator]
         ARQ -->|Sends the SQL translated query to JDBC| JDBC[Java Database Connectivity]
         JDBC -->|The filtered quads| ARQ
         ARQ -->|The filtered quads| SE
@@ -281,31 +280,50 @@ This dataset as been transformed to be compatible with the designed conceptual m
 
 ```mermaid
 sequenceDiagram
-    title Transformation and Import workflow
+    title Transformation, Import and query workflow
     autonumber
-    box ConVer-G
-        participant Version Import API
-        participant Workspace Import API
-    end
 
-    System ->> BSBM: Generate a set of versions and their dataset
+    participant BSBM
+    participant Annotation
+
+    System ->>+ BSBM: Ask for a set of versions
+    BSBM ->>- System: Generate a set of versions
+
     loop For each generated version
-        System ->> Annotation: Send the versionable data to annotate
-        Annotation ->> System: The annotated data with the version index
-        System ->> Annotation: Send the versionable data to annotate
-        Annotation ->> System: The annotated data with the graph name
+        System ->>+ Annotation: Send the versionable data to annotate
+        Annotation ->>- System: The annotated data with the version index
+        System ->>+ Annotation: Send the versionable data to annotate
+        Annotation ->>- System: The annotated data with the graph name
     end
-    loop For each Annotated version
-        System ->> Triple store: Sends the version to import
-        System ->> Version Import API: Sends the version to import
-        Version Import API ->> System: Returns the version index
-    end
+    
+    participant Triple store
 
-    loop For each generated version transitions
-        System ->> Triple store: Sends the version transition to import
-        System ->> Workspace Import API: Sends the version transitions to import
-        Workspace Import API ->> System: Returns import status
+    loop For each Annotated version
+        System ->>+ QuaVer: Sends the version to import
+        QuaVer ->>+ Database: Inserts the version
+        Database ->>- QuaVer: Returns the insert status
+        QuaVer ->>- System: Returns the version index
+        
+        System ->>+ Triple store: Sends the version to import
+        Triple store ->>- System: Returns the insert status
     end
+    
+    System ->>+ Triple store: Sends the theoretical annotations to import
+    Triple store ->>- System: Returns the insert status
+    
+    box QuaQue
+        participant SPARQL-SQL translator
+        participant SPARQL API
+    end
+    
+    actor User client
+    
+    User client ->>+ SPARQL API: Sends a SPARQL query
+    SPARQL API ->>+ SPARQL-SQL translator: Translates the SPARQL query
+    SPARQL-SQL translator ->>- SPARQL API: Returns the SQL query
+    SPARQL API ->>+ Database: Sends the SQL query
+    Database ->>- SPARQL API: Returns the queried result
+    SPARQL API ->>- User client: Returns the result
 ```
 
 #### Entity linking

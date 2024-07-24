@@ -1,6 +1,6 @@
 # Query for all triples (includes quads)
 SELECT ?s ?p ?o WHERE {
-    GRAPH <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace> {
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
         ?s ?p ?o .
     }
 }

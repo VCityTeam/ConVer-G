@@ -4,9 +4,18 @@ start=$(date +%s%3N)
 
 /bin/bash ./init_stack.sh
 
-/bin/bash ./gratte_ciel/download.sh
+download=true
 
-/bin/bash ./gratte_ciel/transform.sh
+# if -local is set to true, don't download the data
+if [ "$1" = "-local" ]; then
+  download=false
+fi
+
+if [ "$download" = true ]; then
+  /bin/bash ./gratte_ciel/download.sh
+
+  /bin/bash ./gratte_ciel/transform.sh
+fi
 
 /bin/bash ./gratte_ciel/import_relational.sh
 

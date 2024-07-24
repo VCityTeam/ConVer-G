@@ -27,27 +27,47 @@ def main():
     print(f'({args.annotation_type} annotation) - file: {args.input_file} with {args.annotation}')
 
     converter = RdfConverter(args)
-    converter.convert(args.input_folder, args.input_file, args.input_format, args.output_folder)
+    converter.annotation = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+
+
+
+    if args.input_file == '*':
+        for file in os.listdir(args.input_folder):
+            converter.filename = os.path.split(file)[-1]
+            converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
+            if args.annotation_type == 'theoretical':
+                converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
+                                        + hashlib.sha256(
+                            (converter.annotation + converter.filename).encode("utf-8")
+                        ).hexdigest()
+                                        )
+            else:
+                converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+            converter.convert(args.input_folder, file, args.input_format, args.output_folder)
+    else:
+        converter.filename = os.path.split(args.input_file)[-1]
+        converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
+        if args.annotation_type == 'theoretical':
+            converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
+                                    + hashlib.sha256(
+                        (converter.annotation + converter.filename).encode("utf-8")
+                    ).hexdigest()
+                                    )
+        else:
+            converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+        converter.convert(args.input_folder, args.input_file, args.input_format, args.output_folder)
 
 
 class RdfConverter:
     def __init__(self, args):
         self.args = args
-        self.filename = os.path.split(args.input_file)[-1]
         self.graph = rdflib.Graph()
-        self.workspace_graph = ConjunctiveGraph()
-        self.version = f'https://github.com/VCityTeam/ConVer-G/Version#{self.filename}'
-        self.annotation = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
-
-        if args.annotation_type == 'theoretical':
-            self.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
-                               + hashlib.sha256(
-                                        (self.annotation + self.filename).encode("utf-8")
-                                    ).hexdigest()
-                               )
-        else:
-            self.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+        self.metadata_graph = ConjunctiveGraph()
         self.annotation_type = args.annotation_type
+        self.filename = None
+        self.version = None
+        self.graph_name = None
+        self.annotation = None
 
     def convert(self, input_folder, input_file, input_format, output_folder):
         """
@@ -90,33 +110,33 @@ class RdfConverter:
         :param output_folder: The folder to write the output to
         """
         theoretical_annotations_filename = 'theoretical_annotations.nq'
-        workspace_ds = Dataset()
-        workspace_uri = URIRef('https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/Workspace/3.0/workspace')
+        metadata_ds = Dataset()
+        metadata_uri = URIRef('https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata')
         if os.path.exists(os.path.join(output_folder + '/', theoretical_annotations_filename)):
-            self.workspace_graph.parse(
+            self.metadata_graph.parse(
                 os.path.join(output_folder + '/', theoretical_annotations_filename), format='nquads')
-            for triple in self.workspace_graph:
+            for triple in self.metadata_graph:
                 subject = self.create_uriref_or_literal(triple[0])
                 predicate = URIRef(triple[1])
                 obj = self.create_uriref_or_literal(triple[2])
-                workspace_ds.add((subject, predicate, obj, workspace_uri))
-        workspace_ds.add(
+                metadata_ds.add((subject, predicate, obj, metadata_uri))
+        metadata_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/ConVer-G/Version#is-version-of'),
                 URIRef(self.annotation),
-                workspace_uri
+                metadata_uri
             )
         )
-        workspace_ds.add(
+        metadata_ds.add(
             (
                 named_graph,
                 URIRef('https://github.com/VCityTeam/ConVer-G/Version#is-in-version'),
                 URIRef(self.version),
-                workspace_uri
+                metadata_uri
             )
         )
-        workspace_ds.serialize(
+        metadata_ds.serialize(
             destination=output_folder + '/' + theoretical_annotations_filename, format='nquads', encoding='utf-8')
 
     def create_uriref_or_literal(self, string):

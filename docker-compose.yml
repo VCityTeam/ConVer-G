@@ -6,10 +6,10 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=sparqltosql
+      - POSTGRES_DB=converg
     volumes:
       - pg-volume:/var/lib/postgresql/data
-    command: ["postgres", "-c", "log_statement=all", "-c", "log_min_duration_statement=250"]
+    command: ["postgres", "-c", "log_min_duration_statement=250"]
     deploy:
       resources:
         limits:
@@ -23,7 +23,7 @@ services:
     environment:
       - POSTGRES_USER=postgres-test
       - POSTGRES_PASSWORD=password-test
-      - POSTGRES_DB=sparqltosql-test
+      - POSTGRES_DB=converg-test
     volumes:
       - pg-volume-test:/var/lib/postgresql/data
     deploy:
@@ -45,30 +45,33 @@ services:
           cpus: ${BD_CPU_LIMITATION:-0.000}
           memory: ${BD_RAM_LIMITATION:-16Gb}
 
-  ud-quads-versioning:
+  ud-quads-loader:
     build:
-      context: quads-versioning
+      context: quads-loader
       dockerfile: Dockerfile
     depends_on:
       - postgres
     environment:
-      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
+      - "DATASOURCE_USERNAME=postgres"
+      - "DATASOURCE_PASSWORD=password"
     ports:
       - "8080:8080"
-    container_name: quads-versioning
+    container_name: quads-loader
 
   ud-quads-query:
     build:
       context: quads-query
       dockerfile: Dockerfile
       args:
-        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql
+        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg
         - DATASOURCE_USERNAME=postgres
         - DATASOURCE_PASSWORD=password
     depends_on:
       - postgres
     environment:
-      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/sparqltosql"
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
       - "DATASOURCE_USERNAME=postgres"
       - "DATASOURCE_PASSWORD=password"
     ports:
