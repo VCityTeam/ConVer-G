@@ -59,15 +59,4 @@ public class JdbcConnection {
         }
         return jdbcConnection;
     }
-
-    /**
-     * Execute the given SQL query
-     *
-     * @param sqlQuery SQL query to be executed
-     * @return ResultSet result of the SQL query
-     * @throws SQLException exception can be thrown during DB transaction
-     */
-    public ResultSet executeSQL(String sqlQuery) throws SQLException {
-        return statement.executeQuery(sqlQuery);
-    }
 }

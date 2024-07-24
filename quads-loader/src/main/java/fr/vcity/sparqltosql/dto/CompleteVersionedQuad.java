@@ -36,8 +36,4 @@ public class CompleteVersionedQuad {
         this.namedGraph = namedGraph;
         this.validity = validity;
     }
-
-    public CompleteVersionedQuad() {
-    }
-
 }
