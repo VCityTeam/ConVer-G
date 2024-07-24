@@ -20,7 +20,7 @@
   </properties>
 
   <modules>
-    <module>quads-versioning</module>
+    <module>quads-loader</module>
     <module>quads-query</module>
   </modules>
 

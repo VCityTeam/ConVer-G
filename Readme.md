@@ -74,7 +74,7 @@ sdk use java 21.0.1-amzn
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
 
 ### Maven
-#### ⌛ Quads-Versioning
+#### ⌛ Quads-Loader
 
 This project uses:
 
@@ -101,7 +101,7 @@ This project has been tested with: `junit-jupiter-engine`
 
 ### Start the application
 
-#### ⌛ Quads-Versioning
+#### ⌛ Quads-Loader
 
 ```shell
 # at the root of the project
@@ -109,7 +109,7 @@ This project has been tested with: `junit-jupiter-engine`
 docker compose up -d
 
 # if you want to hack the import program
-cd quads-versioning
+cd quads-loader
 
 ## wait until the PostgreSQL database is up
 ## starts the Java Spring application locally (http://localhost:8080/)
