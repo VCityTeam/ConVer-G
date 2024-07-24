@@ -25,21 +25,18 @@ done
 printf "\n%s$(date +%FT%T) - [Transformations] Replacement completed."
 
 ## Transform data as quads
-### Use the find command to locate all files ending with "split.ttl"
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation started.\n"
 
-find . -type f -name "*.ttl" -print0 | while IFS= read -r -d '' file
-do
-    file=$(basename "$file")
-    docker run --name "relational_annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" ttl relational Grand-Lyon
-done
-docker ps --filter name=relational_annotate_graph-* -aq | xargs docker stop | xargs docker rm
+docker run --name "annotate_graph-relational" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "*" ttl relational BSBM
+docker ps --filter name=annotate_graph-relational -aq | xargs docker stop | xargs docker rm
 
 find . -type f -name "Transition*.ttl" -print0 | while IFS= read -r -d '' file
 do
     file=$(basename "$file")
     docker run --name "relational_annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" "$file" ttl relational Metadata
 done
+
+docker run --name "relational_annotate_graph-workspace" -v "$PWD:/data" vcity/annotate_graph "/data/quads/theoretical" "/data/triples" GratteCiel_2009_2018_Workspace.ttl ttl relational Metadata
 docker ps --filter name=relational_annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 find . -type f -name "*split.ttl" -print0 | while IFS= read -r -d '' file
@@ -49,12 +46,12 @@ do
 done
 docker ps --filter name=theoretical_annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
-find . -type f -name "*.nt" -print0 | while IFS= read -r -d '' file
-do
-    file=$(basename "$file")
-    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" nt  relational Grand-Lyon
-done
-docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
+#find . -type f -name "*.nt" -print0 | while IFS= read -r -d '' file
+#do
+#    file=$(basename "$file")
+#    docker run --name "annotate_graph-$(basename "$file")" -v "$PWD:/data" vcity/annotate_graph "/data/quads/relational" "/data/triples" "$file" nt  relational Grand-Lyon
+#done
+#docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation completed."
 

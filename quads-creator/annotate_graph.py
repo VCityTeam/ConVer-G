@@ -27,27 +27,47 @@ def main():
     print(f'({args.annotation_type} annotation) - file: {args.input_file} with {args.annotation}')
 
     converter = RdfConverter(args)
-    converter.convert(args.input_folder, args.input_file, args.input_format, args.output_folder)
+    converter.annotation = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+
+
+
+    if args.input_file == '*':
+        for file in os.listdir(args.input_folder):
+            converter.filename = os.path.split(file)[-1]
+            converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
+            if args.annotation_type == 'theoretical':
+                converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
+                                        + hashlib.sha256(
+                            (converter.annotation + converter.filename).encode("utf-8")
+                        ).hexdigest()
+                                        )
+            else:
+                converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+            converter.convert(args.input_folder, file, args.input_format, args.output_folder)
+    else:
+        converter.filename = os.path.split(args.input_file)[-1]
+        converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
+        if args.annotation_type == 'theoretical':
+            converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
+                                    + hashlib.sha256(
+                        (converter.annotation + converter.filename).encode("utf-8")
+                    ).hexdigest()
+                                    )
+        else:
+            converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+        converter.convert(args.input_folder, args.input_file, args.input_format, args.output_folder)
 
 
 class RdfConverter:
     def __init__(self, args):
         self.args = args
-        self.filename = os.path.split(args.input_file)[-1]
         self.graph = rdflib.Graph()
         self.metadata_graph = ConjunctiveGraph()
-        self.version = f'https://github.com/VCityTeam/ConVer-G/Version#{self.filename}'
-        self.annotation = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
-
-        if args.annotation_type == 'theoretical':
-            self.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
-                               + hashlib.sha256(
-                                        (self.annotation + self.filename).encode("utf-8")
-                                    ).hexdigest()
-                               )
-        else:
-            self.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
         self.annotation_type = args.annotation_type
+        self.filename = None
+        self.version = None
+        self.graph_name = None
+        self.annotation = None
 
     def convert(self, input_folder, input_file, input_format, output_folder):
         """
