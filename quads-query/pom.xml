@@ -101,7 +101,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>fr.cnrs.liris.jpugetgil.sparqltosql.QuadsQueryApp</mainClass>
+                            <mainClass>fr.cnrs.liris.jpugetgil.converg.QuadsQueryApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -102,10 +102,10 @@
                 <version>${jacoco.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>fr/vcity/sparqltosql/dao/*.class</exclude>
-                        <exclude>fr/vcity/sparqltosql/dto/*.class</exclude>
-                        <exclude>fr/vcity/sparqltosql/model/*.class</exclude>
-                        <exclude>fr/vcity/sparqltosql/*.class</exclude>
+                        <exclude>fr/vcity/converg/dao/*.class</exclude>
+                        <exclude>fr/vcity/converg/dto/*.class</exclude>
+                        <exclude>fr/vcity/converg/model/*.class</exclude>
+                        <exclude>fr/vcity/converg/*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
