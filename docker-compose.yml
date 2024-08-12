@@ -37,8 +37,8 @@ services:
     ports:
       - "9999:8080"
     container_name: blazegraph
-    volumes:
-      - ./blazegraph.properties:/data/blazegraph.properties
+    environment:
+      - "BLAZEGRAPH_QUADS=true"
     deploy:
       resources:
         limits:
