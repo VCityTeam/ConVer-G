@@ -9,7 +9,7 @@ public class SQLQuery {
 
     private String sql;
 
-    private SQLContext context;
+    private final SQLContext context;
 
     public SQLQuery(String sql, SQLContext context) {
         this.sql = sql;
@@ -26,10 +26,6 @@ public class SQLQuery {
 
     public SQLContext getContext() {
         return context;
-    }
-
-    public void setContext(SQLContext context) {
-        this.context = context;
     }
 
     public SQLQuery finalizeQuery() {
@@ -94,7 +90,7 @@ public class SQLQuery {
                             case GRAPH_NAME -> " JOIN versioned_named_graph vng" + index + " ON indexes_table.ng$" +
                                     sqlVariable.getSqlVarName() + " = vng" + index +
                                     ".id_named_graph AND get_bit(indexes_table.bs$" +
-                                    sqlVariable.getSqlVarName() + ", vng" + index + ".index_version) = 1 \n" +
+                                    sqlVariable.getSqlVarName() + ", vng" + index + ".index_version - 1) = 1 \n" +
                                     " JOIN resource_or_literal rl" + index + " ON vng" + index + ".id_versioned_named_graph = rl" +
                                     index + ".id_resource_or_literal";
                             case VERSIONED_NAMED_GRAPH -> " JOIN resource_or_literal rl" + index + " ON " +

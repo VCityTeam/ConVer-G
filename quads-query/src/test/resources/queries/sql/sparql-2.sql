@@ -9,5 +9,5 @@ FROM (
  JOIN resource_or_literal rl1 ON rl1.id_resource_or_literal = sq1.v$s
  JOIN resource_or_literal rl2 ON rl2.id_resource_or_literal = sq1.v$p
  JOIN resource_or_literal rl3 ON rl3.id_resource_or_literal = sq1.v$o
- JOIN versioned_named_graph vng1 ON sq1.ng$g = vng1.id_named_graph AND get_bit(sq1.bs$g, vng1.index_version) = 1
+ JOIN versioned_named_graph vng1 ON sq1.ng$g = vng1.id_named_graph AND get_bit(sq1.bs$g, vng1.index_version - 1) = 1
  JOIN resource_or_literal rl4 ON rl4.id_resource_or_literal = vng1.id_versioned_named_graph;

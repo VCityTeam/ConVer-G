@@ -7,7 +7,7 @@ FROM (
          WHERE t1.id_subject = 19 AND t2.id_subject = 19
          AND bit_count(t1.validity & t2.validity) <> 0
      ) sq1
- JOIN versioned_named_graph vng1 ON sq1.gn$g = vng1.id_named_graph AND get_bit(sq1.bs$g, vng1.index_version) = 1 AND vng1.index_version = 2 -- 2 is the version index of the given versioned graph
+ JOIN versioned_named_graph vng1 ON sq1.gn$g = vng1.id_named_graph AND get_bit(sq1.bs$g, vng1.index_version - 1) = 1 AND vng1.index_version = 2 -- 2 is the version index of the given versioned graph
  JOIN resource_or_literal rl2 ON rl2.id_resource_or_literal = sq1.v$p
  JOIN resource_or_literal rl3 ON rl3.id_resource_or_literal = sq1.v$o
  JOIN resource_or_literal rl4 ON rl4.id_resource_or_literal = vng1.id_versioned_named_graph;

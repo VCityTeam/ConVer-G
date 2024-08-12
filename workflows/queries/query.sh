@@ -9,11 +9,12 @@ log_folder="."
 if [ "$#" -eq 1 ] ; then
     echo "Logs will be saved in the folder $1"
     log_folder="$1"
-fis
+    mkdir -p "$log_folder"
+fi
 
 printf "\n%s$(date +%FT%T) - [quads-query] Query started."
 
-find . -type f -name "sts*.rq" -print0 | while IFS= read -r -d '' file
+find . -type f -name "converg*.rq" -print0 | while IFS= read -r -d '' file
 do
     printf "\n%s$(date +%FT%T) - [quads-query] Query $file"
     name=$(basename "$file")
@@ -28,7 +29,7 @@ do
       --data "$content"
 
     end_query_relational=$(date +%s%3N)
-    printf "[Measure] (Query StS Query %s): %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
+    printf "[Measure] (Query ConVer-G Query %s): %s ms\n" "$file" "$((end_query_relational-start_query_relational))s"
 done
 
 printf "\n%s$(date +%FT%T) - [quads-query] Query completed."

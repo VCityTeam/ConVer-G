@@ -217,7 +217,7 @@ public class StSBGPOperator extends StSOperator {
                                                 "get_bit(t" + i + ".validity," +
                                                         """
                                                                 (
-                                                                    SELECT vng.index_version
+                                                                    SELECT vng.index_version - 1
                                                                     FROM versioned_named_graph vng JOIN resource_or_literal rl ON
                                                                     vng.id_versioned_named_graph = rl.id_resource_or_literal
                                                                     WHERE rl.name = '""" + nodeUri.getURI() + "')"
