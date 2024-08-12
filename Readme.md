@@ -113,7 +113,7 @@ cd quads-loader
 
 ## wait until the PostgreSQL database is up
 ## starts the Java Spring application locally (http://localhost:8080/)
-mvn spring-boot:run
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" -jar target/quads-loader-0.0.1-SNAPSHOT.jar
 ```
 
 #### 🦆 Quads-Query
@@ -131,7 +131,7 @@ cd quads-query
 mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
-java -jar target/quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" -jar quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Implementation
@@ -299,10 +299,10 @@ sequenceDiagram
     participant Triple store
 
     loop For each Annotated version
-        System ->>+ QuaVer: Sends the version to import
-        QuaVer ->>+ Database: Inserts the version
-        Database ->>- QuaVer: Returns the insert status
-        QuaVer ->>- System: Returns the version index
+        System ->>+ QuaDer: Sends the version to import
+        QuaDer ->>+ Database: Inserts the version
+        Database ->>- QuaDer: Returns the insert status
+        QuaDer ->>- System: Returns the version index
         
         System ->>+ Triple store: Sends the version to import
         Triple store ->>- System: Returns the insert status
