@@ -26,6 +26,7 @@ public class StSGroupOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
+        // FIXME: Check condensedMode and apply the appropriate transformation
         if (sqlQuery.getContext().sqlVariables().stream()
                 .anyMatch(sqlVar -> sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME)) {
             disaggregateBitVector();
@@ -77,9 +78,9 @@ public class StSGroupOperator extends StSOperator {
     }
 
     private void disaggregateBitVector() {
-        String select = "SELECT " + getSelectDisaggregator();
+        String select = "SELECT " + getSelectDisaggregation();
         String from = " FROM (" + this.sqlQuery.getSql() + ") disagg \n";
-        String join = getJoinDisaggregator();
+        String join = getJoinDisaggregation();
 
         List<SQLVariable> sqlVariables = this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVar -> sqlVar.getSqlVarType() != SQLVarType.BIT_STRING)
@@ -96,7 +97,7 @@ public class StSGroupOperator extends StSOperator {
         this.sqlQuery = new SQLQuery(select + from + join, sqlContext);
     }
 
-    private String getJoinDisaggregator() {
+    private String getJoinDisaggregation() {
         return this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME).map(sqlVariable -> (
                         "JOIN versioned_named_graph vng ON vng.id_named_graph = disagg.ng$" + sqlVariable.getSqlVarName() +
@@ -109,7 +110,7 @@ public class StSGroupOperator extends StSOperator {
      *
      * @return the SELECT clause of the SQL query
      */
-    private String getSelectDisaggregator() {
+    private String getSelectDisaggregation() {
         return this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() != SQLVarType.BIT_STRING)
                 .map(sqlVariable -> {

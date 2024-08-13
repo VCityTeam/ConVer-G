@@ -76,12 +76,12 @@ Make sure you have Maven installed. If you don't have Maven installed, run: `sud
 ### Maven
 #### ⌛ Quads-Loader
 
-This project uses:
+This project:
 
-- the `jena-arq` library for parsing SPARQL statements in Java,
-- the `springdoc-openapi-starter-webmvc-ui` library to parse the Swagger API annotations and displays
+- uses the `jena-arq` library for parsing SPARQL statements in Java,
+- uses the `springdoc-openapi-starter-webmvc-ui` library to parse the Swagger API annotations and displays
   the [swagger-ui](http://localhost:8080/swagger-ui/index.html),
-- a [Dockerized PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html), so the `postgresql` driver is
+- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html), so the `postgresql` driver is
   installed too.
 
 This project has been tested with:
@@ -91,10 +91,10 @@ This project has been tested with:
 
 #### 🦆 Quads-Query
 
-This project uses:
+This project:
 
-- the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
-- a [Dockerized PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html), so the `postgresql` driver is
+- uses the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
+- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html) if you use this target language, so the `postgresql` driver is
   installed too.
 
 This project has been tested with: `junit-jupiter-engine`
@@ -131,7 +131,7 @@ cd quads-query
 mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" -jar quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" -jar quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Implementation

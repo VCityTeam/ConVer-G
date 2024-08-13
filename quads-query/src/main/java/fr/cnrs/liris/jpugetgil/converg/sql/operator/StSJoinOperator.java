@@ -158,7 +158,8 @@ public class StSJoinOperator extends StSOperator {
         SQLContext context = new SQLContext(
                 graphVariable,
                 mergedOccurrences,
-                this.sqlVariables
+                this.sqlVariables,
+                leftSQLQuery.getContext().condensedMode()
         );
         return new SQLQuery(sql, context);
     }

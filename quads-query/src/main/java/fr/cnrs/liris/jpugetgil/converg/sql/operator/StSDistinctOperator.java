@@ -16,7 +16,8 @@ public class StSDistinctOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 sqlQuery.getContext().graph(),
                 sqlQuery.getContext().sparqlVarOccurrences(),
-                sqlQuery.getContext().sqlVariables()
+                sqlQuery.getContext().sqlVariables(),
+                sqlQuery.getContext().condensedMode()
         );
 
         return new SQLQuery(

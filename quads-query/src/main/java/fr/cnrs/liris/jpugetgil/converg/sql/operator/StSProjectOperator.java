@@ -36,7 +36,8 @@ public class StSProjectOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 sqlQuery.getContext().graph(),
                 sqlQuery.getContext().sparqlVarOccurrences(),
-                sqlVariables
+                sqlVariables,
+                sqlQuery.getContext().condensedMode()
         );
 
         SQLQuery newSQLQuery = new SQLQuery(sqlQuery.getSql(), sqlContext);

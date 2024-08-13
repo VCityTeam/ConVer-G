@@ -41,7 +41,8 @@ public class StSUnionOperator extends StSOperator {
         SQLContext sqlContext = new SQLContext(
                 graph,
                 varOccurrences,
-                this.sqlVariables
+                this.sqlVariables,
+                leftQuery.getContext().condensedMode()
         );
 
         return new SQLQuery(

@@ -1,10 +1,10 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
-import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractCountableAggregator;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggCount;
 
-public class Count extends AbstractAggregator<AggCount> {
+public class Count extends AbstractCountableAggregator<AggCount> {
     /**
      * Build an aggregator from a Jena aggregator.
      *
