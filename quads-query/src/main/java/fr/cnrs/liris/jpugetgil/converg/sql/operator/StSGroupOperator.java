@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import com.google.common.collect.Streams;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractCountableAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
@@ -9,11 +10,15 @@ import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
 import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.core.VarExprList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class StSGroupOperator extends StSOperator {
+    private static final Logger log = LoggerFactory.getLogger(StSGroupOperator.class);
+
     private final OpGroup op;
 
     private SQLQuery sqlQuery;
@@ -26,36 +31,53 @@ public class StSGroupOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
-        // FIXME: Check condensedMode and apply the appropriate transformation
-        if (sqlQuery.getContext().sqlVariables().stream()
-                .anyMatch(sqlVar -> sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME)) {
-            disaggregateBitVector();
-        }
+        if (sqlQuery.getContext().condensedMode() &&
+                op.getGroupVars().getVars()
+                        .stream()
+                        .noneMatch(
+                                groupVar -> sqlQuery.getContext().sqlVariables()
+                                        .stream()
+                                        .anyMatch(
+                                                sqlVar -> sqlVar.getSqlVarName().equals(groupVar.getName()) &&
+                                                        sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME
+                                        )
+                        ) &&
+                op.getAggregators()
+                        .stream()
+                        .allMatch(agg ->
+                                new Aggregator(agg).getAggregator() instanceof AbstractCountableAggregator<?>
+                        )) {
+            log.info("Condensed mode and aggregation on triple and countable aggregators.");
+            // TODO: Implement the transformation for the condensed mode
+            
 
-        getIdValues();
-
-        VarExprList exprList = op.getGroupVars();
-        List<Var> vars = exprList.getVars();
-        String groupByVars = vars.stream()
-                .map(variable -> "v$" + variable.getName())
-                .collect(Collectors.joining(", "));
-        String aggregatorsString = op.getAggregators().stream()
-                .map(agg -> new Aggregator(agg).toSQLString())
-                .collect(Collectors.joining(", "));
-
-        String projections;
-        if (!groupByVars.isBlank() && !aggregatorsString.isBlank()) {
-            projections = groupByVars + ", " + aggregatorsString;
+            return sqlQuery;
         } else {
-            projections = aggregatorsString + groupByVars;
+            disaggregateBitVector();
+            getIdValues();
+
+            VarExprList exprList = op.getGroupVars();
+            List<Var> vars = exprList.getVars();
+            String groupByVars = vars.stream()
+                    .map(variable -> "v$" + variable.getName())
+                    .collect(Collectors.joining(", "));
+            String aggregatorsString = op.getAggregators().stream()
+                    .map(agg -> new Aggregator(agg).toSQLString())
+                    .collect(Collectors.joining(", "));
+
+            String projections;
+            if (!groupByVars.isBlank() && !aggregatorsString.isBlank()) {
+                projections = groupByVars + ", " + aggregatorsString;
+            } else {
+                projections = aggregatorsString + groupByVars;
+            }
+
+            return new SQLQuery(
+                    "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
+                            ") sq\n GROUP BY (" + groupByVars + ")",
+                    sqlQuery.getContext()
+            );
         }
-
-
-        return new SQLQuery(
-                "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
-                        ") sq\n GROUP BY (" + groupByVars + ")",
-                sqlQuery.getContext()
-        );
     }
 
     private void getIdValues() {

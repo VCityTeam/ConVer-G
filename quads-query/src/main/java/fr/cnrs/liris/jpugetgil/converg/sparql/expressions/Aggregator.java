@@ -15,6 +15,40 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
         super(expr);
     }
 
+    public AbstractAggregator<?> getAggregator() {
+        ExprAggregator expAggr = this.getJenaExpr();
+        return switch (expAggr.getAggregator()) {
+            case AggAvg aggAvg -> new Avg(aggAvg, expAggr.getVar());
+            case AggAvgDistinct aggAvgDistinct -> new AvgDistinct(aggAvgDistinct, expAggr.getVar());
+            case AggMedian aggMedian -> new Median(aggMedian, expAggr.getVar());
+            case AggMedianDistinct aggMedianDistinct ->
+                    new MedianDistinct(aggMedianDistinct, expAggr.getVar());
+            case AggCount aggCount -> new Count(aggCount, expAggr.getVar());
+            case AggCountDistinct aggCountDistinct ->
+                    new CountDistinct(aggCountDistinct, expAggr.getVar());
+            case AggCountVar aggCountVar -> new CountVar(aggCountVar, expAggr.getVar());
+            case AggCountVarDistinct aggCountVarDistinct ->
+                    new CountVarDistinct(aggCountVarDistinct, expAggr.getVar());
+            case AggCustom aggCustom -> new Custom(aggCustom, expAggr.getVar());
+            case AggGroupConcat aggGroupConcat -> new GroupConcat(aggGroupConcat, expAggr.getVar());
+            case AggGroupConcatDistinct aggGroupConcatDistinct ->
+                    new GroupConcatDistinct(aggGroupConcatDistinct, expAggr.getVar());
+            case AggMax aggMax -> new Max(aggMax, expAggr.getVar());
+            case AggMaxDistinct aggMaxDistinct -> new MaxDistinct(aggMaxDistinct, expAggr.getVar());
+            case AggMin aggMin -> new Min(aggMin, expAggr.getVar());
+            case AggMinDistinct aggMinDistinct -> new MinDistinct(aggMinDistinct, expAggr.getVar());
+            case AggMode aggMode -> new Mode(aggMode, expAggr.getVar());
+            case AggModeDistinct aggModeDistinct -> new ModeDistinct(aggModeDistinct, expAggr.getVar());
+            case AggSample aggSample -> new Sample(aggSample, expAggr.getVar());
+            case AggSampleDistinct aggSampleDistinct ->
+                    new SampleDistinct(aggSampleDistinct, expAggr.getVar());
+            case AggNull aggNull -> new Null(aggNull, expAggr.getVar());
+            case AggSum aggSum -> new Sum(aggSum, expAggr.getVar());
+            case AggSumDistinct aggSumDistinct -> new SumDistinct(aggSumDistinct, expAggr.getVar());
+            default -> throw new IllegalStateException("Unexpected value: " + this.getJenaExpr().getAggregator());
+        };
+    }
+
     @Override
     public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
         throw new IllegalStateException("updateFilterConfiguration should not be called on an aggregate value");
@@ -22,36 +56,6 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
 
     @Override
     public String toSQLString() {
-        ExprAggregator expAggr = this.getJenaExpr();
-        return switch (expAggr.getAggregator()) {
-            case AggAvg aggAvg -> new Avg(aggAvg, expAggr.getVar()).toSQLString();
-            case AggAvgDistinct aggAvgDistinct -> new AvgDistinct(aggAvgDistinct, expAggr.getVar()).toSQLString();
-            case AggMedian aggMedian -> new Median(aggMedian, expAggr.getVar()).toSQLString();
-            case AggMedianDistinct aggMedianDistinct ->
-                    new MedianDistinct(aggMedianDistinct, expAggr.getVar()).toSQLString();
-            case AggCount aggCount -> new Count(aggCount, expAggr.getVar()).toSQLString();
-            case AggCountDistinct aggCountDistinct ->
-                    new CountDistinct(aggCountDistinct, expAggr.getVar()).toSQLString();
-            case AggCountVar aggCountVar -> new CountVar(aggCountVar, expAggr.getVar()).toSQLString();
-            case AggCountVarDistinct aggCountVarDistinct ->
-                    new CountVarDistinct(aggCountVarDistinct, expAggr.getVar()).toSQLString();
-            case AggCustom aggCustom -> new Custom(aggCustom, expAggr.getVar()).toSQLString();
-            case AggGroupConcat aggGroupConcat -> new GroupConcat(aggGroupConcat, expAggr.getVar()).toSQLString();
-            case AggGroupConcatDistinct aggGroupConcatDistinct ->
-                    new GroupConcatDistinct(aggGroupConcatDistinct, expAggr.getVar()).toSQLString();
-            case AggMax aggMax -> new Max(aggMax, expAggr.getVar()).toSQLString();
-            case AggMaxDistinct aggMaxDistinct -> new MaxDistinct(aggMaxDistinct, expAggr.getVar()).toSQLString();
-            case AggMin aggMin -> new Min(aggMin, expAggr.getVar()).toSQLString();
-            case AggMinDistinct aggMinDistinct -> new MinDistinct(aggMinDistinct, expAggr.getVar()).toSQLString();
-            case AggMode aggMode -> new Mode(aggMode, expAggr.getVar()).toSQLString();
-            case AggModeDistinct aggModeDistinct -> new ModeDistinct(aggModeDistinct, expAggr.getVar()).toSQLString();
-            case AggSample aggSample -> new Sample(aggSample, expAggr.getVar()).toSQLString();
-            case AggSampleDistinct aggSampleDistinct ->
-                    new SampleDistinct(aggSampleDistinct, expAggr.getVar()).toSQLString();
-            case AggNull aggNull -> new Null(aggNull, expAggr.getVar()).toSQLString();
-            case AggSum aggSum -> new Sum(aggSum, expAggr.getVar()).toSQLString();
-            case AggSumDistinct aggSumDistinct -> new SumDistinct(aggSumDistinct, expAggr.getVar()).toSQLString();
-            default -> throw new IllegalStateException("Unexpected value: " + this.getJenaExpr().getAggregator());
-        };
+        return getAggregator().toSQLString();
     }
 }
