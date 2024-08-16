@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.expressions;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator.*;
 import fr.cnrs.liris.jpugetgil.converg.sparql.transformer.FilterConfiguration;
+import org.apache.jena.sparql.ARQException;
 import org.apache.jena.sparql.expr.ExprAggregator;
 import org.apache.jena.sparql.expr.aggregate.*;
 
@@ -45,13 +46,13 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
             case AggNull aggNull -> new Null(aggNull, expAggr.getVar());
             case AggSum aggSum -> new Sum(aggSum, expAggr.getVar());
             case AggSumDistinct aggSumDistinct -> new SumDistinct(aggSumDistinct, expAggr.getVar());
-            default -> throw new IllegalStateException("Unexpected value: " + this.getJenaExpr().getAggregator());
+            default -> throw new ARQException("Aggregation - Unexpected value: " + this.getJenaExpr().getAggregator());
         };
     }
 
     @Override
     public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
-        throw new IllegalStateException("updateFilterConfiguration should not be called on an aggregate value");
+        throw new ARQException("updateFilterConfiguration should not be called on an aggregate value");
     }
 
     @Override

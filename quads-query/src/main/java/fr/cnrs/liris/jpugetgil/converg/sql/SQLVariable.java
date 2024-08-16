@@ -2,7 +2,7 @@ package fr.cnrs.liris.jpugetgil.converg.sql;
 
 import fr.cnrs.liris.jpugetgil.converg.sql.comparison.EqualToOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.comparison.NotEqualToOperator;
-import org.apache.commons.lang3.NotImplementedException;
+import org.apache.jena.sparql.ARQNotImplemented;
 
 import java.util.Objects;
 
@@ -70,8 +70,8 @@ public class SQLVariable {
                                 leftTableName + ".v$" + this.sqlVarName,
                                 rightTableName + ".vng$" + rightSQLVar.getSqlVarName()
                         );
-                case BIT_STRING -> throw new NotImplementedException("Not supported yet.");
-                case AGGREGATED -> throw new NotImplementedException("Not supported yet.");
+                case BIT_STRING -> throw new ARQNotImplemented("BITSTRING - DATA join Not supported yet.");
+                case AGGREGATED -> throw new ARQNotImplemented("AGGREGATED - DATA join Not supported yet.");
             };
             case VERSIONED_NAMED_GRAPH -> switch (rightSQLVar.getSqlVarType()) {
                 case VERSIONED_NAMED_GRAPH -> new EqualToOperator()
@@ -89,20 +89,20 @@ public class SQLVariable {
                                 leftTableName + ".vng$" + this.sqlVarName,
                                 rightTableName + ".v$" + rightSQLVar.getSqlVarName()
                         );
-                case BIT_STRING -> throw new NotImplementedException("Not supported yet.");
-                case AGGREGATED -> throw new NotImplementedException("Not supported yet.");
+                case BIT_STRING -> throw new ARQNotImplemented("VNG - BITSTRING join Not supported yet.");
+                case AGGREGATED -> throw new ARQNotImplemented("VNG - AGGREGATED join Not supported yet.");
             };
             case BIT_STRING -> switch (rightSQLVar.getSqlVarType()) {
-                case DATA, VERSIONED_NAMED_GRAPH, GRAPH_NAME -> throw new NotImplementedException("Not supported yet.");
+                case DATA, VERSIONED_NAMED_GRAPH, GRAPH_NAME -> throw new ARQNotImplemented("BITSTRING - DATA/VNG/GRAPHNAME join Not supported yet.");
                 case BIT_STRING -> new NotEqualToOperator()
                         .buildComparisonOperatorSQL(
                                 "bit_count(" + leftTableName + ".bs$" + this.sqlVarName + " & " + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")",
                                 "0"
                         );
-                case AGGREGATED -> throw new NotImplementedException("Not supported yet.");
+                case AGGREGATED -> throw new ARQNotImplemented("BITSTRING - AGGREGATED join Not supported yet.");
             };
             case GRAPH_NAME -> switch (rightSQLVar.getSqlVarType()) {
-                case BIT_STRING -> throw new NotImplementedException("Not supported yet.");
+                case BIT_STRING -> throw new ARQNotImplemented("GRAPHNAME - BISTRING join Not supported yet.");
                 case VERSIONED_NAMED_GRAPH -> new EqualToOperator()
                         .buildComparisonOperatorSQL(
                                 leftTableName + ".ng$" + this.sqlVarName,
@@ -118,9 +118,9 @@ public class SQLVariable {
                                 leftTableName + ".ng$" + this.sqlVarName,
                                 rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
                         );
-                case AGGREGATED -> throw new NotImplementedException("Not supported yet.");
+                case AGGREGATED -> throw new ARQNotImplemented("GRAPHNAME - AGGREGATED join Not supported yet.");
             };
-            case AGGREGATED -> throw new NotImplementedException("Not supported yet.");
+            case AGGREGATED -> throw new ARQNotImplemented("AGGREGATED - * join Not supported yet.");
         };
     }
 

@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
 import org.slf4j.Logger;
@@ -21,4 +22,6 @@ public abstract class SPARQLLanguageTranslator {
     }
 
     abstract ResultSet translateAndExecSelect(Query sparqlQuery);
+
+    abstract Dataset translateAndExecConstruct(Query query);
 }

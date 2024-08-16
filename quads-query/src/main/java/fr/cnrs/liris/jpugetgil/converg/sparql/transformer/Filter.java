@@ -3,6 +3,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.transformer;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.op.OpFilter;
 
 public class Filter {
@@ -20,7 +21,7 @@ public class Filter {
         // TODO: build from
         // TODO: map variables to values or ids from subquery
         // TODO: generate SQL expression
-        throw new IllegalStateException("Implementation not finished"); // TODO: remove once implemented
+        throw new ARQNotImplemented("Implementation not finished"); // TODO: remove once implemented
     }
 
     public OpFilter getOp() {

@@ -7,6 +7,7 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.util.Context;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class VersioningQueryExecution implements QueryExecution {
             return "SQL";
         } else {
             log.error("Unsupported target language: {}", targetLang);
-            throw new IllegalArgumentException("Unsupported target language: " + targetLang);
+            throw new ARQNotImplemented("Unsupported target language: " + targetLang);
         }
     }
 
@@ -95,7 +96,7 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public Dataset execConstructDataset() {
-        return null;
+        return translator.translateAndExecConstruct(query);
     }
 
     @Override

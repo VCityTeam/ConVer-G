@@ -1,8 +1,12 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggMode;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Mode extends AbstractAggregator<AggMode> {
     /**
@@ -17,6 +21,15 @@ public class Mode extends AbstractAggregator<AggMode> {
 
     @Override
     public String toSQLString() {
-        throw new IllegalStateException("Not implemented yet");
+        List<Expression> expressions = this.getAggregator().getExprList().getList().stream()
+                .map(Expression::fromJenaExpr)
+                .toList();
+
+        String joinedExpression = expressions.stream()
+                .map(Expression::toSQLString)
+                .collect(Collectors.joining(""));
+
+        String varName = "agg" + getVariable().getVarName().replace(".", "");
+        return this.getAggregator().getName() + "() WITHIN GROUP (ORDER BY " + joinedExpression + ") AS " + varName;
     }
 }

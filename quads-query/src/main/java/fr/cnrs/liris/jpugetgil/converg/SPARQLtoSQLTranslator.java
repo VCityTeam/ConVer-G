@@ -10,8 +10,11 @@ import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.sparql.ARQException;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
@@ -120,8 +123,17 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 
         } catch (SQLException e) {
             log.error(e.getMessage());
-            return null;
+            throw new ARQException(e);
         }
+    }
+
+    @Override
+    Dataset translateAndExecConstruct(Query query) {
+        // TODO: Implement the Construct query
+        Op op = Algebra.compile(query);
+
+
+        return null;
     }
 
     private SQLQuery buildSPARQLContext(Op op) {
@@ -138,7 +150,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                 // Jointure avec un/des variable qui sont dans un optional
                 buildSPARQLContext(opLeftJoin.getLeft(), context);
                 buildSPARQLContext(opLeftJoin.getRight(), context);
-                throw new IllegalArgumentException("TODO: OpLeftJoin not implemented");
+                throw new ARQNotImplemented("TODO: OpLeftJoin not implemented");
             }
             case OpUnion opUnion -> new StSUnionOperator(
                     buildSPARQLContext(opUnion.getLeft(), context),
@@ -200,18 +212,17 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     buildSPARQLContext(opMinus.getLeft(), context),
                     buildSPARQLContext(opMinus.getRight(), context)
             ).buildSQLQuery();
-            case OpQuadPattern opQuadPattern ->
-                    throw new IllegalArgumentException("TODO: OpQuadPattern not implemented");
+            case OpQuadPattern opQuadPattern -> throw new ARQNotImplemented("TODO: OpQuadPattern not implemented");
             case OpFilter opFilter -> new StSFilterOperator(
                     buildSPARQLContext(opFilter.getSubOp()),
                     opFilter
             ).buildSQLQuery();
-            case OpOrder opOrder -> throw new IllegalArgumentException("TODO: OpOrder not implemented");
-            case OpTopN opTopN -> throw new IllegalArgumentException("TODO: OpTopN not implemented");
-            case OpPath opPath -> throw new IllegalArgumentException("TODO: OpPath not implemented");
-            case OpLabel opLabel -> throw new IllegalArgumentException("TODO: OpLabel not implemented");
-            case OpList opList -> throw new IllegalArgumentException("TODO: OpList not implemented");
-            default -> throw new IllegalArgumentException("TODO: Unknown operator " + op.getClass().getName());
+            case OpOrder opOrder -> throw new ARQNotImplemented("TODO: OpOrder not implemented");
+            case OpTopN opTopN -> throw new ARQNotImplemented("TODO: OpTopN not implemented");
+            case OpPath opPath -> throw new ARQNotImplemented("TODO: OpPath not implemented");
+            case OpLabel opLabel -> throw new ARQNotImplemented("TODO: OpLabel not implemented");
+            case OpList opList -> throw new ARQNotImplemented("TODO: OpList not implemented");
+            default -> throw new ARQNotImplemented("TODO: Unknown operator " + op.getClass().getName());
         };
     }
 

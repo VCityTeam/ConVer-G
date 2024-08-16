@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.transformer.FilterConfiguration;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.expr.E_NotExists;
 
 public class NotExists extends AbstractExpression<E_NotExists> {
@@ -10,6 +11,6 @@ public class NotExists extends AbstractExpression<E_NotExists> {
 
     @Override
     public void updateFilterConfiguration(FilterConfiguration configuration, boolean requiresValue) {
-        throw new IllegalStateException("Not implemented yet"); // TODO: implement
+        throw new ARQNotImplemented("NotExists aggregation is not implemented");
     }
 }

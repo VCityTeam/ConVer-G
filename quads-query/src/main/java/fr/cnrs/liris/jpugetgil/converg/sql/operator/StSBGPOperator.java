@@ -7,6 +7,8 @@ import fr.cnrs.liris.jpugetgil.converg.sql.*;
 import fr.cnrs.liris.jpugetgil.converg.sql.comparison.EqualToOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.comparison.NotEqualToOperator;
 import org.apache.jena.graph.*;
+import org.apache.jena.sparql.ARQException;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 
 import java.util.List;
@@ -124,7 +126,7 @@ public class StSBGPOperator extends StSOperator {
             case SUBJECT -> "id_subject";
             case PREDICATE -> "id_predicate";
             case OBJECT -> "id_object";
-            default -> throw new IllegalArgumentException();
+            default -> throw new ARQNotImplemented("Unexpected value: " + sparqlOccurrence.getType() + " in getColumnByOccurrence");
         };
     }
 
@@ -225,7 +227,7 @@ public class StSBGPOperator extends StSOperator {
                                                 "1"
                                         )
                         );
-                default -> throw new IllegalStateException("Unexpected value: " + context.graph());
+                default -> throw new ARQException("Unexpected value: " + context.graph());
             }
 
             sqlClauseBuilder.and(buildFiltersOnIds(triples, i));

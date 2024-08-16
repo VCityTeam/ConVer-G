@@ -49,7 +49,8 @@ public class StSGroupOperator extends StSOperator {
                         )) {
             log.info("Condensed mode and aggregation on triple and countable aggregators.");
             // TODO: Implement the transformation for the condensed mode
-            
+
+
 
             return sqlQuery;
         } else {

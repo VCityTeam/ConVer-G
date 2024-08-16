@@ -5,6 +5,7 @@ import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
 import org.apache.jena.graph.Node_Variable;
+import org.apache.jena.sparql.ARQException;
 import org.apache.jena.sparql.algebra.op.OpGraph;
 
 import java.util.stream.Collectors;
@@ -50,7 +51,7 @@ public class StSGraphOperator extends StSOperator {
                     if (sqlVariable.getSqlVarType() == SQLVarType.VERSIONED_NAMED_GRAPH) {
                         return "id_versioned_named_graph as vng$" + sqlQuery.getContext().graph().getName();
                     } else {
-                        throw new UnsupportedOperationException("Unsupported SQLVarType: " + sqlVariable.getSqlVarType());
+                        throw new ARQException("Unsupported SQLVarType: " + sqlVariable.getSqlVarType());
                     }
                 }).collect(Collectors.joining(", "));
 

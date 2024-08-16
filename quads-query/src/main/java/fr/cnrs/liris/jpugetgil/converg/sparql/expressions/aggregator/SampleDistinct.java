@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggSampleDistinct;
 
@@ -17,6 +18,6 @@ public class SampleDistinct extends AbstractAggregator<AggSampleDistinct> {
 
     @Override
     public String toSQLString() {
-        throw new IllegalStateException("Not implemented yet");
+        throw new ARQNotImplemented("Sample distinct aggregation is not implemented");
     }
 }
