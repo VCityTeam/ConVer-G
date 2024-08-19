@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
-import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractCountableAggregator;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggCountVarDistinct;
@@ -8,7 +8,7 @@ import org.apache.jena.sparql.expr.aggregate.AggCountVarDistinct;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CountVarDistinct extends AbstractCountableAggregator<AggCountVarDistinct> {
+public class CountVarDistinct extends AbstractAggregator<AggCountVarDistinct> {
     /**
      * Build an aggregator from a Jena aggregator.
      *

@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
-import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractCountableAggregator;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggSum;
@@ -8,7 +8,7 @@ import org.apache.jena.sparql.expr.aggregate.AggSum;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Sum extends AbstractCountableAggregator<AggSum> {
+public class Sum extends AbstractAggregator<AggSum> {
     /**
      * Build an aggregator from a Jena aggregator.
      *

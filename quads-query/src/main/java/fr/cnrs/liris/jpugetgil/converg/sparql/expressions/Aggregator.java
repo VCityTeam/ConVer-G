@@ -3,6 +3,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.expressions;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator.*;
 import fr.cnrs.liris.jpugetgil.converg.sparql.transformer.FilterConfiguration;
 import org.apache.jena.sparql.ARQException;
+import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.expr.ExprAggregator;
 import org.apache.jena.sparql.expr.aggregate.*;
 
@@ -14,6 +15,24 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
      */
     public Aggregator(ExprAggregator expr) {
         super(expr);
+    }
+
+    public boolean isCountable() {
+        return switch (this.getJenaExpr().getAggregator()) {
+            case AggAvg ignored -> true;
+            case AggAvgDistinct ignored -> true;
+            case AggCount ignored -> true;
+            case AggCountDistinct ignored -> true;
+            case AggCountVar ignored -> true;
+            case AggCountVarDistinct ignored -> true;
+            case AggMax ignored -> true;
+            case AggMaxDistinct ignored -> true;
+            case AggMin ignored -> true;
+            case AggMinDistinct ignored -> true;
+            case AggSum ignored -> true;
+            case AggSumDistinct ignored -> true;
+            default -> false;
+        };
     }
 
     public AbstractAggregator<?> getAggregator() {
@@ -58,5 +77,9 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
     @Override
     public String toSQLString() {
         return getAggregator().toSQLString();
+    }
+
+    public String toSQLString(OpGroup opGroup, String alias) {
+        return getAggregator().toSQLString(opGroup, alias);
     }
 }

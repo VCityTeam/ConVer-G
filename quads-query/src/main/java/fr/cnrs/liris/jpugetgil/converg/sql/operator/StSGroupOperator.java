@@ -1,7 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import com.google.common.collect.Streams;
-import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractCountableAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
@@ -31,57 +30,81 @@ public class StSGroupOperator extends StSOperator {
 
     @Override
     public SQLQuery buildSQLQuery() {
+        String groupByVars = op.getGroupVars().getVars()
+                .stream()
+                .map(variable -> "v$" + variable.getName())
+                .collect(Collectors.joining(", "));
+        String aggregatorsString;
+
         if (sqlQuery.getContext().condensedMode() &&
-                op.getGroupVars().getVars()
-                        .stream()
-                        .noneMatch(
-                                groupVar -> sqlQuery.getContext().sqlVariables()
-                                        .stream()
-                                        .anyMatch(
-                                                sqlVar -> sqlVar.getSqlVarName().equals(groupVar.getName()) &&
-                                                        sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME
-                                        )
-                        ) &&
-                op.getAggregators()
-                        .stream()
-                        .allMatch(agg ->
-                                new Aggregator(agg).getAggregator() instanceof AbstractCountableAggregator<?>
-                        )) {
+                isAggregatedOnTriple() &&
+                isCountableAggregator()) {
             log.info("Condensed mode and aggregation on triple and countable aggregators.");
             // TODO: Implement the transformation for the condensed mode
-
-
-
-            return sqlQuery;
-        } else {
-            disaggregateBitVector();
-            getIdValues();
-
-            VarExprList exprList = op.getGroupVars();
-            List<Var> vars = exprList.getVars();
-            String groupByVars = vars.stream()
-                    .map(variable -> "v$" + variable.getName())
+            aggregatorsString = op.getAggregators().stream()
+                    .map(agg -> new Aggregator(agg).toSQLString(op, sqlQuery.getContext().graph().getName()))
                     .collect(Collectors.joining(", "));
-            String aggregatorsString = op.getAggregators().stream()
+
+        } else {
+            this.sqlQuery = disaggregateBitVectorAndReturnQuery();
+            this.sqlQuery = setIdValuesAndReturnQuery();
+
+            aggregatorsString = op.getAggregators().stream()
                     .map(agg -> new Aggregator(agg).toSQLString())
                     .collect(Collectors.joining(", "));
-
-            String projections;
-            if (!groupByVars.isBlank() && !aggregatorsString.isBlank()) {
-                projections = groupByVars + ", " + aggregatorsString;
-            } else {
-                projections = aggregatorsString + groupByVars;
-            }
-
-            return new SQLQuery(
-                    "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
-                            ") sq\n GROUP BY (" + groupByVars + ")",
-                    sqlQuery.getContext()
-            );
         }
+
+        String projections;
+        if (!groupByVars.isBlank() && !aggregatorsString.isBlank()) {
+            projections = groupByVars + ", " + aggregatorsString;
+        } else {
+            projections = aggregatorsString + groupByVars;
+        }
+
+        return new SQLQuery(
+                "SELECT " + projections + " FROM (" + sqlQuery.getSql() +
+                        ") sq\n GROUP BY (" + groupByVars + ")",
+                sqlQuery.getContext()
+        );
     }
 
-    private void getIdValues() {
+    /**
+     * Checks if the aggregation is a countable-compatible aggregator
+     *
+     * @return true if the aggregation is a countable-compatible aggregator, false otherwise
+     */
+    private boolean isCountableAggregator() {
+        return op.getAggregators()
+                .stream()
+                .allMatch(agg ->
+                        new Aggregator(agg).isCountable()
+                );
+    }
+
+    /**
+     * Checks if the aggregation is done on the triple (not on the graph name)
+     *
+     * @return true if the aggregation is done on the triple, false otherwise
+     */
+    private boolean isAggregatedOnTriple() {
+        return op.getGroupVars().getVars()
+                .stream()
+                .noneMatch(
+                        groupVar -> sqlQuery.getContext().sqlVariables()
+                                .stream()
+                                .anyMatch(
+                                        sqlVar -> sqlVar.getSqlVarName().equals(groupVar.getName()) &&
+                                                sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME
+                                )
+                );
+    }
+
+    /**
+     * Sets the id values of the resources or literals
+     *
+     * @return the new SQL query with the id values of the resources or literals
+     */
+    private SQLQuery setIdValuesAndReturnQuery() {
         String select = "SELECT " + getSelectIdValues();
         String from = " FROM (" + this.sqlQuery.getSql() + ") idValues \n";
         String join = getJoinIdValues();
@@ -97,10 +120,15 @@ public class StSGroupOperator extends StSOperator {
                 }).toList();
 
         SQLContext sqlContext = this.sqlQuery.getContext().setSQLVariables(sqlVariables);
-        this.sqlQuery = new SQLQuery(select + from + join, sqlContext);
+        return new SQLQuery(select + from + join, sqlContext);
     }
 
-    private void disaggregateBitVector() {
+    /**
+     * Disaggregates the bit vector
+     *
+     * @return the new SQL query with the disaggregated bit vector
+     */
+    private SQLQuery disaggregateBitVectorAndReturnQuery() {
         String select = "SELECT " + getSelectDisaggregation();
         String from = " FROM (" + this.sqlQuery.getSql() + ") disagg \n";
         String join = getJoinDisaggregation();
@@ -117,9 +145,14 @@ public class StSGroupOperator extends StSOperator {
 
         SQLContext sqlContext = this.sqlQuery.getContext().setSQLVariables(sqlVariables);
 
-        this.sqlQuery = new SQLQuery(select + from + join, sqlContext);
+        return new SQLQuery(select + from + join, sqlContext);
     }
 
+    /**
+     * Gets the JOIN clause of the SQL query with the versioned named graph table (bitstring explosion)
+     *
+     * @return the JOIN clause of the SQL query
+     */
     private String getJoinDisaggregation() {
         return this.sqlQuery.getContext().sqlVariables().stream()
                 .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME).map(sqlVariable -> (

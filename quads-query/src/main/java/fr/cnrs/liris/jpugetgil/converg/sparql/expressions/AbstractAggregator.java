@@ -1,5 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.sparql.expressions;
 
+import org.apache.jena.sparql.ARQNotImplemented;
+import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.Aggregator;
 
@@ -26,4 +28,8 @@ public abstract class AbstractAggregator<E extends Aggregator> {
     }
 
     public abstract String toSQLString();
+
+    protected String toSQLString(OpGroup opGroup, String alias) {
+        throw new ARQNotImplemented("toSQLString not implemented for " + this.getClass().getSimpleName());
+    }
 }
