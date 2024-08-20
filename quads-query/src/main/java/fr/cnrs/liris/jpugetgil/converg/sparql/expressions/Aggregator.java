@@ -19,18 +19,18 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
 
     public boolean isCountable() {
         return switch (this.getJenaExpr().getAggregator()) {
-            case AggAvg ignored -> true;
-            case AggAvgDistinct ignored -> true;
-            case AggCount ignored -> true;
-            case AggCountDistinct ignored -> true;
+            case AggCount ignored -> true; // Done
+//            case AggCountDistinct ignored -> true;
             case AggCountVar ignored -> true;
-            case AggCountVarDistinct ignored -> true;
+//            case AggCountVarDistinct ignored -> true;
+            case AggAvg ignored -> true; // TODO: to test
+//            case AggAvgDistinct ignored -> true;
             case AggMax ignored -> true;
-            case AggMaxDistinct ignored -> true;
+//            case AggMaxDistinct ignored -> true;
             case AggMin ignored -> true;
-            case AggMinDistinct ignored -> true;
+//            case AggMinDistinct ignored -> true;
             case AggSum ignored -> true;
-            case AggSumDistinct ignored -> true;
+//            case AggSumDistinct ignored -> true;
             default -> false;
         };
     }

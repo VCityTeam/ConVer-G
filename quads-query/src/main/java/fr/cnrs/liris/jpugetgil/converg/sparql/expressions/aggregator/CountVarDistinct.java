@@ -21,9 +21,7 @@ public class CountVarDistinct extends AbstractAggregator<AggCountVarDistinct> {
 
     @Override
     public String toSQLString() {
-        List<Expression> expressions = this.getAggregator().getExprList().getList().stream()
-                .map(Expression::fromJenaExpr)
-                .toList();
+        List<Expression> expressions = getExpressionList();
 
         String joinedExpression = expressions.stream()
                 .map(Expression::toSQLString)

@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
+import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggSum;
 
@@ -21,9 +22,7 @@ public class Sum extends AbstractAggregator<AggSum> {
 
     @Override
     public String toSQLString() {
-        List<Expression> expressions = this.getAggregator().getExprList().getList().stream()
-                .map(Expression::fromJenaExpr)
-                .toList();
+        List<Expression> expressions = getExpressionList();
 
         String joinedExpression = expressions.stream()
                 .map(expression -> expression.toSQLString() + "::float")
@@ -31,5 +30,18 @@ public class Sum extends AbstractAggregator<AggSum> {
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");
         return this.getAggregator().getName() + "(" + joinedExpression + ") AS " + varName;
+    }
+
+    @Override
+    public String toSQLString(OpGroup opGroup, String alias) {
+        // FIXME: fetch the value of the element
+        List<Expression> expressions = getExpressionList();
+
+        String joinedExpression = expressions.stream()
+                .map(expression -> expression.toSQLString() + "::float")
+                .collect(Collectors.joining(""));
+
+        String varName = "agg" + getVariable().getVarName().replace(".", "");
+        return "SUM(bit_count(bs$" + alias + ") * " + joinedExpression + ") AS " + varName;
     }
 }
