@@ -13,7 +13,7 @@ public class SampleDistinct extends AbstractAggregator<AggSampleDistinct> {
      * @param variable the variable associated to the aggregator
      */
     public SampleDistinct(AggSampleDistinct aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

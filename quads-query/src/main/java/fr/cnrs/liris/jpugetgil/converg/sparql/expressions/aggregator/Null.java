@@ -13,7 +13,7 @@ public class Null extends AbstractAggregator<AggNull> {
      * @param variable the variable associated to the aggregator
      */
     public Null(AggNull aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, false);
     }
 
     @Override

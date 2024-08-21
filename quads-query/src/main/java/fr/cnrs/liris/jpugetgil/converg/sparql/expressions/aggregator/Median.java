@@ -16,7 +16,7 @@ public class Median extends AbstractAggregator<AggMedian> {
      * @param variable the variable associated to the aggregator
      */
     public Median(AggMedian aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

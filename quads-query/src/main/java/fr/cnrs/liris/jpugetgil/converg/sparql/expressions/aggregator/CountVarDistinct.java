@@ -16,7 +16,7 @@ public class CountVarDistinct extends AbstractAggregator<AggCountVarDistinct> {
      * @param variable the variable associated to the aggregator
      */
     public CountVarDistinct(AggCountVarDistinct aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, false);
     }
 
     @Override

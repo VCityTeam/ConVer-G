@@ -13,7 +13,7 @@ public class Custom extends AbstractAggregator<AggCustom> {
      * @param variable the variable associated to the aggregator
      */
     public Custom(AggCustom aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

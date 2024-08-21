@@ -16,7 +16,7 @@ public class GroupConcatDistinct extends AbstractAggregator<AggGroupConcatDistin
      * @param variable the variable associated to the aggregator
      */
     public GroupConcatDistinct(AggGroupConcatDistinct aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

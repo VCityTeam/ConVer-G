@@ -16,7 +16,7 @@ public class AvgDistinct extends AbstractAggregator<AggAvgDistinct> {
      * @param variable the variable associated to the aggregator
      */
     public AvgDistinct(AggAvgDistinct aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

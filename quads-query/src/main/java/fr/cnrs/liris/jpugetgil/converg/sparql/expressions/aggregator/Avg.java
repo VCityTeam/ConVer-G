@@ -17,7 +17,7 @@ public class Avg extends AbstractAggregator<AggAvg> {
      * @param variable the variable associated to the aggregator
      */
     public Avg(AggAvg aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

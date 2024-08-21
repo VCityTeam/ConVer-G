@@ -17,7 +17,7 @@ public class Sum extends AbstractAggregator<AggSum> {
      * @param variable the variable associated to the aggregator
      */
     public Sum(AggSum aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

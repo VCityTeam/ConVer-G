@@ -16,7 +16,7 @@ public class MinDistinct extends AbstractAggregator<AggMinDistinct> {
      * @param variable the variable associated to the aggregator
      */
     public MinDistinct(AggMinDistinct aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

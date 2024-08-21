@@ -13,7 +13,7 @@ public class Sample extends AbstractAggregator<AggSample> {
      * @param variable the variable associated to the aggregator
      */
     public Sample(AggSample aggr, Var variable) {
-        super(aggr, variable);
+        super(aggr, variable, true);
     }
 
     @Override

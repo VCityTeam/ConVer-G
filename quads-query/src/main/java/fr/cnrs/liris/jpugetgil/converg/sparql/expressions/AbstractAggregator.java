@@ -10,15 +10,17 @@ import java.util.List;
 public abstract class AbstractAggregator<E extends Aggregator> {
     private final E aggr;
     private final Var variable;
+    private final boolean requiresValue;
 
     /**
      * Build an aggregator from a Jena aggregator.
      *
      * @param aggr the source Jena aggregator
      */
-    protected AbstractAggregator(E aggr, Var variable) {
+    protected AbstractAggregator(E aggr, Var variable, boolean requiresValue) {
         this.aggr = aggr;
         this.variable = variable;
+        this.requiresValue = requiresValue;
     }
 
     public E getAggregator() {
@@ -27,6 +29,10 @@ public abstract class AbstractAggregator<E extends Aggregator> {
 
     public Var getVariable() {
         return variable;
+    }
+
+    public boolean getRequiresValue() {
+        return this.requiresValue;
     }
 
     public abstract String toSQLString();

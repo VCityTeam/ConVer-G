@@ -17,24 +17,6 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
         super(expr);
     }
 
-    public boolean isCountable() {
-        return switch (this.getJenaExpr().getAggregator()) {
-            case AggCount ignored -> true; // Done
-//            case AggCountDistinct ignored -> true;
-            case AggCountVar ignored -> true;
-//            case AggCountVarDistinct ignored -> true;
-            case AggAvg ignored -> true; // TODO: to test
-//            case AggAvgDistinct ignored -> true;
-            case AggMax ignored -> true;
-//            case AggMaxDistinct ignored -> true;
-            case AggMin ignored -> true;
-//            case AggMinDistinct ignored -> true;
-            case AggSum ignored -> true;
-//            case AggSumDistinct ignored -> true;
-            default -> false;
-        };
-    }
-
     public AbstractAggregator<?> getAggregator() {
         ExprAggregator expAggr = this.getJenaExpr();
         return switch (expAggr.getAggregator()) {
@@ -67,6 +49,28 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
             case AggSumDistinct aggSumDistinct -> new SumDistinct(aggSumDistinct, expAggr.getVar());
             default -> throw new ARQException("Aggregation - Unexpected value: " + this.getJenaExpr().getAggregator());
         };
+    }
+
+    public boolean isCountable() {
+        return switch (this.getJenaExpr().getAggregator()) {
+            case AggCount ignored -> true; // Done
+//            case AggCountDistinct ignored -> true;
+            case AggCountVar ignored -> true;
+//            case AggCountVarDistinct ignored -> true;
+            case AggAvg ignored -> true; // TODO: to test
+//            case AggAvgDistinct ignored -> true;
+            case AggMax ignored -> true;
+//            case AggMaxDistinct ignored -> true;
+            case AggMin ignored -> true;
+//            case AggMinDistinct ignored -> true;
+            case AggSum ignored -> true; // TODO: to test
+//            case AggSumDistinct ignored -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isValueRequired() {
+        return this.getAggregator().getRequiresValue();
     }
 
     @Override
