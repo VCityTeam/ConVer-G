@@ -19,12 +19,12 @@ public class JdbcConnection {
     @Getter
     private Connection connection;
     private Statement statement;
-    private static final String CONNECTION_URL = System.getenv("DATASOURCE_URL") == null ?
-            "jdbc:postgresql://localhost:5432/converg" : System.getenv("DATASOURCE_URL");
-    private static final String CONNECTION_USERNAME = System.getenv("DATASOURCE_USERNAME") == null ?
-            "postgres" : System.getenv("DATASOURCE_USERNAME");
-    private static final String CONNECTION_PASSWORD = System.getenv("DATASOURCE_PASSWORD") == null ?
-            "password" : System.getenv("DATASOURCE_PASSWORD");
+    private static final String CONNECTION_URL = System.getenv("SPRING_DATASOURCE_URL") == null ?
+            "jdbc:postgresql://localhost:5432/converg" : System.getenv("SPRING_DATASOURCE_URL");
+    private static final String CONNECTION_USERNAME = System.getenv("SPRING_DATASOURCE_USERNAME") == null ?
+            "postgres" : System.getenv("SPRING_DATASOURCE_USERNAME");
+    private static final String CONNECTION_PASSWORD = System.getenv("SPRING_DATASOURCE_PASSWORD") == null ?
+            "password" : System.getenv("SPRING_DATASOURCE_PASSWORD");
 
     /**
      * Constructor method in order to create db connection & statement

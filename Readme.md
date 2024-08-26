@@ -1,4 +1,5 @@
 # ConVer-G project
+
 > Which means Concurrent Versioning of knowledge Graphs
 
 This project aims to create a knowledge hub that can store and query a set of RDF datasets with a versioning system.
@@ -43,11 +44,15 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   SELECT queries over that RDF to SQL queries over the original relational data.
   The goal is to provide a specification for SPARQL tool vendors and a foundation for the Semantic Web. It highlights
   the importance of creating a computable mapping from SPARQL semantics to SQL semantics.
-- **[Evaluating SPARQL to SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
+- *
+  *[Evaluating SPARQL to SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)
+  **
   This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
   It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL to SQL translation in
   the Ontop system.
-- **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
+- *
+  *[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)
+  **
   This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
   techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL
   queries to relational queries,
@@ -55,6 +60,7 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   database.
 
 ## Getting started
+
 ### Installation
 
 This project uses Java 21 JDK + Maven and
@@ -74,6 +80,7 @@ sdk use java 21.0.1-amzn
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.
 
 ### Maven
+
 #### ⌛ Quads-Loader
 
 This project:
@@ -94,7 +101,8 @@ This project has been tested with:
 This project:
 
 - uses the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
-- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html) if you use this target language, so the `postgresql` driver is
+- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html) if you use this target language, so
+  the `postgresql` driver is
   installed too.
 
 This project has been tested with: `junit-jupiter-engine`
@@ -135,6 +143,10 @@ java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_P
 ```
 
 ### Implementation
+
+#### Ontology
+
+![The graph versioning ontology](https://www.ldf.fi/service/rdf-grapher?rdf=%40prefix+vers%3A+%3Chttps%3A%2F%2Fgithub.com%2FVCityTeam%2FConVer-G%2F%3E+.%0D%0A%40prefix+rdf%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E+.%0D%0A%40prefix+rdfs%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E+.%0D%0A%40prefix+purl%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Felements%2F1.1%3E+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AResource+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Acomment%3E+%22A+versioned+graph+name+inside+a+given+dataset%22+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Versioned+named+graph%22%40en+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9+versionn%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23is-in-version%3E+vers%3AVersion+.%0D%0A%3Cvers%3AVersion%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Acomment%3E+%22A+dataset+version%22+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40en+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23is-version-of%3E+vers%3ANamed-Graph+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Acomment%3E+%22A+graph+name+inside+a+given+dataset%22+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Named+graph%22%40en+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioning%3E+%3Crdf%3Atype%3E+%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23Ontology%3E+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Atitle%3E+%22The+quad+versioning+vocabulary%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adate%3E+%222024-08-26%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adescription%3E+%22This+is+the+RDF+schema+for+the+quad+versioning+vocabulary+terms%2C+defined+in+the+VCity+ConVer-G+work.%22+.&from=ttl&to=png)
 
 #### Conceptual model
 
