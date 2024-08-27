@@ -28,22 +28,24 @@ def main():
 
     converter = RdfConverter(args)
     converter.annotation = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
-
-
+    os.makedirs(args.output_folder, exist_ok=True)
 
     if args.input_file == '*':
-        for file in os.listdir(args.input_folder):
-            converter.filename = os.path.split(file)[-1]
-            converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
-            if args.annotation_type == 'theoretical':
-                converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
-                                        + hashlib.sha256(
-                            (converter.annotation + converter.filename).encode("utf-8")
-                        ).hexdigest()
-                                        )
-            else:
-                converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
-            converter.convert(args.input_folder, file, args.input_format, args.output_folder)
+        files = [file for file in os.listdir(args.input_folder) if os.path.isfile(os.path.join(args.input_folder, file))]
+        print(f'Files to transform: {files}')
+        for file in files:
+            if os.path.isfile(os.path.join(args.input_folder, file)):
+                converter.filename = os.path.split(file)[-1]
+                converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
+                if args.annotation_type == 'theoretical':
+                    converter.graph_name = ('https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'
+                                            + hashlib.sha256(
+                                (converter.annotation + converter.filename).encode("utf-8")
+                            ).hexdigest()
+                                            )
+                else:
+                    converter.graph_name = f'https://github.com/VCityTeam/ConVer-G/Named-Graph#{args.annotation}'
+                converter.convert(args.input_folder, file, args.input_format, args.output_folder)
     else:
         converter.filename = os.path.split(args.input_file)[-1]
         converter.version = f'https://github.com/VCityTeam/ConVer-G/Version#{converter.filename}'
@@ -79,9 +81,8 @@ class RdfConverter:
         :param input_format: The format of the input RDF file. Must be an RDFlib compliant format
         :param output_folder: The folder to write the output to
         """
+        print(f'({self.annotation_type} annotation) - file: {input_file} with {self.annotation}')
         self.graph.parse(os.path.join(input_folder + '/', input_file), format=input_format)
-        os.makedirs(output_folder, exist_ok=True)
-
         ds = Dataset()
         named_graph = URIRef(self.graph_name)
 

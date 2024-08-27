@@ -19,7 +19,7 @@ do
       --connect-timeout 60 \
       --data-binary @"$file"
       end=$(date +%s%3N)
-      printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
+    printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
 done
 
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import completed."
