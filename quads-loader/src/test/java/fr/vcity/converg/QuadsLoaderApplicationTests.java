@@ -61,7 +61,7 @@ class QuadsLoaderApplicationTests {
     @Test
     @Order(1)
     void importV1() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/version-1.split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-1.split.ttl.relational.trig");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -90,7 +90,7 @@ class QuadsLoaderApplicationTests {
     @Test
     @Order(2)
     void importV2() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:dataset/version-2.split.ttl.relational.nq");
+        Resource resource = resourceLoader.getResource("classpath:dataset/version-2.split.ttl.relational.trig");
 
         MockMultipartFile file
                 = new MockMultipartFile(
@@ -194,7 +194,7 @@ class QuadsLoaderApplicationTests {
 //    @Test
 //    @Order(6)
 //    void importMetadata() throws Exception {
-//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
+//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.trig");
 //
 //        MockMultipartFile file1
 //                = new MockMultipartFile(
@@ -235,7 +235,7 @@ class QuadsLoaderApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl.relational.nq",
+                "Corrupted_File.ttl.relational.trig",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0}
         );
@@ -251,7 +251,7 @@ class QuadsLoaderApplicationTests {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
-                "Corrupted_File.ttl.relational.nq",
+                "Corrupted_File.ttl.relational.trig",
                 MediaType.TEXT_PLAIN_VALUE,
                 new byte[]{0, 1}
         );
@@ -269,8 +269,8 @@ class QuadsLoaderApplicationTests {
 //    @Test
 //    @Order(11)
 //    void importMetadata2() throws Exception {
-//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.nq");
-//        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-1.nt.relational.nq");
+//        Resource resource = resourceLoader.getResource("classpath:dataset/transition-0.nt.relational.trig");
+//        Resource resource2 = resourceLoader.getResource("classpath:dataset/transition-1.nt.relational.trig");
 //
 //        MockMultipartFile file1
 //                = new MockMultipartFile(

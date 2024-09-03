@@ -14,32 +14,32 @@ printf "\n%s$(date +%FT%T) - [quads-loader] Versions import started."
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2018_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2018_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2018_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2015_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2015_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2015_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2012_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2012_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2012_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2012_alt_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2012_alt_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2012_alt_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2009_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2009_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2009_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Version GratteCiel_2009_alt_split."
 curl --location 'http://localhost:8080/import/version' \
   --header 'Content-Type: multipart/form-data' \
-  --form 'file=@"quads/relational/GratteCiel_2009_alt_split.ttl.relational.nq"'
+  --form 'file=@"quads/relational/GratteCiel_2009_alt_split.ttl.relational.trig"'
 
 printf "\n%s$(date +%FT%T) - [quads-loader] Versions import completed."
 

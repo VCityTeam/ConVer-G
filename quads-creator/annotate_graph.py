@@ -98,11 +98,11 @@ class RdfConverter:
             ds.add((subject, predicate, obj, named_graph))
         if self.annotation_type == 'theoretical':
             self.add_theoretical_annotation(named_graph, output_folder)
-            ds.serialize(destination=output_folder + '/' + self.filename + '.theoretical.nq',
-                         format='nquads', encoding='utf-8')
+            ds.serialize(destination=output_folder + '/' + self.filename + '.theoretical.trig',
+                         format='trig', encoding='utf-8')
         else:
-            ds.serialize(destination=output_folder + '/' + self.filename + '.relational.nq',
-                         format='nquads', encoding='utf-8')
+            ds.serialize(destination=output_folder + '/' + self.filename + '.relational.trig',
+                         format='trig', encoding='utf-8')
 
     def add_theoretical_annotation(self, named_graph, output_folder):
         """
@@ -110,12 +110,12 @@ class RdfConverter:
         :param named_graph: The named graph to be annotated
         :param output_folder: The folder to write the output to
         """
-        theoretical_annotations_filename = 'theoretical_annotations.nq'
+        theoretical_annotations_filename = 'theoretical_annotations.trig'
         metadata_ds = Dataset()
         metadata_uri = URIRef('https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata')
         if os.path.exists(os.path.join(output_folder + '/', theoretical_annotations_filename)):
             self.metadata_graph.parse(
-                os.path.join(output_folder + '/', theoretical_annotations_filename), format='nquads')
+                os.path.join(output_folder + '/', theoretical_annotations_filename), format='trig')
             for triple in self.metadata_graph:
                 subject = self.create_uriref_or_literal(triple[0])
                 predicate = URIRef(triple[1])
@@ -138,7 +138,7 @@ class RdfConverter:
             )
         )
         metadata_ds.serialize(
-            destination=output_folder + '/' + theoretical_annotations_filename, format='nquads', encoding='utf-8')
+            destination=output_folder + '/' + theoretical_annotations_filename, format='trig', encoding='utf-8')
 
     def create_uriref_or_literal(self, string):
         """Create a URIRef with the same validation func used by URIRef

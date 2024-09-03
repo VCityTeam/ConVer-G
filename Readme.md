@@ -371,7 +371,7 @@ tail -f allout.txt
 
 Let's assume that we have a dataset with 2 versions with the following quads:
 
-**Version 1 (buildings-2015.nq):**
+**Version 1 (buildings-2015.trig):**
 
 | Subject                       | Predicate | Object | Named Graph                               |
 |-------------------------------|-----------|--------|-------------------------------------------|
@@ -379,7 +379,7 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 | http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon |
 | http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        |
 
-**Version 2 (buildings-2018.nq):**
+**Version 2 (buildings-2018.trig):**
 
 | Subject                       | Predicate | Object | Named Graph                               |
 |-------------------------------|-----------|--------|-------------------------------------------|
