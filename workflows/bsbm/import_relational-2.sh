@@ -13,7 +13,7 @@ printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import started."
 ### Import the versions of BSBM
 printf "\n%s$(date +%FT%T) - [quads-loader] Versions import started."
 
-find . -type f -name "*.split.ttl.relational.trig" -print0 | while IFS= read -r -d '' file
+find . -type f -name "*.ttl.relational.trig" -print0 | while IFS= read -r -d '' file
 do
     printf "\n%s$(date +%FT%T) - [quads-loader] Version $file"
     start=$(date +%s%3N)

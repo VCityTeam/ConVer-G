@@ -27,7 +27,7 @@ public class QuadImportService implements IQuadImportService {
     }
 
     public record TripleValueType(String sValue, String sType, String pValue, String pType, String oValue,
-                                   String oType) {
+                                  String oType) {
     }
 
     public record QuadValueType(TripleValueType tripleValueType, String namedGraph, Integer version) {
@@ -37,6 +37,8 @@ public class QuadImportService implements IQuadImportService {
     ResourceOrLiteral metadataIsVersionOf;
     ResourceOrLiteral defaultGraphURI;
 
+    IFlatModelQuadRepository flatModelQuadRepository;
+    IFlatModelTripleRepository flatModelTripleRepository;
     IResourceOrLiteralRepository rdfResourceRepository;
     IVersionedQuadRepository rdfVersionedQuadRepository;
     IMetadataRepository metadataRepository;
@@ -47,6 +49,8 @@ public class QuadImportService implements IQuadImportService {
     VersionedQuadComponent versionedQuadComponent;
 
     public QuadImportService(
+            IFlatModelQuadRepository flatModelQuadRepository,
+            IFlatModelTripleRepository flatModelTripleRepository,
             IResourceOrLiteralRepository rdfResourceRepository,
             IVersionedQuadRepository rdfVersionedQuadRepository,
             IMetadataRepository metadataRepository,
@@ -56,6 +60,8 @@ public class QuadImportService implements IQuadImportService {
             IVersionRepository versionRepository,
             VersionedQuadComponent versionedQuadComponent
     ) {
+        this.flatModelQuadRepository = flatModelQuadRepository;
+        this.flatModelTripleRepository = flatModelTripleRepository;
         this.rdfResourceRepository = rdfResourceRepository;
         this.rdfVersionedQuadRepository = rdfVersionedQuadRepository;
         this.metadataRepository = metadataRepository;
@@ -114,6 +120,8 @@ public class QuadImportService implements IQuadImportService {
      */
     @Override
     public void resetDatabase() {
+        flatModelQuadRepository.deleteAll();
+        flatModelTripleRepository.deleteAll();
         rdfVersionedQuadRepository.deleteAll();
         rdfVersionedNamedGraphRepository.deleteAll();
         versionRepository.deleteAll();
@@ -170,7 +178,6 @@ public class QuadImportService implements IQuadImportService {
     @Override
     public void condenseModel() {
         Long start = System.nanoTime();
-        rdfVersionedQuadRepository.deleteAll();
         rdfResourceRepository.flatModelQuadsSubjectToCatalog();
         rdfResourceRepository.flatModelQuadsPredicateToCatalog();
         rdfResourceRepository.flatModelQuadsObjectToCatalog();
@@ -178,6 +185,7 @@ public class QuadImportService implements IQuadImportService {
         rdfResourceRepository.flatModelTriplesPredicateToCatalog();
         rdfResourceRepository.flatModelTriplesObjectToCatalog();
         rdfVersionedQuadRepository.condenseModel();
+        flatModelQuadRepository.deleteAll();
         Long end = System.nanoTime();
         log.info("[Measure] (Catalog + Condense relational internal): {} ns;", end - start);
     }
@@ -198,6 +206,8 @@ public class QuadImportService implements IQuadImportService {
         if (!tripleValueTypes.isEmpty()) {
             metadataComponent.saveTriples(tripleValueTypes);
         }
+
+        // TODO: Transfer flat_model_triple to metadata
     }
 
     /**
