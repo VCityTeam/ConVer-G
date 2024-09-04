@@ -66,4 +66,5 @@ public interface IVersionedQuadRepository extends CrudRepository<VersionedQuad, 
             """)
     @Modifying
     void condenseModel();
+    // TODO: Add the option to import another dataset after a condensation (ON CONFLICT)
 }
