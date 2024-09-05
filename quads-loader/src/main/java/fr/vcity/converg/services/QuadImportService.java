@@ -207,7 +207,9 @@ public class QuadImportService implements IQuadImportService {
             metadataComponent.saveTriples(tripleValueTypes);
         }
 
-        // TODO: Transfer flat_model_triple to metadata
+        rdfResourceRepository.flatModelTriplesSubjectToCatalog();
+        rdfResourceRepository.flatModelTriplesPredicateToCatalog();
+        rdfResourceRepository.flatModelTriplesObjectToCatalog();
     }
 
     /**

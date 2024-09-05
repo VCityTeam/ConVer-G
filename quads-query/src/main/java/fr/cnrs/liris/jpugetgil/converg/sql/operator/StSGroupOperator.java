@@ -40,7 +40,6 @@ public class StSGroupOperator extends StSOperator {
                 isAggregatedOnTriple() &&
                 isCountableAggregator()) {
             log.info("Condensed mode and aggregation on triple and countable aggregators.");
-            // TODO: Implement the transformation for the condensed mode
             StringJoiner joiner = new StringJoiner(", ");
             for (ExprAggregator agg : op.getAggregators()) {
                 AbstractAggregator<?> aggregator = new Aggregator(agg).getAggregator();
