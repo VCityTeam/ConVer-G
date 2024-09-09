@@ -53,9 +53,8 @@ services:
       - postgres
     environment:
       - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
-      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
-      - "DATASOURCE_USERNAME=postgres"
-      - "DATASOURCE_PASSWORD=password"
+      - "SPRING_DATASOURCE_USERNAME=postgres"
+      - "SPRING_DATASOURCE_PASSWORD=password"
     ports:
       - "8080:8080"
     container_name: quads-loader

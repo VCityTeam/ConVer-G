@@ -1,18 +1,19 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import com.google.common.collect.Streams;
+import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Aggregator;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLVarType;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
 import org.apache.jena.sparql.algebra.op.OpGroup;
-import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.core.VarExprList;
+import org.apache.jena.sparql.expr.ExprAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class StSGroupOperator extends StSOperator {
@@ -25,7 +26,6 @@ public class StSGroupOperator extends StSOperator {
     public StSGroupOperator(OpGroup op, SQLQuery sqlQuery) {
         this.op = op;
         this.sqlQuery = sqlQuery;
-        this.sqlVariables = sqlQuery.getContext().sqlVariables();
     }
 
     @Override
@@ -40,10 +40,17 @@ public class StSGroupOperator extends StSOperator {
                 isAggregatedOnTriple() &&
                 isCountableAggregator()) {
             log.info("Condensed mode and aggregation on triple and countable aggregators.");
-            // TODO: Implement the transformation for the condensed mode
-            aggregatorsString = op.getAggregators().stream()
-                    .map(agg -> new Aggregator(agg).toSQLString(op, sqlQuery.getContext().graph().getName()))
-                    .collect(Collectors.joining(", "));
+            StringJoiner joiner = new StringJoiner(", ");
+            for (ExprAggregator agg : op.getAggregators()) {
+                AbstractAggregator<?> aggregator = new Aggregator(agg).getAggregator();
+                if (aggregator.getRequiresValue()) {
+                    this.sqlQuery = new StSIdentifyOperator(sqlQuery, aggregator.getAggregator().getExprList().getVarsMentioned())
+                            .buildSQLQuery();
+                }
+                String sqlString = new Aggregator(agg).toSQLString(op, sqlQuery.getContext().graph().getName());
+                joiner.add(sqlString);
+            }
+            aggregatorsString = joiner.toString();
 
         } else {
             this.sqlQuery = disaggregateBitVectorAndReturnQuery();

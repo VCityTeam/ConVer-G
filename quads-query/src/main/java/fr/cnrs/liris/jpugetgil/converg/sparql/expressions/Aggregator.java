@@ -59,9 +59,9 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
 //            case AggCountVarDistinct ignored -> true;
             case AggAvg ignored -> true; // TODO: to test
 //            case AggAvgDistinct ignored -> true;
-            case AggMax ignored -> true;
+//            case AggMax ignored -> true;
 //            case AggMaxDistinct ignored -> true;
-            case AggMin ignored -> true;
+//            case AggMin ignored -> true;
 //            case AggMinDistinct ignored -> true;
             case AggSum ignored -> true; // TODO: to test
 //            case AggSumDistinct ignored -> true;

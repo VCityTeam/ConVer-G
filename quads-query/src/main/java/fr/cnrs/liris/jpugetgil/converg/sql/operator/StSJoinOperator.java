@@ -96,7 +96,6 @@ public class StSJoinOperator extends StSOperator {
                             )
             );
         } else if (graphLeftVariable != null && graphRightVariable != null) {
-            // TODO: check if this is correct
             select += getContextSelectGraphVariable(leftSQLQuery.getContext(), "left_table") +
                     getContextSelectGraphVariable(rightSQLQuery.getContext(), "right_table");
         } else if (graphLeftVariable != null) {

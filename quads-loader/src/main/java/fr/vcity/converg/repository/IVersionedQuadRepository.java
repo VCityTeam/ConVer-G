@@ -30,7 +30,7 @@ public interface IVersionedQuadRepository extends CrudRepository<VersionedQuad, 
                    fm.id_predicate,
                    fm.id_object,
                    fm.id_named_graph,
-                   bit_or(bs)::bit varying as validity
+                   bit_or(bs)::bit varying as val
             FROM (SELECT
                      rls.id_resource_or_literal as id_subject,
                      rlp.id_resource_or_literal as id_predicate,
@@ -61,6 +61,8 @@ public interface IVersionedQuadRepository extends CrudRepository<VersionedQuad, 
                      fm.id_predicate,
                      fm.id_object,
                      fm.id_named_graph
+            ON CONFLICT (id_subject, id_predicate, id_object, id_named_graph)
+            DO UPDATE SET validity = overlay(EXCLUDED.validity placing versioned_quad.validity from 1)
             """)
     @Modifying
     void condenseModel();

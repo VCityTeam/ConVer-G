@@ -34,7 +34,6 @@ public class Avg extends AbstractAggregator<AggAvg> {
 
     @Override
     public String toSQLString(OpGroup opGroup, String alias) {
-        // FIXME: fetch the value of the element
         List<Expression> expressions = getExpressionList();
 
         String joinedExpression = expressions.stream()

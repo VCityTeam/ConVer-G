@@ -20,5 +20,7 @@ RUN mkdir -p /data/triples \
 
 USER user
 
+ENV PYTHONUNBUFFERED=1
+
 # Setup Entrypoint
 ENTRYPOINT ["python", "annotate_graph.py"]
