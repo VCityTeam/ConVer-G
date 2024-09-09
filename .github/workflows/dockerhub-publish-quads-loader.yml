@@ -48,7 +48,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: quads-loader
-          file: ./Dockerfile
+          file: ./quads-loader/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
