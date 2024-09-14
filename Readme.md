@@ -347,7 +347,7 @@ theoretical model and the implementation.
 
 We add a quad for each triple (the graph name).
 Its semantic is the link between the triple and the source of the data.
-The transformation has been made with the [annotate python program](quads-creator/annotate_graph.py).
+The transformation has been made with the [annotate python program](quads-creator-old/annotate_graph.py).
 We used a virtual environment with pip 23.3.1 from Python 3.10.12.
 
 ```shell
