@@ -55,7 +55,7 @@ public class RDFConverter {
      *
      */
     public void convert() {
-        log.info("({} annotation) - file: {}", annotationType, inputFile);
+        log.info("({} annotation) - file: {} with {}", this.annotationType, this.inputFile, this.annotation);
 
         insertQuadsToDataset();
 
@@ -81,12 +81,11 @@ public class RDFConverter {
         getStreamRDF(inputFileName, outputFile, graphURI)
                 .finish();
 
-        getMetadataStreamRDF(inputFileName)
+        getMetadataStreamRDF(inputFileName, graphURI)
                 .finish();
     }
 
-    private StreamRDF getMetadataStreamRDF(String inputFileName) {
-        String graphURI = "https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata";
+    private StreamRDF getMetadataStreamRDF(String inputFileName, String graphURI) {
         StreamRDF quadStreamRDF = new StreamRDFBase() {
             @Override
             public void quad(Quad quad) {
@@ -96,18 +95,18 @@ public class RDFConverter {
 
         metadataDataset
                 .asDatasetGraph()
-                .add(new Quad(NodeFactory.createURI(graphURI),
+                .add(new Quad(NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata"),
                         Triple.create(
-                                NodeFactory.createURI(getGraphNameURI(inputFileName)),
+                                NodeFactory.createURI(graphURI),
                                 NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Version#is-version-of"),
                                 NodeFactory.createURI(getAnnotationURI(annotation))
                         )));
 
         metadataDataset
                 .asDatasetGraph()
-                .add(new Quad(NodeFactory.createURI(graphURI),
+                .add(new Quad(NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata"),
                         Triple.create(
-                                NodeFactory.createURI(getGraphNameURI(inputFileName)),
+                                NodeFactory.createURI(graphURI),
                                 NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Version#is-in-version"),
                                 NodeFactory.createURI(getVersionURI(inputFileName))
                         )));
