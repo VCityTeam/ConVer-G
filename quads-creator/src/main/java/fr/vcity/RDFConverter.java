@@ -27,54 +27,65 @@ public class RDFConverter {
     private final Dataset metadataDataset;
     private final String annotationType;
     private final String annotation;
+    private final String inputFolder;
+    private final String inputFile;
+    private final String outputFolder;
 
-    public RDFConverter(String annotationType, String annotation) {
+    /**
+     *
+     * @param annotationType The type of annotation (relational or theoretical)
+     * @param annotation The annotation (quad)
+     * @param inputFolder The folder containing the input files
+     * @param inputFile The file to be converted
+     * @param outputFolder The folder to write the output to
+     */
+    public RDFConverter(String annotationType, String annotation, String inputFolder, String inputFile, String outputFolder) {
         this.dataset = DatasetFactory.create();
         this.metadataDataset = DatasetFactory.create();
         this.annotationType = annotationType;
         this.annotation = annotation;
+        this.inputFolder = inputFolder;
+        this.inputFile = inputFile;
+        this.outputFolder = outputFolder;
     }
 
     /**
      * It takes an input file, an input format, an output file, and an annotation, and it adds annotation to the
      * input file from the input format and saves it to the output file
      *
-     * @param inputFolder The folder containing the input files
-     * @param inputFile The file to be converted
-     * @param outputFolder The folder to write the output to
      */
-    public void convert(String inputFolder, String inputFile, String outputFolder) {
+    public void convert() {
         log.info("({} annotation) - file: {}", annotationType, inputFile);
 
-        insertQuadsToDataset(outputFolder, inputFolder, inputFile);
+        insertQuadsToDataset();
 
         if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
-            insertQuadsToMetadataDataset(outputFolder, inputFolder, inputFile);
+            insertQuadsToMetadataDataset();
         }
     }
 
-    private void insertQuadsToDataset(String outputFolder, String inputFolder, String inputFile) {
+    private void insertQuadsToDataset() {
         String inputFileName = getInputFileName(inputFolder, inputFile);
         String outputFile = getOutputFileName(outputFolder, inputFile);
         String graphURI = getGraphNameURI(inputFile);
 
-        getStreamRDF(inputFileName, outputFile, graphURI, dataset)
+        getStreamRDF(inputFileName, outputFile, graphURI)
                 .finish();
     }
 
-    private void insertQuadsToMetadataDataset(String outputFolder, String inputFolder, String inputFile) {
+    private void insertQuadsToMetadataDataset() {
         String inputFileName = getInputFileName(inputFolder, inputFile);
         String outputFile = getOutputFileName(outputFolder, inputFile);
         String graphURI = getGraphNameURI(inputFile);
 
-        getStreamRDF(inputFileName, outputFile, graphURI, dataset)
+        getStreamRDF(inputFileName, outputFile, graphURI)
                 .finish();
 
-        getMetadataStreamRDF(outputFolder, inputFileName)
+        getMetadataStreamRDF(inputFileName)
                 .finish();
     }
 
-    private StreamRDF getMetadataStreamRDF(String outputFolder, String inputFileName) {
+    private StreamRDF getMetadataStreamRDF(String inputFileName) {
         String graphURI = "https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata";
         StreamRDF quadStreamRDF = new StreamRDFBase() {
             @Override
@@ -129,7 +140,7 @@ public class RDFConverter {
         return quadStreamRDF;
     }
 
-    private StreamRDF getStreamRDF(String inputFileName, String outputFile, String graphURI, Dataset dataset) {
+    private StreamRDF getStreamRDF(String inputFileName, String outputFile, String graphURI) {
         StreamRDF streamRDF = new StreamRDFBase() {
             @Override
             public void triple(Triple triple) {

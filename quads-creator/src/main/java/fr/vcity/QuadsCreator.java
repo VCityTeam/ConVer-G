@@ -19,8 +19,8 @@ public class QuadsCreator {
         String annotationType = args[3]; // 4th argument: annotation type
         String annotation = args[4]; // 5th argument: annotation type
 
-        new RDFConverter(annotationType, annotation)
-                .convert(inputFolder, inputFile, outputFolder);
+        new RDFConverter(annotationType, annotation, inputFolder, inputFile, outputFolder)
+                .convert();
 
         log.info("Quads saved to {}", outputFolder);
     }
