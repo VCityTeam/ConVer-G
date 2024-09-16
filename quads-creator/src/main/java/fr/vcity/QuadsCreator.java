@@ -24,20 +24,23 @@ public class QuadsCreator {
         if (inputFile.equals("*")) {
             File folder = new File(inputFolder);
 
+            // Create the directory if it does not exist
+            if (folder.mkdirs()) {
+                log.info("The folder was created successfully");
+            }
+
             if (folder.exists() && folder.isDirectory()) {
                 // Get the list of all files and directories in the folder
                 File[] filesList = folder.listFiles();
 
                 // Check if the directory is empty
-                if (filesList != null && filesList.length > 0) {
+                if (filesList != null) {
                     for (File file : filesList) {
                         if (file.isFile()) {
                             new RDFConverter(annotationType, annotation, inputFolder, file.getName(), outputFolder)
                                     .convert();
                         }
                     }
-                } else {
-                    log.info("The folder is empty.");
                 }
             } else {
                 log.info("The specified folder does not exist or is not a directory.");
