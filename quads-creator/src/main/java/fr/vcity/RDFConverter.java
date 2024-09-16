@@ -32,12 +32,13 @@ public class RDFConverter {
     private final String outputFolder;
 
     /**
+     * Constructor of RDFConverter
      *
      * @param annotationType The type of annotation (relational or theoretical)
-     * @param annotation The annotation (quad)
-     * @param inputFolder The folder containing the input files
-     * @param inputFile The file to be converted
-     * @param outputFolder The folder to write the output to
+     * @param annotation     The annotation (quad)
+     * @param inputFolder    The folder containing the input files
+     * @param inputFile      The file to be converted
+     * @param outputFolder   The folder to write the output to
      */
     public RDFConverter(String annotationType, String annotation, String inputFolder, String inputFile, String outputFolder) {
         this.dataset = DatasetFactory.create();
@@ -52,7 +53,6 @@ public class RDFConverter {
     /**
      * It takes an input file, an input format, an output file, and an annotation, and it adds annotation to the
      * input file from the input format and saves it to the output file
-     *
      */
     public void convert() {
         log.info("({} annotation) - file: {} with {}", this.annotationType, this.inputFile, this.annotation);
@@ -85,6 +85,13 @@ public class RDFConverter {
                 .finish();
     }
 
+    /**
+     * It reads a file and converts it into a stream of quads and triple
+     *
+     * @param inputFileName The input file name
+     * @param graphURI      The graph name
+     * @return A stream of quads
+     */
     private StreamRDF getMetadataStreamRDF(String inputFileName, String graphURI) {
         StreamRDF quadStreamRDF = new StreamRDFBase() {
             @Override
@@ -139,6 +146,14 @@ public class RDFConverter {
         return quadStreamRDF;
     }
 
+    /**
+     * It reads a file and converts it into a stream of triples
+     *
+     * @param inputFileName The input file name
+     * @param outputFile    The output file name
+     * @param graphURI      The graph name
+     * @return A stream of triples
+     */
     private StreamRDF getStreamRDF(String inputFileName, String outputFile, String graphURI) {
         StreamRDF streamRDF = new StreamRDFBase() {
             @Override
@@ -164,22 +179,34 @@ public class RDFConverter {
         return streamRDF;
     }
 
+    /**
+     * This function generates the input file name
+     *
+     * @param inputFolder The folder containing the input files
+     * @param inputFile   The input file name
+     * @return The built input file
+     */
     private String getInputFileName(String inputFolder, String inputFile) {
         return new File(inputFolder, inputFile).getPath();
     }
 
+    /**
+     * This function generates the theoretical file name
+     *
+     * @param inputFolder The folder containing the input files
+     * @return The built theoretical
+     */
     private String getTheoreticalFileName(String inputFolder) {
         return getInputFileName(inputFolder, "theoretical_annotations.trig");
     }
 
-    private String getVersionURI(String inputFileName) {
-        return "https://github.com/VCityTeam/ConVer-G/Version#" + inputFileName;
-    }
-
-    private String getAnnotationURI(String annotation) {
-        return "https://github.com/VCityTeam/ConVer-G/Named-Graph#" + annotation;
-    }
-
+    /**
+     * This function generates the output file name
+     *
+     * @param inputFolder The folder containing the input files
+     * @param inputFile   The input file name
+     * @return The built output file name
+     */
     private String getOutputFileName(String inputFolder, String inputFile) {
         if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
             return getInputFileName(inputFolder, inputFile) + ".theoretical.trig";
@@ -188,6 +215,32 @@ public class RDFConverter {
         }
     }
 
+    /**
+     * This function generates the version URI
+     *
+     * @param inputFileName The input file name
+     * @return The version
+     */
+    private String getVersionURI(String inputFileName) {
+        return "https://github.com/VCityTeam/ConVer-G/Version#" + inputFileName;
+    }
+
+    /**
+     * This function generates the annotation URI
+     *
+     * @param annotation The annotation (graph name)
+     * @return The URI of the annotation
+     */
+    private String getAnnotationURI(String annotation) {
+        return "https://github.com/VCityTeam/ConVer-G/Named-Graph#" + annotation;
+    }
+
+    /**
+     * It generates a unique URI for the graph name given a seed (input file)
+     *
+     * @param inputFile The seed to generate the URI
+     * @return The URI of the graph name
+     */
     private String getGraphNameURI(String inputFile) {
         if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
             try {

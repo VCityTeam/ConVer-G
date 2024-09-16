@@ -4,8 +4,12 @@ COPY . .
 RUN ["mvn", "package", "-Dmaven.test.skip=true"]
 
 FROM eclipse-temurin:21
-LABEL maintainer="vcity"
 
-RUN mkdir /opt/app
+LABEL maintainer="vcity, jey.puget-gil@liris.cnrs.fr"
+LABEL authors="jey.puget-gil@liris.cnrs.fr"
+
+WORKDIR /opt/app
+RUN mkdir -p data
+
 COPY --from=build-create /app/target/quads-creator-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/app/quads-creator.jar
 ENTRYPOINT [ "java", "-jar", "/opt/app/quads-creator.jar" ]
