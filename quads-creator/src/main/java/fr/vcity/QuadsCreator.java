@@ -21,13 +21,15 @@ public class QuadsCreator {
         String annotationType = args[3]; // 4th argument: annotation type
         String annotation = args[4]; // 5th argument: annotation type
 
+        File outputF = new File(outputFolder);
+
+        // Create the directory if it does not exist
+        if (outputF.mkdirs()) {
+            log.info("The folder ({}) was created successfully", outputF.getAbsolutePath());
+        }
+
         if (inputFile.equals("*")) {
             File folder = new File(inputFolder);
-
-            // Create the directory if it does not exist
-            if (folder.mkdirs()) {
-                log.info("The folder was created successfully");
-            }
 
             if (folder.exists() && folder.isDirectory()) {
                 // Get the list of all files and directories in the folder
@@ -43,13 +45,13 @@ public class QuadsCreator {
                     }
                 }
             } else {
-                log.info("The specified folder does not exist or is not a directory.");
+                log.info("The specified folder ({}) does not exist or is not a directory.", folder.getAbsolutePath());
             }
         } else {
             new RDFConverter(annotationType, annotation, inputFolder, inputFile, outputFolder)
                     .convert();
         }
 
-        log.info("Quads saved to {}", outputFolder);
+        log.info("Quads saved to {}", outputF.getAbsolutePath());
     }
 }
