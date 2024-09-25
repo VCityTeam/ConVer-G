@@ -19,16 +19,35 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 @Service
 @Slf4j
 public class QuadImportService implements IQuadImportService {
 
+    /**
+     * Triple Value Type
+     *
+     * @param sValue the subject value
+     * @param sType  the subject type
+     * @param pValue the predicate value
+     * @param pType  the predicate type
+     * @param oValue the object value
+     * @param oType  the object type
+     */
     public record TripleValueType(String sValue, String sType, String pValue, String pType, String oValue,
                                   String oType) {
     }
 
+    /**
+     * Quad Value Type
+     *
+     * @param tripleValueType the triple (subject, predicate, object) and their types
+     * @param namedGraph      the named graph
+     * @param version         the version
+     */
     public record QuadValueType(TripleValueType tripleValueType, String namedGraph, Integer version) {
     }
 
@@ -100,6 +119,16 @@ public class QuadImportService implements IQuadImportService {
             extractAndInsertVersionedNamedGraph(file, datasetGraph, version);
             extractAndInsertQuads(datasetGraph, version);
 
+            log.info("Saving subjects quads to catalog");
+            rdfResourceRepository.flatModelQuadsSubjectToCatalog();
+            log.info("Saving predicates quads to catalog");
+            rdfResourceRepository.flatModelQuadsPredicateToCatalog();
+            log.info("Saving objects quads to catalog");
+            rdfResourceRepository.flatModelQuadsObjectToCatalog();
+            log.info("Condensing quads to catalog");
+            rdfVersionedQuadRepository.condenseModel();
+            flatModelQuadRepository.deleteAll();
+
             Long end = System.nanoTime();
             log.info("[Measure] (Import relational internal): {} ns for file: {};", end - start, file.getOriginalFilename());
         } catch (RiotException | IOException e) {
@@ -111,6 +140,7 @@ public class QuadImportService implements IQuadImportService {
         LocalDateTime endTransactionTime = LocalDateTime.now();
 
         versionRepository.insertEndTransactionTime(version.getIndexVersion(), endTransactionTime);
+
         return version.getIndexVersion();
     }
 
@@ -156,6 +186,14 @@ public class QuadImportService implements IQuadImportService {
                 importDefaultModel(datasetGraph.getGraph(graphNode));
             }
 
+            log.info("Saving subjects triples to catalog");
+            rdfResourceRepository.flatModelTriplesSubjectToCatalog();
+            log.info("Saving predicates triples to catalog");
+            rdfResourceRepository.flatModelTriplesPredicateToCatalog();
+            log.info("Saving object triples to catalog");
+            rdfResourceRepository.flatModelTriplesObjectToCatalog();
+            flatModelTripleRepository.deleteAll();
+
             Long end = System.nanoTime();
             log.info("[Measure] (Import relational internal): {} ns for file: {};", end - start, file.getOriginalFilename());
         } catch (RiotException | IOException e) {
@@ -171,42 +209,27 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Condense the dataset
-     */
-    @Override
-    public void condenseModel() {
-        Long start = System.nanoTime();
-        rdfResourceRepository.flatModelQuadsSubjectToCatalog();
-        rdfResourceRepository.flatModelQuadsPredicateToCatalog();
-        rdfResourceRepository.flatModelQuadsObjectToCatalog();
-        rdfResourceRepository.flatModelTriplesSubjectToCatalog();
-        rdfResourceRepository.flatModelTriplesPredicateToCatalog();
-        rdfResourceRepository.flatModelTriplesObjectToCatalog();
-        rdfVersionedQuadRepository.condenseModel();
-        flatModelQuadRepository.deleteAll();
-        Long end = System.nanoTime();
-        log.info("[Measure] (Catalog + Condense relational internal): {} ns;", end - start);
-    }
-
-    /**
      * Import RDF default model statements
      *
      * @param graph The default graph
      */
     private void importDefaultModel(Graph graph) {
-        Set<Node> nodeSet = new HashSet<>();
         List<TripleValueType> tripleValueTypes = new ArrayList<>();
 
         graph.stream()
-                .forEach(triple -> tripleValueTypes.add(getTripleValueType(triple, nodeSet)));
+                .forEach(triple -> {
+                    tripleValueTypes.add(getTripleValueType(triple));
+
+                    if (tripleValueTypes.size() == 50000) {
+                        log.info("50000 records found. Executing batch save triples");
+                        metadataComponent.saveTriples(tripleValueTypes);
+                        tripleValueTypes.clear();
+                    }
+                });
 
         if (!tripleValueTypes.isEmpty()) {
             metadataComponent.saveTriples(tripleValueTypes);
         }
-
-        rdfResourceRepository.flatModelTriplesSubjectToCatalog();
-        rdfResourceRepository.flatModelTriplesPredicateToCatalog();
-        rdfResourceRepository.flatModelTriplesObjectToCatalog();
     }
 
     /**
@@ -216,20 +239,37 @@ public class QuadImportService implements IQuadImportService {
      * @param version      The version
      */
     private void extractAndInsertQuads(DatasetGraph datasetGraph, Version version) {
-        Set<Node> nodeSet = new HashSet<>();
         List<QuadValueType> quadValueTypes = new ArrayList<>();
 
         datasetGraph.stream()
                 .forEach(quad -> {
-                    QuadValueType quadValueType = new QuadValueType(getTripleValueType(quad.asTriple(), nodeSet), quad.getGraph().getURI(), version.getIndexVersion() - 1);
+                    QuadValueType quadValueType = new QuadValueType(
+                            getTripleValueType(
+                                    quad.asTriple()
+                            ),
+                            quad.getGraph().getURI(),
+                            version.getIndexVersion() - 1
+                    );
                     quadValueTypes.add(quadValueType);
+
+                    if (quadValueTypes.size() == 50000) {
+                        log.info("50000 records found. Executing batch save quads");
+                        versionedQuadComponent.saveQuads(quadValueTypes);
+                        quadValueTypes.clear();
+                    }
                 });
 
         datasetGraph.getDefaultGraph()
                 .stream()
                 .forEach(triple -> {
-                    QuadValueType quadValueType = new QuadValueType(getTripleValueType(triple, nodeSet), defaultGraphURI.getName(), version.getIndexVersion() - 1);
+                    QuadValueType quadValueType = new QuadValueType(getTripleValueType(triple), defaultGraphURI.getName(), version.getIndexVersion() - 1);
                     quadValueTypes.add(quadValueType);
+
+                    if (quadValueTypes.size() == 50000) {
+                        log.info("50000 records found. Executing batch save quads");
+                        versionedQuadComponent.saveQuads(quadValueTypes);
+                        quadValueTypes.clear();
+                    }
                 });
 
         if (!quadValueTypes.isEmpty()) {
@@ -264,18 +304,13 @@ public class QuadImportService implements IQuadImportService {
     /**
      * Get the triple value type
      *
-     * @param triple  The triple
-     * @param nodeSet The node set
+     * @param triple The triple
      * @return The triple value type
      */
-    private static TripleValueType getTripleValueType(Triple triple, Set<Node> nodeSet) {
+    private static TripleValueType getTripleValueType(Triple triple) {
         var subject = triple.getSubject();
         var predicate = triple.getPredicate();
         var object = triple.getObject();
-
-        nodeSet.add(subject);
-        nodeSet.add(predicate);
-        nodeSet.add(object);
 
         String sValue = subject.isLiteral() ? subject.getLiteral().getValue().toString() : subject.toString();
         String sType = subject.isLiteral() ? subject.getLiteral().getDatatype().getURI() : null;

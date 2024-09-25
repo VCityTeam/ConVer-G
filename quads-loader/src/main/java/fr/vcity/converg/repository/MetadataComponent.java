@@ -19,28 +19,26 @@ public class MetadataComponent {
         JdbcConnection jdbcConnection = JdbcConnection.getInstance();
         Connection connection = jdbcConnection.getConnection();
 
-        for (List<QuadImportService.TripleValueType> partition : ListUtils.partition(tripleValueTypes, 100)) {
-            String insertTripleValueSQL = """
-                    INSERT INTO flat_model_triple (subject, subject_type, predicate, predicate_type, object, object_type)"""
-                    + "VALUES (?, ?, ?, ?, ?, ?);";
+        String insertTripleValueSQL = """
+                INSERT INTO flat_model_triple (subject, subject_type, predicate, predicate_type, object, object_type)"""
+                + "VALUES (?, ?, ?, ?, ?, ?);";
 
-            try {
-                PreparedStatement ps = connection.prepareStatement(insertTripleValueSQL);
+        try {
+            PreparedStatement ps = connection.prepareStatement(insertTripleValueSQL);
 
-                for (QuadImportService.TripleValueType tripleValueType : partition) {
-                    ps.setString(1, tripleValueType.sValue());
-                    ps.setString(2, tripleValueType.sType());
-                    ps.setString(3, tripleValueType.pValue());
-                    ps.setString(4, tripleValueType.pType());
-                    ps.setString(5, tripleValueType.oValue());
-                    ps.setString(6, tripleValueType.oType());
-                    ps.addBatch();
-                }
-
-                ps.executeBatch();
-            } catch (SQLException e) {
-                log.error("Error occurred in statement", e);
+            for (QuadImportService.TripleValueType tripleValueType : tripleValueTypes) {
+                ps.setString(1, tripleValueType.sValue());
+                ps.setString(2, tripleValueType.sType());
+                ps.setString(3, tripleValueType.pValue());
+                ps.setString(4, tripleValueType.pType());
+                ps.setString(5, tripleValueType.oValue());
+                ps.setString(6, tripleValueType.oType());
+                ps.addBatch();
             }
+
+            ps.executeBatch();
+        } catch (SQLException e) {
+            log.error("Error occurred in statement", e);
         }
     }
 }

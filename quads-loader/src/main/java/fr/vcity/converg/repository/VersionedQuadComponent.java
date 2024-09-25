@@ -78,30 +78,28 @@ public class VersionedQuadComponent {
         JdbcConnection jdbcConnection = JdbcConnection.getInstance();
         Connection connection = jdbcConnection.getConnection();
 
-        for (List<QuadImportService.QuadValueType> partition : ListUtils.partition(quadValueTypes, 10000)) {
-            String insertQuadValueSQL = """
-                   INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)"""
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+        String insertQuadValueSQL = """
+                INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)"""
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
-            try {
-                PreparedStatement ps = connection.prepareStatement(insertQuadValueSQL);
+        try {
+            PreparedStatement ps = connection.prepareStatement(insertQuadValueSQL);
 
-                for (QuadImportService.QuadValueType quadValueType : partition) {
-                    ps.setString(1, quadValueType.tripleValueType().sValue());
-                    ps.setString(2, quadValueType.tripleValueType().sType());
-                    ps.setString(3, quadValueType.tripleValueType().pValue());
-                    ps.setString(4, quadValueType.tripleValueType().pType());
-                    ps.setString(5, quadValueType.tripleValueType().oValue());
-                    ps.setString(6, quadValueType.tripleValueType().oType());
-                    ps.setString(7, quadValueType.namedGraph());
-                    ps.setInt(8, quadValueType.version());
-                    ps.addBatch();
-                }
-
-                ps.executeBatch();
-            } catch (SQLException e) {
-                log.error("Error occurred in statement", e);
+            for (QuadImportService.QuadValueType quadValueType : quadValueTypes) {
+                ps.setString(1, quadValueType.tripleValueType().sValue());
+                ps.setString(2, quadValueType.tripleValueType().sType());
+                ps.setString(3, quadValueType.tripleValueType().pValue());
+                ps.setString(4, quadValueType.tripleValueType().pType());
+                ps.setString(5, quadValueType.tripleValueType().oValue());
+                ps.setString(6, quadValueType.tripleValueType().oType());
+                ps.setString(7, quadValueType.namedGraph());
+                ps.setInt(8, quadValueType.version());
+                ps.addBatch();
             }
+
+            ps.executeBatch();
+        } catch (SQLException e) {
+            log.error("Error occurred in statement", e);
         }
     }
 }
