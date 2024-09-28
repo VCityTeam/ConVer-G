@@ -119,14 +119,11 @@ public class QuadImportService implements IQuadImportService {
             extractAndInsertVersionedNamedGraph(file, datasetGraph, version);
             extractAndInsertQuads(datasetGraph, version);
 
-            log.info("Saving subjects quads to catalog");
-            rdfResourceRepository.flatModelQuadsSubjectToCatalog();
-            log.info("Saving predicates quads to catalog");
-            rdfResourceRepository.flatModelQuadsPredicateToCatalog();
-            log.info("Saving objects quads to catalog");
-            rdfResourceRepository.flatModelQuadsObjectToCatalog();
+            log.info("Saving quads to catalog");
+            rdfResourceRepository.flatModelQuadsToCatalog();
             log.info("Condensing quads to catalog");
             rdfVersionedQuadRepository.condenseModel();
+            rdfVersionedQuadRepository.updateValidityVersionedQuad();
             flatModelQuadRepository.deleteAll();
 
             Long end = System.nanoTime();
@@ -136,26 +133,10 @@ public class QuadImportService implements IQuadImportService {
             throw new RiotException(e.getMessage());
         }
 
-        rdfVersionedQuadRepository.updateValidityVersionedQuad();
         LocalDateTime endTransactionTime = LocalDateTime.now();
-
         versionRepository.insertEndTransactionTime(version.getIndexVersion(), endTransactionTime);
 
         return version.getIndexVersion();
-    }
-
-    /**
-     * Deletes all the elements inside the database
-     */
-    @Override
-    public void resetDatabase() {
-        flatModelQuadRepository.deleteAll();
-        flatModelTripleRepository.deleteAll();
-        rdfVersionedQuadRepository.deleteAll();
-        rdfVersionedNamedGraphRepository.deleteAll();
-        versionRepository.deleteAll();
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
     }
 
     /**
@@ -186,12 +167,8 @@ public class QuadImportService implements IQuadImportService {
                 importDefaultModel(datasetGraph.getGraph(graphNode));
             }
 
-            log.info("Saving subjects triples to catalog");
-            rdfResourceRepository.flatModelTriplesSubjectToCatalog();
-            log.info("Saving predicates triples to catalog");
-            rdfResourceRepository.flatModelTriplesPredicateToCatalog();
-            log.info("Saving object triples to catalog");
-            rdfResourceRepository.flatModelTriplesObjectToCatalog();
+            log.info("Saving triples to catalog");
+            rdfResourceRepository.flatModelTriplesToCatalog();
             flatModelTripleRepository.deleteAll();
 
             Long end = System.nanoTime();
@@ -199,6 +176,20 @@ public class QuadImportService implements IQuadImportService {
         } catch (RiotException | IOException e) {
             throw new RiotException(e.getMessage());
         }
+    }
+
+    /**
+     * Deletes all the elements inside the database
+     */
+    @Override
+    public void resetDatabase() {
+        flatModelQuadRepository.deleteAll();
+        flatModelTripleRepository.deleteAll();
+        rdfVersionedQuadRepository.deleteAll();
+        rdfVersionedNamedGraphRepository.deleteAll();
+        versionRepository.deleteAll();
+        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
+        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
     }
 
     /**

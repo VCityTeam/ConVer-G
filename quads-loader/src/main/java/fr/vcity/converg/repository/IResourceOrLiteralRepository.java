@@ -18,55 +18,31 @@ public interface IResourceOrLiteralRepository extends CrudRepository<ResourceOrL
 
     @Query("""
             INSERT INTO resource_or_literal (name, type)
-            SELECT fmq.subject, fmq.subject_type
-                FROM flat_model_quad fmq
-            ON CONFLICT DO NOTHING
-            """)
-    @Modifying
-    void flatModelQuadsSubjectToCatalog();
-
-    @Query("""
-            INSERT INTO resource_or_literal (name, type)
-            SELECT fmq.predicate, fmq.predicate_type
-                FROM flat_model_quad fmq
-            ON CONFLICT DO NOTHING
-            """)
-    @Modifying
-    void flatModelQuadsPredicateToCatalog();
-
-    @Query("""
-            INSERT INTO resource_or_literal (name, type)
             SELECT fmq.object, fmq.object_type
                 FROM flat_model_quad fmq
-            ON CONFLICT DO NOTHING
+            UNION
+            SELECT fmq.predicate, fmq.predicate_type
+                FROM flat_model_quad fmq
+            UNION
+            SELECT fmq.subject, fmq.subject_type
+                FROM flat_model_quad fmq
+            ON CONFLICT DO NOTHING;
             """)
     @Modifying
-    void flatModelQuadsObjectToCatalog();
+    void flatModelQuadsToCatalog();
 
     @Query("""
             INSERT INTO resource_or_literal (name, type)
             SELECT fmt.subject, fmt.subject_type
                 FROM flat_model_triple fmt
-            ON CONFLICT DO NOTHING
-            """)
-    @Modifying
-    void flatModelTriplesSubjectToCatalog();
-
-    @Query("""
-            INSERT INTO resource_or_literal (name, type)
+            UNION
             SELECT fmt.predicate, fmt.predicate_type
                 FROM flat_model_triple fmt
-            ON CONFLICT DO NOTHING
-            """)
-    @Modifying
-    void flatModelTriplesPredicateToCatalog();
-
-    @Query("""
-            INSERT INTO resource_or_literal (name, type)
+            UNION
             SELECT fmt.object, fmt.object_type
                 FROM flat_model_triple fmt
             ON CONFLICT DO NOTHING
             """)
     @Modifying
-    void flatModelTriplesObjectToCatalog();
+    void flatModelTriplesToCatalog();
 }
