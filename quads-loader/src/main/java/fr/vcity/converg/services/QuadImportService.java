@@ -5,14 +5,13 @@ import fr.vcity.converg.dao.Version;
 import fr.vcity.converg.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.riot.system.ErrorHandlerFactory;
-import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.riot.system.StreamRDFBase;
+import org.apache.jena.sparql.core.Quad;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,8 +19,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -66,6 +66,10 @@ public class QuadImportService implements IQuadImportService {
     IVersionRepository versionRepository;
     VersionedQuadComponent versionedQuadComponent;
 
+    List<QuadValueType> quadValueTypes = new ArrayList<>();
+    Set<String> namedGraphs = new HashSet<>();
+    List<TripleValueType> tripleValueTypes = new ArrayList<>();
+
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
             IFlatModelTripleRepository flatModelTripleRepository,
@@ -106,18 +110,12 @@ public class QuadImportService implements IQuadImportService {
 
         log.info("Current file: {}", file.getOriginalFilename());
 
-        try (InputStream inputStream = file.getInputStream()) {
-            DatasetGraph datasetGraph =
-                    RDFParser.create()
-                            .source(inputStream)
-                            .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
-                            .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                            .toDatasetGraph();
 
+        try (InputStream inputStream = file.getInputStream()) {
             Long start = System.nanoTime();
 
-            extractAndInsertVersionedNamedGraph(file, datasetGraph, version);
-            extractAndInsertQuads(datasetGraph, version);
+            getQuadsStreamRDF(inputStream, file.getOriginalFilename(), version.getIndexVersion())
+                    .finish();
 
             log.info("Saving quads to catalog");
             rdfResourceRepository.flatModelQuadsToCatalog();
@@ -149,23 +147,10 @@ public class QuadImportService implements IQuadImportService {
         log.info("Current file: {}", file.getOriginalFilename());
 
         try (InputStream inputStream = file.getInputStream()) {
-            DatasetGraph datasetGraph =
-                    RDFParser.create()
-                            .source(inputStream)
-                            .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(file.getOriginalFilename())))
-                            .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                            .toDatasetGraph();
-
             Long start = System.nanoTime();
 
-            if (!datasetGraph.getDefaultGraph().isEmpty()) {
-                importDefaultModel(datasetGraph.getDefaultGraph());
-            }
-
-            for (Iterator<Node> i = datasetGraph.listGraphNodes(); i.hasNext(); ) {
-                var graphNode = i.next();
-                importDefaultModel(datasetGraph.getGraph(graphNode));
-            }
+            getTriplesStreamRDF(inputStream, file.getOriginalFilename())
+                    .finish();
 
             log.info("Saving triples to catalog");
             rdfResourceRepository.flatModelTriplesToCatalog();
@@ -200,96 +185,99 @@ public class QuadImportService implements IQuadImportService {
     }
 
     /**
-     * Import RDF default model statements
-     *
-     * @param graph The default graph
+     * Save the triples in batch
      */
-    private void importDefaultModel(Graph graph) {
-        List<TripleValueType> tripleValueTypes = new ArrayList<>();
-
-        graph.stream()
-                .forEach(triple -> {
-                    tripleValueTypes.add(getTripleValueType(triple));
-
-                    if (tripleValueTypes.size() == 50000) {
-                        log.info("50000 records found. Executing batch save triples");
-                        metadataComponent.saveTriples(tripleValueTypes);
-                        tripleValueTypes.clear();
-                    }
-                });
-
-        if (!tripleValueTypes.isEmpty()) {
-            metadataComponent.saveTriples(tripleValueTypes);
-        }
+    private void saveBatchTriples() {
+        metadataComponent.saveTriples(tripleValueTypes);
+        tripleValueTypes.clear();
     }
 
     /**
-     * Extract and insert the quads
-     *
-     * @param datasetGraph The datasetGraph
-     * @param version      The version
+     * Save the quads in batch
      */
-    private void extractAndInsertQuads(DatasetGraph datasetGraph, Version version) {
-        List<QuadValueType> quadValueTypes = new ArrayList<>();
-
-        datasetGraph.stream()
-                .forEach(quad -> {
-                    QuadValueType quadValueType = new QuadValueType(
-                            getTripleValueType(
-                                    quad.asTriple()
-                            ),
-                            quad.getGraph().getURI(),
-                            version.getIndexVersion() - 1
-                    );
-                    quadValueTypes.add(quadValueType);
-
-                    if (quadValueTypes.size() == 50000) {
-                        log.info("50000 records found. Executing batch save quads");
-                        versionedQuadComponent.saveQuads(quadValueTypes);
-                        quadValueTypes.clear();
-                    }
-                });
-
-        datasetGraph.getDefaultGraph()
-                .stream()
-                .forEach(triple -> {
-                    QuadValueType quadValueType = new QuadValueType(getTripleValueType(triple), defaultGraphURI.getName(), version.getIndexVersion() - 1);
-                    quadValueTypes.add(quadValueType);
-
-                    if (quadValueTypes.size() == 50000) {
-                        log.info("50000 records found. Executing batch save quads");
-                        versionedQuadComponent.saveQuads(quadValueTypes);
-                        quadValueTypes.clear();
-                    }
-                });
-
-        if (!quadValueTypes.isEmpty()) {
-            versionedQuadComponent.saveQuads(quadValueTypes);
-        }
+    private void saveBatchQuads() {
+        versionedQuadComponent.saveQuads(quadValueTypes);
+        quadValueTypes.clear();
     }
 
     /**
-     * Extract and insert the versioned named graph
+     * Save the versioned named graph in batch
      *
-     * @param file         The input file
-     * @param datasetGraph The datasetGraph
-     * @param version      The version
+     * @param filename The input filename
+     * @param version  The version number
      */
-    private void extractAndInsertVersionedNamedGraph(MultipartFile file, DatasetGraph datasetGraph, Version version) {
-        List<String> namedGraphs = new ArrayList<>();
+    private void saveBatchVersionedNamedGraph(String filename, Integer version) {
+        versionedNamedGraphComponent.saveVersionedNamedGraph(namedGraphs.stream().toList(), filename, version);
+        namedGraphs.clear();
+    }
 
-        for (Iterator<Node> i = datasetGraph.listGraphNodes(); i.hasNext(); ) {
-            var namedModel = i.next();
-            namedGraphs.add(namedModel.getURI());
-        }
+    /**
+     * Converts a stream into a stream of quads
+     *
+     * @param in The input stream of the dataset
+     * @return A stream of quads
+     */
+    private StreamRDF getQuadsStreamRDF(InputStream in, String filename, Integer version) {
+        StreamRDF quadStreamRDF = new StreamRDFBase() {
+            @Override
+            public void quad(Quad quad) {
+                namedGraphs.add(quad.getGraph().getURI());
+                quadValueTypes.add(new QuadValueType(
+                        getTripleValueType(quad.asTriple()),
+                        quad.getGraph().getURI(),
+                        version - 1
+                ));
 
-        if (!datasetGraph.getDefaultGraph().isEmpty()) {
-            namedGraphs.add(defaultGraphURI.getName());
-        }
+                if (namedGraphs.size() == 50000) {
+                    log.info("50000 named graph records found. Executing batch save named graph");
+                    saveBatchVersionedNamedGraph(filename, version);
+                }
 
-        if (!namedGraphs.isEmpty()) {
-            versionedNamedGraphComponent.saveVersionedNamedGraph(namedGraphs, file.getOriginalFilename(), version.getIndexVersion());
-        }
+                if (quadValueTypes.size() == 50000) {
+                    log.info("50000 quads records found. Executing batch save quads");
+                    saveBatchQuads();
+                }
+            }
+        };
+
+        RDFParser.create()
+                .source(in)
+                .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(filename)))
+                .parse(quadStreamRDF);
+
+        saveBatchVersionedNamedGraph(filename, version);
+        saveBatchQuads();
+
+        return quadStreamRDF;
+    }
+
+    /**
+     * Converts a stream into a stream of quads
+     *
+     * @param in The input stream of the dataset
+     * @return A stream of quads
+     */
+    private StreamRDF getTriplesStreamRDF(InputStream in, String filename) {
+        StreamRDF tripleStreamRDF = new StreamRDFBase() {
+            @Override
+            public void triple(Triple triple) {
+                tripleValueTypes.add(getTripleValueType(triple));
+
+                if (tripleValueTypes.size() == 50000) {
+                    log.info("50000 triples records found. Executing batch save quads");
+                    saveBatchTriples();
+                }
+            }
+        };
+
+        RDFParser.create()
+                .source(in)
+                .lang(RDFLanguages.nameToLang(FilenameUtils.getExtension(filename)))
+                .parse(tripleStreamRDF);
+
+        saveBatchTriples();
+
+        return tripleStreamRDF;
     }
 
     /**
