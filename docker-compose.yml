@@ -1,27 +1,87 @@
-version: '3.0'
-
 services:
   postgres:
-    image: postgres:15
+    image: postgres@sha256:4ec37d2a07a0067f176fdcc9d4bb633a5724d2cc4f892c7a2046d054bb6939e5
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=sparqltosql
+      - POSTGRES_DB=converg
     volumes:
       - pg-volume:/var/lib/postgresql/data
+    command: ["postgres", "-c", "log_min_duration_statement=250"]
+    deploy:
+      resources:
+        limits:
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
 
   postgres-test:
-    image: postgres:15
+    image: postgres@sha256:4ec37d2a07a0067f176fdcc9d4bb633a5724d2cc4f892c7a2046d054bb6939e5
     ports:
       - "5433:5432"
     environment:
       - POSTGRES_USER=postgres-test
       - POSTGRES_PASSWORD=password-test
-      - POSTGRES_DB=sparqltosql-test
+      - POSTGRES_DB=converg-test
     volumes:
       - pg-volume-test:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
+
+  blazegraph:
+    image: vcity/blazegraph-cors@sha256:c6f9556ca53ff01304557e349d2f10b3e121dae7230426f4c64fa42b2cbaf805
+    ports:
+      - "9999:8080"
+    container_name: blazegraph
+    environment:
+      - "BLAZEGRAPH_QUADS=true"
+    deploy:
+      resources:
+        limits:
+          cpus: ${BD_CPU_LIMITATION:-0.000}
+          memory: ${BD_RAM_LIMITATION:-16Gb}
+
+  ud-quads-loader:
+#    build:
+#      context: quads-loader
+#      dockerfile: Dockerfile
+    image: vcity/quads-loader@sha256:9ddb6b97427b0a6c973345ef5797e1f0fa5f8b1e456e8ef17ccd712d827896e8
+    depends_on:
+      - postgres
+    environment:
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
+      - "SPRING_DATASOURCE_USERNAME=postgres"
+      - "SPRING_DATASOURCE_PASSWORD=password"
+    ports:
+      - "8080:8080"
+    container_name: quads-loader
+
+  ud-quads-query:
+    build:
+      context: quads-query
+      dockerfile: Dockerfile
+      args:
+        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg
+        - DATASOURCE_USERNAME=postgres
+        - DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+    environment:
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
+      - "DATASOURCE_USERNAME=postgres"
+      - "DATASOURCE_PASSWORD=password"
+    ports:
+      - "8081:8081"
+    container_name: quads-query
+    deploy:
+      resources:
+        limits:
+          cpus: ${QUERY_CPU_LIMITATION:-0.000}
+          memory: ${QUERY_RAM_LIMITATION:-16Gb}
 
 volumes:
   pg-volume:
