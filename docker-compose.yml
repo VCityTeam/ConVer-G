@@ -46,9 +46,10 @@ services:
           memory: ${BD_RAM_LIMITATION:-16Gb}
 
   ud-quads-loader:
-    build:
-      context: quads-loader
-      dockerfile: Dockerfile
+#    build:
+#      context: quads-loader
+#      dockerfile: Dockerfile
+    image: vcity/quads-loader@sha256:9ddb6b97427b0a6c973345ef5797e1f0fa5f8b1e456e8ef17ccd712d827896e8
     depends_on:
       - postgres
     environment:
