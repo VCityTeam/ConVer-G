@@ -64,7 +64,7 @@ Using a SQL as a backend for SPARQL has been done in some cases.
 ### Installation
 
 This project uses Java 21 JDK + Maven and
-a [dockerized (make sure that Docker is installed too)](https://www.docker.com/) [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html).
+a [dockerized (make sure that Docker is installed too)](https://www.docker.com/) [PostgreSQL 17 database](https://www.postgresql.org/docs/17/index.html).
 If you don't have Java 21 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this
 tool to set Java 21 as current session version.
 
@@ -88,7 +88,7 @@ This project:
 - uses the `jena-arq` library for parsing SPARQL statements in Java,
 - uses the `springdoc-openapi-starter-webmvc-ui` library to parse the Swagger API annotations and displays
   the [swagger-ui](http://localhost:8080/swagger-ui/index.html),
-- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html), so the `postgresql` driver is
+- needs a [PostgreSQL 17 database](https://www.postgresql.org/docs/17/index.html), so the `postgresql` driver is
   installed too.
 
 This project has been tested with:
@@ -101,7 +101,7 @@ This project has been tested with:
 This project:
 
 - uses the `jena-fuseki-server` Apache Jena Fuseki is a SPARQL server,
-- needs a [PostgreSQL 16 database](https://www.postgresql.org/docs/16/index.html) if you use this target language, so
+- needs a [PostgreSQL 17 database](https://www.postgresql.org/docs/17/index.html) if you use this target language, so
   the `postgresql` driver is
   installed too.
 
