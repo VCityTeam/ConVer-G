@@ -32,9 +32,14 @@ public class QuadImportController {
             @ApiResponse(responseCode = "200", description = "The quads were added to a new version"),
             @ApiResponse(responseCode = "400", description = "Invalid content")}
     )
-    @PostMapping(value = {"/version"})
+    @PostMapping(value = {"/version"}, consumes = "multipart/form-data")
     ResponseEntity<Integer> importModel(
-            @Parameter(description = "The file containing all the triple/quads to import as valid in a new version", name = "file")
+            @Parameter(
+                    description = "The file containing all the triple/quads to import as valid in a new version",
+                    name = "file",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "string", format = "binary"))
+            )
             @RequestParam("file") MultipartFile file
     ) {
         try {
@@ -55,9 +60,13 @@ public class QuadImportController {
             @ApiResponse(responseCode = "200", description = "The triple were added to a new metadata"),
             @ApiResponse(responseCode = "400", description = "Invalid content")}
     )
-    @PostMapping(value = {"/metadata"})
+    @PostMapping(value = {"/metadata"}, consumes = "multipart/form-data")
     ResponseEntity<Void> importMetadata(
-            @Parameter(description = "The file containing all the triple to import as valid in a new metadata", name = "file")
+            @Parameter(description = "The file containing all the triple to import as valid in a new metadata",
+                    name = "file",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "string", format = "binary"))
+            )
             @RequestParam("file") MultipartFile file
     ) {
         try {
