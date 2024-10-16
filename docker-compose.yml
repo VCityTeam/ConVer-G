@@ -49,7 +49,7 @@ services:
 #    build:
 #      context: quads-loader
 #      dockerfile: Dockerfile
-    image: vcity/quads-loader@sha256:9ddb6b97427b0a6c973345ef5797e1f0fa5f8b1e456e8ef17ccd712d827896e8
+    image: vcity/quads-loader@sha256:3e81c83d08e956b79af8b69b60c2f84d723184a21f5663b781ed8431e2fcca76
     depends_on:
       - postgres
     environment:

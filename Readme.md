@@ -7,6 +7,8 @@ The project is part of the BD team's research efforts within the [LIRIS](https:/
 and [VCity project](https://projet.liris.cnrs.fr/vcity/).
 The aim of this POC is to query a set of city version and extract associated knowledge.
 
+> This system has a demonstration and its code source is [available on GitHub](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution).
+
 ## Motivations
 
 ### Why create a "SPARQL to SQL" translator rather than a from scratch engine?
