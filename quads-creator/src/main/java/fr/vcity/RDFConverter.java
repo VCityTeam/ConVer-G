@@ -203,15 +203,15 @@ public class RDFConverter {
     /**
      * This function generates the output file name
      *
-     * @param inputFolder The folder containing the input files
-     * @param inputFile   The input file name
+     * @param outputFolder The folder containing the output files
+     * @param inputFile    The input file name
      * @return The built output file name
      */
-    private String getOutputFileName(String inputFolder, String inputFile) {
+    private String getOutputFileName(String outputFolder, String inputFile) {
         if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
-            return getInputFileName(inputFolder, inputFile) + ".theoretical.trig";
+            return getInputFileName(outputFolder, inputFile) + ".theoretical.trig";
         } else {
-            return getInputFileName(inputFolder, inputFile) + ".relational.trig";
+            return getInputFileName(outputFolder, inputFile) + ".relational.trig";
         }
     }
 
