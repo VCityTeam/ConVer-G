@@ -1,0 +1,8 @@
+# Find the max rating of reviews in each versioned graph
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+SELECT ?vg (MAX(?rating) as ?maxrating) WHERE {
+  GRAPH ?vg {
+      ?s a bsbm:Review ;
+  			bsbm:rating3 ?rating .
+  }
+} GROUP BY ?vg

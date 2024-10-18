@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.jena.riot.RiotException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Import API")
 @RequestMapping("/import")
 public class QuadImportController {
+
+    @Value("${quad.importer.enabled}")
+    boolean quadImporterEnabled;
+
     QuadImportService quadImportService;
 
     public QuadImportController(QuadImportService quadImportService) {
@@ -43,8 +48,12 @@ public class QuadImportController {
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            Integer indexVersion = quadImportService.importModel(file);
-            return ResponseEntity.ok(indexVersion);
+            if (quadImporterEnabled) {
+                Integer indexVersion = quadImportService.importModel(file);
+                return ResponseEntity.ok(indexVersion);
+            } else {
+                return ResponseEntity.ok(null);
+            }
         } catch (RiotException e) {
             return ResponseEntity
                     .badRequest()
@@ -70,7 +79,10 @@ public class QuadImportController {
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            quadImportService.importMetadata(file);
+            if (quadImporterEnabled) {
+                quadImportService.importMetadata(file);
+            }
+
             return ResponseEntity.ok().build();
         } catch (RiotException e) {
             return ResponseEntity
@@ -88,6 +100,8 @@ public class QuadImportController {
     })
     @DeleteMapping(value = {"/metadata"})
     void removeMetadata() {
-        quadImportService.removeMetadata();
+        if (quadImporterEnabled) {
+            quadImportService.removeMetadata();
+        }
     }
 }

@@ -4,4 +4,4 @@ SELECT ?g ?s ?p ?o WHERE {
       ?s ?p ?o .
     }
     FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
-}
+}  LIMIT 1000

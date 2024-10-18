@@ -1,0 +1,11 @@
+# Give the graph name (metadata) of the versioned graph containing the product feature 287 and its type
+SELECT ?version ?p1 ?o1 ?type WHERE {
+    GRAPH ?vg {
+      <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p1 ?o1 ;
+        a ?type .
+    }
+
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+         ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-in-version> 	?version .
+    }
+}

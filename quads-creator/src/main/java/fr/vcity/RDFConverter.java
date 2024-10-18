@@ -81,7 +81,7 @@ public class RDFConverter {
         getStreamRDF(inputFileName, outputFile, graphURI)
                 .finish();
 
-        getMetadataStreamRDF(inputFileName, graphURI)
+        getMetadataStreamRDF(inputFile, graphURI)
                 .finish();
     }
 

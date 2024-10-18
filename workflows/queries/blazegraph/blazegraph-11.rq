@@ -1,0 +1,14 @@
+# Find the number of rating of reviews in each graph
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT ?version (AVG(?rating) as ?avgrating) WHERE {
+  GRAPH ?vg {
+      ?s a bsbm:Review ;
+  			bsbm:rating3 ?rating .
+  }
+
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+    ?vg vers:is-in-version ?version .
+  }
+} GROUP BY ?version

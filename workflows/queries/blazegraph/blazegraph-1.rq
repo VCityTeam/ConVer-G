@@ -3,4 +3,4 @@ SELECT ?s ?p ?o WHERE {
     GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
         ?s ?p ?o .
     }
-}
+} LIMIT 1000

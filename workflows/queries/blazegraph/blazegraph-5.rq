@@ -1,5 +1,5 @@
 # Query the graph store for all quads with a given subject and a join on the predicate and subject (object might be equal to object2)
-SELECT ?graph ?subject ?predicate ?object ?object2 WHERE {
+SELECT ?graph ?predicate ?object ?object2 WHERE {
     GRAPH ?graph {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?predicate ?object ,
         ?object2 .
