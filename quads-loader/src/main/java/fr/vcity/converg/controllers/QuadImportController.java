@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/import")
 public class QuadImportController {
 
-    @Value("${quad.importer.enabled}")
+    @Value("${quad.importer.enabled:true}")
     boolean quadImporterEnabled;
 
     QuadImportService quadImportService;
