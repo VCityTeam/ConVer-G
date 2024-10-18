@@ -208,11 +208,7 @@ public class RDFConverter {
      * @return The built output file name
      */
     private String getOutputFileName(String outputFolder, String inputFile) {
-        if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
-            return getInputFileName(outputFolder, inputFile) + ".theoretical.trig";
-        } else {
-            return getInputFileName(outputFolder, inputFile) + ".relational.trig";
-        }
+        return getInputFileName(outputFolder, inputFile) + ".trig";
     }
 
     /**
