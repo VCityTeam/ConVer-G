@@ -1,6 +1,6 @@
 # Query the graph store for all quads in a specific versioned graph with a given subject and a join on the subject (predicate might be equal to predicate2 and object might be equal to object2)
 SELECT ?p ?o WHERE {
-    GRAPH <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#f9f46affceacefb7f493e84dd18206309777c31cdfa09d0b7e945961eac004b9> {
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#e65bf1f62e97fdcfa2db4f5ada20719afc1389387c9b6ef53603d6bf2d882a1f> {
       <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p ?o ;
         ?p2 ?o2 .
     }
