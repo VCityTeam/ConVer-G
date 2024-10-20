@@ -4,7 +4,7 @@
 # Import the data inside the Relational Database (through quads-loader import endpoint)
 ######################################################
 
-cd ../dataset/quads/data/relational || exit
+cd ../dataset/quads/alt/relational || exit
 
 echo "------------------------------------------------------------ [BEGIN IMPORT RELATIONAL] ------------------------------------------------------------"
 printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import started."

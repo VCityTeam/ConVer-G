@@ -24,11 +24,13 @@ echo "----------------------------------------------------------------- [BEGIN W
 /bin/bash ./bsbm/transform-2.sh
 
 start_import_relational=$(date +%s%3N)
+/bin/bash ./bsbm/import_relational-1.sh "$1"
 /bin/bash ./bsbm/import_relational-2.sh "$1"
 end_import_relational=$(date +%s%3N)
 printf "[Measure] {Import relational} Import duration: %s ms\n" "$((end_import_relational-start_import_relational))"
 
 start_import_triple=$(date +%s%3N)
+/bin/bash ./bsbm/import_triple-1.sh "$1"
 /bin/bash ./bsbm/import_triple-2.sh "$1"
 end_import_triple=$(date +%s%3N)
 printf "[Measure] {Import triple} Import duration: %s ms\n" "$((end_import_triple-start_import_triple))"

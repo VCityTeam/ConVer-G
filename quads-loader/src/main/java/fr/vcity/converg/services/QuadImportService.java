@@ -114,14 +114,25 @@ public class QuadImportService implements IQuadImportService {
         try (InputStream inputStream = file.getInputStream()) {
             Long start = System.nanoTime();
 
+            Long startBatching = System.nanoTime();
             getQuadsStreamRDF(inputStream, file.getOriginalFilename(), version.getIndexVersion())
                     .finish();
+            Long endBatching = System.nanoTime();
+            log.info("[Measure] (Batching): {} ns for file: {};", endBatching - startBatching, file.getOriginalFilename());
 
             log.info("Saving quads to catalog");
+            Long startCatalog = System.nanoTime();
             rdfResourceRepository.flatModelQuadsToCatalog();
+            Long endCatalog = System.nanoTime();
+            log.info("[Measure] (Catalog): {} ns for file: {};", endCatalog - startCatalog, file.getOriginalFilename());
+
             log.info("Condensing quads to catalog");
+            Long startCondensing = System.nanoTime();
             rdfVersionedQuadRepository.condenseModel();
             rdfVersionedQuadRepository.updateValidityVersionedQuad();
+            Long endCondensing = System.nanoTime();
+            log.info("[Measure] (Condensing): {} ns for file: {};", endCondensing - startCondensing, file.getOriginalFilename());
+
             flatModelQuadRepository.deleteAll();
 
             Long end = System.nanoTime();

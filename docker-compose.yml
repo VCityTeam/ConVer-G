@@ -39,6 +39,8 @@ services:
     container_name: blazegraph
     environment:
       - "BLAZEGRAPH_QUADS=true"
+      - "BLAZEGRAPH_TIMEOUT=600000"
+      - "BLAZEGRAPH_MEMORY=12G"
     deploy:
       resources:
         limits:

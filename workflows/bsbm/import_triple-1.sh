@@ -4,7 +4,7 @@
 # Import the data inside the Triple Store
 ######################################################
 
-cd ../dataset/quads/data/theoretical || exit
+cd ../dataset/quads/alt/theoretical || exit
 
 echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
 printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
