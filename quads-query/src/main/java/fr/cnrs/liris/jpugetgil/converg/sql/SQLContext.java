@@ -14,7 +14,12 @@ import java.util.Map;
  * @param sqlVariables         The variables of the SQL query made by the context
  * @param condensedMode        If the condensed mode is activated
  */
-public record SQLContext(Node graph, Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences, List<SQLVariable> sqlVariables, boolean condensedMode) {
+public record SQLContext(
+        Node graph,
+        Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences,
+        List<SQLVariable> sqlVariables,
+        boolean condensedMode
+) {
     public SQLContext setGraph(Node newGraph) {
         return new SQLContext(newGraph, sparqlVarOccurrences, sqlVariables, condensedMode);
     }

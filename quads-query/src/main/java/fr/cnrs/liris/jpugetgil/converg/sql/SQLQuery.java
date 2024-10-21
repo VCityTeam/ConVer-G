@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.sql;
 
 import com.google.common.collect.Streams;
+import org.apache.jena.sparql.algebra.op.OpSlice;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -10,6 +11,8 @@ public class SQLQuery {
     private String sql;
 
     private final SQLContext context;
+
+    private OpSlice opSlice;
 
     public SQLQuery(String sql, SQLContext context) {
         this.sql = sql;
@@ -28,15 +31,36 @@ public class SQLQuery {
         return context;
     }
 
+    public void setOpSlice(OpSlice opSlice) {
+        this.opSlice = opSlice;
+    }
+
     public SQLQuery finalizeQuery() {
         String select = "SELECT " + getSelectVariablesResourceOrLiteral();
         String from = " FROM (" + this.sql + ") indexes_table";
         String join = getJoinVariablesResourceOrLiteral();
+        this.sql = select + from + join;
 
-        return new SQLQuery(
-                select + from + join,
+        if (this.opSlice != null) {
+            insertLimit();
+        }
+
+         return new SQLQuery(
+                this.sql,
                 this.context
         );
+    }
+
+    private void insertLimit() {
+        String select = "SELECT * ";
+        String from = " FROM (" + this. sql + ") sl \n";
+        String limit;
+        if (opSlice.getStart() > 0) {
+            limit = "LIMIT " + opSlice.getLength() + " OFFSET " + opSlice.getStart();
+        } else {
+            limit = "LIMIT " + opSlice.getLength();
+        }
+        this.sql = select + from + limit;
     }
 
     /**
