@@ -7,6 +7,7 @@ import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.*;
 
 /**
@@ -62,13 +64,16 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 
         Long end = System.nanoTime();
 
-        log.info("[Measure] (Query translation duration): {} ns;", end - start);
+        log.info("[Measure] (Query translation duration): {} ns for query: {};", end - start, query);
         log.info("Query result: {};", qu.getSql());
 
+        Long startExec = System.nanoTime();
         try (java.sql.ResultSet rs = jdbcConnection.executeSQL(qu.getSql())) {
+            Long endExec = System.nanoTime();
+            log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
 
             // Change the List implementation to the Iterator one (heap space)
-            List<Var> vars = new ArrayList<>();
+            Set<Var> vars = new HashSet<>();
             List<Binding> bindings = new ArrayList<>();
 
             while (Objects.requireNonNull(rs).next()) {
@@ -109,17 +114,17 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                         variableValue = null;
                     }
 
-                    if (!vars.contains(variable)) {
-                        vars.add(variable);
-                    }
+                    vars.add(variable);
 
-                    bindingBuilder.add(variable, variableValue);
+                    if (variableValue != null) {
+                        bindingBuilder.add(variable, variableValue);
+                    }
                 }
 
                 bindings.add(bindingBuilder.build());
             }
 
-            return ResultSetStream.create(vars, bindings.iterator());
+            return ResultSetStream.create(new ArrayList<>(vars), bindings.iterator());
 
         } catch (SQLException e) {
             log.error(e.getMessage());
@@ -256,47 +261,26 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return context;
     }
 
-    private String getAssociatedRDFType(int columnType) {
-        return switch (columnType) {
-            case java.sql.Types.INTEGER:
-                yield "http://www.w3.org/2001/XMLSchema#integer";
-            case java.sql.Types.BIGINT:
-                yield "http://www.w3.org/2001/XMLSchema#long";
-            case java.sql.Types.SMALLINT:
-                yield "http://www.w3.org/2001/XMLSchema#short";
-            case java.sql.Types.TINYINT:
-                yield "http://www.w3.org/2001/XMLSchema#byte";
-            case java.sql.Types.REAL, java.sql.Types.FLOAT:
-                yield "http://www.w3.org/2001/XMLSchema#float";
-            case java.sql.Types.DOUBLE:
-                yield "http://www.w3.org/2001/XMLSchema#double";
-            case java.sql.Types.DECIMAL, java.sql.Types.NUMERIC:
-                yield "http://www.w3.org/2001/XMLSchema#decimal";
-            case java.sql.Types.BOOLEAN:
-                yield "http://www.w3.org/2001/XMLSchema#boolean";
-            case java.sql.Types.DATE:
-                yield "http://www.w3.org/2001/XMLSchema#date";
-            case java.sql.Types.TIME:
-                yield "http://www.w3.org/2001/XMLSchema#time";
-            case java.sql.Types.TIMESTAMP:
-                yield "http://www.w3.org/2001/XMLSchema#dateTime";
-            case java.sql.Types.CHAR, java.sql.Types.VARCHAR, java.sql.Types.LONGVARCHAR:
-                yield "http://www.w3.org/2001/XMLSchema#string";
-            case java.sql.Types.BINARY, java.sql.Types.VARBINARY, java.sql.Types.LONGVARBINARY, java.sql.Types.BLOB:
-                yield "http://www.w3.org/2001/XMLSchema#hexBinary";
-            default:
-                yield "";
-        };
+    private boolean hasColumn(java.sql.ResultSet rs, String columnName) throws SQLException {
+        try {
+            rs.findColumn(columnName);
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
-    public static boolean hasColumn(java.sql.ResultSet rs, String columnName) throws SQLException {
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columns = rsmd.getColumnCount();
-        for (int x = 1; x <= columns; x++) {
-            if (columnName.equals(rsmd.getColumnName(x))) {
-                return true;
-            }
+    private String getAssociatedRDFType(int sqlType) {
+        // Implement this method to map SQL types to RDF types
+        // For example:
+        switch (sqlType) {
+            case Types.INTEGER:
+                return XSDDatatype.XSDinteger.getURI();
+            case Types.VARCHAR:
+                return XSDDatatype.XSDstring.getURI();
+            // Add more cases as needed
+            default:
+                return null;
         }
-        return false;
     }
 }
