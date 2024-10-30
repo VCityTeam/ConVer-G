@@ -35,7 +35,7 @@ public class StSExtendOperator extends StSOperator {
 
         List<SQLVariable> newSQLVariables = new ArrayList<>(this.sqlVariables);
         varExprList.getExprs().keySet()
-                .forEach(variable -> newSQLVariables.add(new SQLVariable(SQLVarType.AGGREGATED, variable.getVarName())));
+                .forEach(variable -> newSQLVariables.add(new SQLVariable(SQLVarType.AGGREGATED, variable.getVarName(), false)));
         SQLContext newSQLContext = sqlQuery.getContext()
                 .setSQLVariables(newSQLVariables);
 

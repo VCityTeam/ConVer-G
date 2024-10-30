@@ -21,13 +21,4 @@ docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker 
 
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation completed."
 
-## Adds data in test metadata
-printf "\n%s$(date +%FT%T) - [Transformations] Copy for test metadata started."
-### Adds BSBM tagged data in test metadata
-
-rm -rf ../quads-loader/src/test/resources/dataset
-mkdir -p ../quads-loader/src/test/resources/dataset
-cp quads/relational/* ../quads-loader/src/test/resources/dataset
-
-printf "\n%s$(date +%FT%T) - [Transformations] Copy for test metadata completed."
 echo "----------------------------------------------------------------- [END TRANSFORM] -----------------------------------------------------------------"

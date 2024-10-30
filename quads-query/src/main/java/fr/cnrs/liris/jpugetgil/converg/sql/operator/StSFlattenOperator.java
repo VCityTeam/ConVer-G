@@ -28,7 +28,7 @@ public class StSFlattenOperator extends StSOperator {
             if (sqlVariable.getSqlVarType() == SQLVarType.DATA) {
                 sqlVariables.add(sqlVariable);
             } else if (sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME) {
-                sqlVariables.add(new SQLVariable(SQLVarType.DATA, sqlVariable.getSqlVarName()));
+                sqlVariables.add(new SQLVariable(SQLVarType.DATA, sqlVariable.getSqlVarName(), true));
             }
         }
         SQLContext context = this.sqlQuery.getContext().setSQLVariables(sqlVariables);

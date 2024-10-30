@@ -37,8 +37,7 @@ public class StSGroupOperator extends StSOperator {
         String aggregatorsString;
 
         if (sqlQuery.getContext().condensedMode() &&
-                isAggregatedOnTriple() &&
-                isCountableAggregator()) {
+                isAggregatedOnTriple()) {
             log.info("Condensed mode and aggregation on triple and countable aggregators.");
             StringJoiner joiner = new StringJoiner(", ");
             for (ExprAggregator agg : op.getAggregators()) {
@@ -76,34 +75,21 @@ public class StSGroupOperator extends StSOperator {
     }
 
     /**
-     * Checks if the aggregation is a countable-compatible aggregator
-     *
-     * @return true if the aggregation is a countable-compatible aggregator, false otherwise
-     */
-    private boolean isCountableAggregator() {
-        return op.getAggregators()
-                .stream()
-                .allMatch(agg ->
-                        new Aggregator(agg).isCountable()
-                );
-    }
-
-    /**
      * Checks if the aggregation is done on the triple (not on the graph name)
      *
-     * @return true if the aggregation is done on the triple, false otherwise
+     * @return true if the aggregation is done on the triple of the graph, false otherwise
      */
     private boolean isAggregatedOnTriple() {
         return op.getGroupVars().getVars()
-                .stream()
-                .noneMatch(
-                        groupVar -> sqlQuery.getContext().sqlVariables()
-                                .stream()
-                                .anyMatch(
-                                        sqlVar -> sqlVar.getSqlVarName().equals(groupVar.getName()) &&
-                                                sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME
-                                )
-                );
+                    .stream()
+                    .noneMatch(
+                            groupVar -> sqlQuery.getContext().sqlVariables()
+                                    .stream()
+                                    .filter(sqlVar -> sqlVar.getSqlVarName().equals(groupVar.getName()))
+                                    .allMatch(
+                                            SQLVariable::isGraphNameOrMetadata
+                                    )
+                    );
     }
 
     /**
@@ -120,9 +106,9 @@ public class StSGroupOperator extends StSOperator {
                 .filter(sqlVar -> sqlVar.getSqlVarType() != SQLVarType.BIT_STRING)
                 .map(sqlVar -> {
                     if (sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME) {
-                        return new SQLVariable(SQLVarType.DATA, sqlVar.getSqlVarName(), true);
+                        return new SQLVariable(SQLVarType.DATA, sqlVar.getSqlVarName(), true, true);
                     } else {
-                        return new SQLVariable(sqlVar.getSqlVarType(), sqlVar.getSqlVarName(), true);
+                        return new SQLVariable(sqlVar.getSqlVarType(), sqlVar.getSqlVarName(), false, true);
                     }
                 }).toList();
 
@@ -144,9 +130,9 @@ public class StSGroupOperator extends StSOperator {
                 .filter(sqlVar -> sqlVar.getSqlVarType() != SQLVarType.BIT_STRING)
                 .map(sqlVar -> {
                     if (sqlVar.getSqlVarType() == SQLVarType.GRAPH_NAME) {
-                        return new SQLVariable(SQLVarType.DATA, sqlVar.getSqlVarName());
+                        return new SQLVariable(SQLVarType.DATA, sqlVar.getSqlVarName(), true);
                     } else {
-                        return new SQLVariable(sqlVar.getSqlVarType(), sqlVar.getSqlVarName());
+                        return new SQLVariable(sqlVar.getSqlVarType(), sqlVar.getSqlVarName(), false);
                     }
                 }).toList();
 

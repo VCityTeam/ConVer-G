@@ -26,7 +26,7 @@ public class StSProjectOperator extends StSOperator {
         List<SQLVariable> sqlVariables = new ArrayList<>();
         for (SQLVariable sqlVariable : this.sqlVariables) {
             if (sqlVariable.getSqlVarType() == SQLVarType.AGGREGATED) {
-                sqlVariables.add(new SQLVariable(sqlVariable.getSqlVarType(), sqlVariable.getSqlVarName(), true));
+                sqlVariables.add(new SQLVariable(sqlVariable.getSqlVarType(), sqlVariable.getSqlVarName(), sqlVariable.isGraphNameOrMetadata()));
             } else if (op.getVars().stream()
                             .anyMatch(variable -> variable.getName().equals(sqlVariable.getSqlVarName()))) {
                 sqlVariables.add(sqlVariable);

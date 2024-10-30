@@ -51,24 +51,6 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
         };
     }
 
-    public boolean isCountable() {
-        return switch (this.getJenaExpr().getAggregator()) {
-            case AggCount ignored -> true; // Done
-//            case AggCountDistinct ignored -> true;
-            case AggCountVar ignored -> true;
-//            case AggCountVarDistinct ignored -> true;
-            case AggAvg ignored -> true; // TODO: to test
-//            case AggAvgDistinct ignored -> true;
-//            case AggMax ignored -> true;
-//            case AggMaxDistinct ignored -> true;
-//            case AggMin ignored -> true;
-//            case AggMinDistinct ignored -> true;
-            case AggSum ignored -> true; // TODO: to test
-//            case AggSumDistinct ignored -> true;
-            default -> false;
-        };
-    }
-
     public boolean isValueRequired() {
         return this.getAggregator().getRequiresValue();
     }

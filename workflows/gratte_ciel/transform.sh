@@ -54,13 +54,3 @@ docker ps --filter name=theoretical_annotate_graph-* -aq | xargs docker stop | x
 #docker ps --filter name=annotate_graph-* -aq | xargs docker stop | xargs docker rm
 
 printf "\n%s$(date +%FT%T) - [Transformations] Version annotation completed."
-
-## Adds data in test workspace
-printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace started."
-### Adds Grand-Lyon tagged data in test workspace
-
-rm -rf ../quads-loader/src/test/resources/dataset
-mkdir -p ../quads-loader/src/test/resources/dataset
-cp quads/relational/* ../quads-loader/src/test/resources/dataset
-
-printf "\n%s$(date +%FT%T) - [Transformations] Copy for test workspace completed."

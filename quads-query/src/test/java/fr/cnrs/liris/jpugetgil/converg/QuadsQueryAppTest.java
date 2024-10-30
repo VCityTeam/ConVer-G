@@ -3,7 +3,12 @@ package fr.cnrs.liris.jpugetgil.converg;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import jakarta.json.Json;
+import org.apache.jena.atlas.json.JSON;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -18,8 +23,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,11 +40,11 @@ class QuadsQueryAppTest {
 
     @Order(1)
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6"})
+    @ValueSource(strings = {"0", "1", "2", "3", "5", "6", "7", "8", "9", "10", "11"})
     void querySPARQLN(String queryNumber) throws Exception {
         log.info("Query number : " + queryNumber);
-        Path pathSts = Path.of("src/test/resources/queries/sparql/sts/sts-" + queryNumber + ".rq");
-        Path pathBlazegraph = Path.of("src/test/resources/queries/sparql/blazegraph/blazegraph-" + queryNumber + ".rq");
+        Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/blazegraph/blazegraph-" + queryNumber + ".rq");
         HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);
         HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
 
@@ -94,16 +102,31 @@ class QuadsQueryAppTest {
         JsonNode rootQuadsQuery = objectMapper.readTree(actual);
         JsonNode rootBlazegraph = objectMapper.readTree(expected);
 
-        List<String> varsStS = new ArrayList<>();
+        List<String> varsQuadsQuery = new ArrayList<>();
         List<String> varsBlazegraph = new ArrayList<>();
 
         assertEquals(rootBlazegraph.get("head").get("vars").size(), rootQuadsQuery.get("head").get("vars").size());
 
-        rootQuadsQuery.get("head").get("vars").forEach(variable -> varsStS.add(variable.asText()));
+        rootQuadsQuery.get("head").get("vars").forEach(variable -> varsQuadsQuery.add(variable.asText()));
         rootBlazegraph.get("head").get("vars").forEach(variable -> varsBlazegraph.add(variable.asText()));
-        assertTrue(varsStS.containsAll(varsBlazegraph));
+        assertTrue(varsQuadsQuery.containsAll(varsBlazegraph));
 
-        assertEquals(rootBlazegraph.get("results").get("bindings").size(), rootQuadsQuery.get("results").get("bindings").size());
-        // TODO : Check if the results are the same
+        JsonNode bgJSONNode = rootBlazegraph.get("results").get("bindings");
+        JsonNode quadsQueryJSONNode = rootQuadsQuery.get("results").get("bindings");
+
+        assertEquals(bgJSONNode.size(), quadsQueryJSONNode.size());
+
+        for (int i = 0; i < quadsQueryJSONNode.size(); i++) {
+                assertTrue(findMatchingJSONNode(bgJSONNode, bgJSONNode.get(i)));
+        }
+    }
+
+    private boolean findMatchingJSONNode(JsonNode json, JsonNode matcher) {
+        for (int i = 0; i < json.size(); i++) {
+            if (json.get(i).equals(matcher)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -21,35 +21,35 @@ public class SQLVariable {
 
     private boolean isValue = false;
 
-    public SQLVariable(SQLVarType sqlVarType, String sqlVarName) {
+    private boolean isGraphNameOrMetadata;
+
+    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isGraphNameOrMetadata) {
         this.sqlVarType = sqlVarType;
         this.sqlVarName = sqlVarName;
+        this.isGraphNameOrMetadata = isGraphNameOrMetadata;
     }
 
-    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isValue) {
+    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isGraphNameOrMetadata, boolean isValue) {
         this.sqlVarType = sqlVarType;
         this.sqlVarName = sqlVarName;
         this.isValue = isValue;
+        this.isGraphNameOrMetadata = isGraphNameOrMetadata;
     }
 
     public SQLVarType getSqlVarType() {
         return sqlVarType;
     }
 
-    public void setSqlVarType(SQLVarType sqlVarType) {
-        this.sqlVarType = sqlVarType;
-    }
-
     public String getSqlVarName() {
         return sqlVarName;
     }
 
-    public void setSqlVarName(String sqlVarName) {
-        this.sqlVarName = sqlVarName;
-    }
-
     public boolean isValue() {
         return isValue;
+    }
+
+    public boolean isGraphNameOrMetadata() {
+        return isGraphNameOrMetadata;
     }
 
     public String join(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {

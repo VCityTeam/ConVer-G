@@ -48,7 +48,7 @@ public class StSBGPOperator extends StSOperator {
      */
     private String generateSelect() {
         if (context.graph() instanceof Node_Variable) {
-            this.sqlVariables.add(new SQLVariable(SQLVarType.BIT_STRING, context.graph().getName(), false));
+            this.sqlVariables.add(new SQLVariable(SQLVarType.BIT_STRING, context.graph().getName(), true, false));
             return intersectionValidity() + " as bs$" + context.graph().getName() + ", " + getSelectVariables();
         } else {
             return getSelectVariables();
@@ -63,7 +63,7 @@ public class StSBGPOperator extends StSOperator {
     private String generateSelectMetadata() {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
                         .filter(Node_Variable.class::isInstance), (node, index) -> {
-                    this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
+                    this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName(), true));
 
                     return "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
                             "." + getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst()) +
@@ -98,7 +98,7 @@ public class StSBGPOperator extends StSOperator {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
                 .filter(Node_Variable.class::isInstance), (node, index) -> {
             if (context.sparqlVarOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
-                this.sqlVariables.add(new SQLVariable(SQLVarType.GRAPH_NAME, node.getName()));
+                this.sqlVariables.add(new SQLVariable(SQLVarType.GRAPH_NAME, node.getName(), true));
 
                 return (
                         "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
@@ -106,7 +106,7 @@ public class StSBGPOperator extends StSOperator {
                 );
             }
 
-            this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName()));
+            this.sqlVariables.add(new SQLVariable(SQLVarType.DATA, node.getName(), false));
             return (
                     "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() + "." +
                             getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst()) +

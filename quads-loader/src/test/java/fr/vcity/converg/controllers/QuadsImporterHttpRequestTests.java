@@ -1,10 +1,10 @@
 package fr.vcity.converg.controllers;
 
+import fr.vcity.converg.dto.CompleteVersionedQuad;
+import fr.vcity.converg.services.QuadImportService;
+import fr.vcity.converg.services.QueryService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -18,6 +18,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -34,6 +35,21 @@ class QuadsImporterHttpRequestTests {
 
     @Autowired
     private ResourceLoader resourceLoader;
+
+    @Autowired
+    private QuadImportService quadImportService;
+
+    @Autowired
+    private QueryService quadQueryService;
+
+    @Test
+    @Order(0)
+    void resetDatabase() {
+        quadImportService.resetDatabase();
+        List<CompleteVersionedQuad> quads = quadQueryService.queryRequestedValidity("*");
+
+        assertEquals(0, quads.size());
+    }
 
     /**
      * Tests the import of the first version and check if the validity is set to 1
@@ -109,7 +125,7 @@ class QuadsImporterHttpRequestTests {
                 resource.getInputStream().readAllBytes()
         );
 
-        String url = "http://localhost:" + port + "/import/version";
+        String url = "http://localhost:" + port + "/import/metadata";
         HttpHeaders headers = createHeaders();
         HttpEntity<MultiValueMap<String, Object>> requestEntity = getMultiValueMapHttpEntity(file, headers);
 
@@ -119,24 +135,13 @@ class QuadsImporterHttpRequestTests {
 
     @Test
     @Order(4)
-    void removeMetadata() {
-        String url = "http://localhost:" + port + "/import/metadata";
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, String.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    @Test
-    @Order(5)
     void sendCorruptedFileVersion() throws Exception {
         MockMultipartFile file
                 = new MockMultipartFile(
                 "file",
                 "Corrupted_File.ttl.trig",
                 MediaType.TEXT_PLAIN_VALUE,
-                new byte[]{0}
+                new byte[]{0,1}
         );
 
         String url = "http://localhost:" + port + "/import/version";
@@ -148,7 +153,7 @@ class QuadsImporterHttpRequestTests {
     }
 
     @Test
-    @Order(6)
+    @Order(5)
     void sendCorruptedFileMetadata() throws Exception {
         MockMultipartFile file
                 = new MockMultipartFile(

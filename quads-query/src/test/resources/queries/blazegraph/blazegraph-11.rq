@@ -1,0 +1,13 @@
+# Find the number of rating of reviews in each version
+PREFIX schema: <http://schema.org/>
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT ?version (AVG(?height) as ?avgheight) WHERE {
+  GRAPH ?vg {
+    ?s schema:height ?height .
+  }
+
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+    ?vg vers:is-in-version ?version .
+  }
+} GROUP BY ?version

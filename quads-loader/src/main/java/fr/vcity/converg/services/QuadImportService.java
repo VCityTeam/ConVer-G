@@ -186,6 +186,7 @@ public class QuadImportService implements IQuadImportService {
         versionRepository.deleteAll();
         rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
         rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
+        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
     }
 
     /**

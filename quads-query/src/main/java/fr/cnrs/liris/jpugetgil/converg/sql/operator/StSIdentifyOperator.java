@@ -40,7 +40,7 @@ public class StSIdentifyOperator extends StSOperator {
                             .stream()
                             .anyMatch(varMentioned -> varMentioned.getVarName().equals(sqlVariable.getSqlVarName()))
             ) {
-                sqlVariables.add(new SQLVariable(SQLVarType.DATA, sqlVariable.getSqlVarName(), true));
+                sqlVariables.add(new SQLVariable(SQLVarType.DATA, sqlVariable.getSqlVarName(), false, true));
             } else {
                 sqlVariables.add(sqlVariable);
             }

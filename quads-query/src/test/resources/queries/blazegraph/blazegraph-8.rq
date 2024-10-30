@@ -1,0 +1,14 @@
+# Give the graph name (metadata) of the versioned graph containing the building 1 and its width
+PREFIX building: <http://example.edu/Building#>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?version ?p1 ?o1 ?type WHERE {
+    GRAPH ?vg {
+      building:1 ?p1 ?o1 ;
+      schema:width ?type .
+    }
+
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+         ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-in-version> 	?version .
+    }
+}

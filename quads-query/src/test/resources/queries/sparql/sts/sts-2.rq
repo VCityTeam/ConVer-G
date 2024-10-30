@@ -1,6 +1,0 @@
-# Query the graph store for all quads with a given subject
-SELECT ?g ?p ?o WHERE {
-    GRAPH ?g {
-      <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature287> ?p ?o .
-    }
-}

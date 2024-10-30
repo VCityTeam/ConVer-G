@@ -1,0 +1,13 @@
+# Find the number of height in each graph
+PREFIX schema: <http://schema.org/>
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT ?graph (COUNT(?height) as ?countheight) WHERE {
+  GRAPH ?vg {
+    ?s schema:height ?height .
+  }
+
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+    ?vg vers:is-version-of ?graph .
+  }
+} GROUP BY ?graph

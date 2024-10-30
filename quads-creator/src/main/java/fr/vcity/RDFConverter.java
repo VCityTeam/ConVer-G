@@ -19,9 +19,14 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 public class RDFConverter {
     private static final Logger log = LoggerFactory.getLogger(RDFConverter.class);
+    private static final String NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
+    private static final String VERSION_URL = "https://github.com/VCityTeam/ConVer-G/Version#";
+    private static final String VERSIONED_NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#";
+    private static final String TRIG_EXTENSION = ".trig";
 
     private final Dataset dataset;
     private final Dataset metadataDataset;
@@ -102,19 +107,19 @@ public class RDFConverter {
 
         metadataDataset
                 .asDatasetGraph()
-                .add(new Quad(NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata"),
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
                         Triple.create(
                                 NodeFactory.createURI(graphURI),
-                                NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Version#is-version-of"),
+                                NodeFactory.createURI(VERSION_URL + "is-version-of"),
                                 NodeFactory.createURI(getAnnotationURI(annotation))
                         )));
 
         metadataDataset
                 .asDatasetGraph()
-                .add(new Quad(NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata"),
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
                         Triple.create(
                                 NodeFactory.createURI(graphURI),
-                                NodeFactory.createURI("https://github.com/VCityTeam/ConVer-G/Version#is-in-version"),
+                                NodeFactory.createURI(VERSION_URL + "is-in-version"),
                                 NodeFactory.createURI(getVersionURI(inputFileName))
                         )));
 
@@ -187,6 +192,9 @@ public class RDFConverter {
      * @return The built input file
      */
     private String getInputFileName(String inputFolder, String inputFile) {
+        if (inputFolder.equals("classpath:")) {
+            return Objects.requireNonNull(getClass().getClassLoader().getResource(inputFile)).getPath();
+        }
         return new File(inputFolder, inputFile).getPath();
     }
 
@@ -197,7 +205,7 @@ public class RDFConverter {
      * @return The built theoretical
      */
     private String getTheoreticalFileName(String inputFolder) {
-        return getInputFileName(inputFolder, "theoretical_annotations.trig");
+        return getInputFileName(inputFolder, "theoretical_annotations" + TRIG_EXTENSION);
     }
 
     /**
@@ -208,7 +216,7 @@ public class RDFConverter {
      * @return The built output file name
      */
     private String getOutputFileName(String outputFolder, String inputFile) {
-        return getInputFileName(outputFolder, inputFile) + ".trig";
+        return getInputFileName(outputFolder, inputFile) + TRIG_EXTENSION;
     }
 
     /**
@@ -218,7 +226,7 @@ public class RDFConverter {
      * @return The version
      */
     private String getVersionURI(String inputFileName) {
-        return "https://github.com/VCityTeam/ConVer-G/Version#" + inputFileName;
+        return VERSION_URL + inputFileName + TRIG_EXTENSION;
     }
 
     /**
@@ -228,7 +236,7 @@ public class RDFConverter {
      * @return The URI of the annotation
      */
     private String getAnnotationURI(String annotation) {
-        return "https://github.com/VCityTeam/ConVer-G/Named-Graph#" + annotation;
+        return NAME_GRAPH_URL + annotation;
     }
 
     /**
@@ -240,8 +248,8 @@ public class RDFConverter {
     private String getGraphNameURI(String inputFile) {
         if (annotationType.equals(AnnotationType.THEORETICAL.getLabel())) {
             try {
-                String toHash = annotation + inputFile;
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                String toHash = NAME_GRAPH_URL + annotation + inputFile + TRIG_EXTENSION;
+                MessageDigest digest = MessageDigest.getInstance("SHA-512");
                 byte[] hashBytes = digest.digest(toHash.getBytes(StandardCharsets.UTF_8));
 
                 // Convert byte array to hex string
@@ -252,13 +260,13 @@ public class RDFConverter {
                     hexString.append(hex);
                 }
 
-                return "https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#" + hexString;
+                return VERSIONED_NAME_GRAPH_URL + hexString;
             } catch (NoSuchAlgorithmException e) {
                 log.error(e.getMessage());
                 throw new RuntimeException(e.getMessage());
             }
         } else {
-            return "https://github.com/VCityTeam/ConVer-G/Named-Graph#" + annotation;
+            return NAME_GRAPH_URL + annotation;
         }
     }
 }

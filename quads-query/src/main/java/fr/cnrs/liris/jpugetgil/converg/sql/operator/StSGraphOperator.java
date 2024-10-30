@@ -29,7 +29,7 @@ public class StSGraphOperator extends StSOperator {
         String query;
         if (this.sqlQuery.getSql() == null) {
             if (op.getNode() instanceof Node_Variable) {
-                sqlVariables.add(new SQLVariable(SQLVarType.VERSIONED_NAMED_GRAPH, op.getNode().getName()));
+                sqlVariables.add(new SQLVariable(SQLVarType.VERSIONED_NAMED_GRAPH, op.getNode().getName(), true));
             }
             query = getStringQueryTable();
         } else {

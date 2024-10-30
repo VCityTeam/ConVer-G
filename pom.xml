@@ -20,9 +20,9 @@
   </properties>
 
   <modules>
+    <module>quads-creator</module>
     <module>quads-loader</module>
     <module>quads-query</module>
-      <module>quads-creator</module>
   </modules>
 
   <build>

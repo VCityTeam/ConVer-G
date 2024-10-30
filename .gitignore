@@ -33,7 +33,7 @@ build/
 .vscode/
 
 ### Dataset ###
-**/dataset
+dataset/*
 
 ### venv ###
 **/venv

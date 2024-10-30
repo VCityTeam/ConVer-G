@@ -1,0 +1,8 @@
+<https://github.com/VCityTeam/ConVer-G/Named-Graph#Test> {
+    <http://example.edu/Building#2>
+            <http://schema.org/width>   "6"^^<http://www.w3.org/2001/XMLSchema#float> ;
+            <http://schema.org/height>  "9.1"^^<http://www.w3.org/2001/XMLSchema#float> .
+    <http://example.edu/Building#1>
+            <http://schema.org/width>   "5"^^<http://www.w3.org/2001/XMLSchema#float> ;
+            <http://schema.org/height>  "10.5"^^<http://www.w3.org/2001/XMLSchema#float> .
+}
