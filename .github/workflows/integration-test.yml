@@ -3,7 +3,8 @@ name: Docker Compose Action
 on:
   push:
     branches:
-      - master
+      - '*'
+      - '!master'
 
 jobs:
   build:
