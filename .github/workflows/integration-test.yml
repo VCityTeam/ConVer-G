@@ -3,8 +3,7 @@ name: Docker Compose Action
 on:
   push:
     branches:
-      - '*'
-      - '!master'
+      - master
 
 jobs:
   build:
@@ -18,18 +17,21 @@ jobs:
         with:
           compose-file: "./docker-compose.yml"
 
-      - name: Initialize databases datasets
+      - name: Wait for Blazegraph to be ready
+        run: |
+          until curl -sSf 'http://localhost:9999/blazegraph/sparql' > /dev/null; do
+            echo "Waiting for Blazegraph..."
+            sleep 5
+          done
+
+      - name: Initialize blazegraph datasets
         run: |
           find quads-query/src/test/resources/dataset/theoretical -type f -name "*.ttl.trig" -print0 | while IFS= read -r -d '' file
           do
-            printf "%s\n$(date +%FT%T) - [Triple Store] $file."
-            start=$(date +%s%3N)
             curl -X POST --location 'http://localhost:9999/blazegraph/sparql' \
-            --header 'Content-Type:application/x-trig' \
-            --connect-timeout 60 \
-            --data-binary @"$file"
-            end=$(date +%s%3N)
-            printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
+              --header 'Content-Type:application/x-trig' \
+              --connect-timeout 60 \
+              --data-binary @"$file"
           done
 
       - name: Run tests
