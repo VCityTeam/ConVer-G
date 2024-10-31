@@ -1,4 +1,4 @@
-name: Docker Compose Action
+name: Run tests on push (development)
 
 on:
   push:
@@ -7,9 +7,8 @@ on:
       - '!master'
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
