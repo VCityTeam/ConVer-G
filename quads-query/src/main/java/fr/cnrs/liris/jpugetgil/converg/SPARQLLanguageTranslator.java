@@ -6,6 +6,8 @@ import org.apache.jena.query.ResultSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+
 
 public abstract class SPARQLLanguageTranslator {
 

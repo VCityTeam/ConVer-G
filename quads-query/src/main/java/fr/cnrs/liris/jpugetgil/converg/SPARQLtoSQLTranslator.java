@@ -67,68 +67,20 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         log.info("[Measure] (Query translation duration): {} ns for query: {};", end - start, query);
         log.info("Query result: {};", qu.getSql());
 
-        Long startExec = System.nanoTime();
-        try (java.sql.ResultSet rs = jdbcConnection.executeSQL(qu.getSql())) {
+        try {
+            Long startExec = System.nanoTime();
+            java.sql.ResultSet rs = jdbcConnection.executeSQL(qu.getSql());
             Long endExec = System.nanoTime();
             log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
 
-            // Change the List implementation to the Iterator one (heap space)
-            Set<Var> vars = new HashSet<>();
-            List<Binding> bindings = new ArrayList<>();
+            BindingIterator bindingIterator = new BindingIterator(rs);
 
-            while (Objects.requireNonNull(rs).next()) {
-                ResultSetMetaData rsmd = rs.getMetaData();
-                List<String> allVariables = new ArrayList<>();
-                List<String> variables = new ArrayList<>();
-                int nbColumns = rsmd.getColumnCount();
-                for (int i = 1; i <= nbColumns; i++) {
-                    String columnName = rsmd.getColumnName(i);
-                    allVariables.add(columnName);
-                    if (columnName.startsWith("name$")) {
-                        variables.add(columnName.substring(5));
-                    } else if (!columnName.startsWith("type$")) {
-                        variables.add(columnName);
-                    }
-                }
+            Set<Var> vars = bindingIterator
+                    .getVars();
 
-                BindingBuilder bindingBuilder = Binding.builder();
-                for (String v : variables) {
-                    Var variable = Var.alloc(v);
-                    Node variableValue;
-
-                    if (hasColumn(rs, "name$" + v) && rs.getString("name$" + v) != null) {
-                        String value = rs.getString("name$" + v);
-                        String valueType;
-                        if (allVariables.contains("type$" + v)) {
-                            valueType = rs.getString("type$" + v);
-                        } else {
-                            valueType = getAssociatedRDFType(rsmd.getColumnType(rs.findColumn("name$" + v)));
-                        }
-                        variableValue = valueType == null ?
-                                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-                    } else if (hasColumn(rs, v) && rs.getString(v) != null) {
-                        String value = rs.getString(v);
-                        String valueType = getAssociatedRDFType(rsmd.getColumnType(rs.findColumn(v)));
-                        variableValue = NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-                    } else {
-                        variableValue = null;
-                    }
-
-                    vars.add(variable);
-
-                    if (variableValue != null) {
-                        bindingBuilder.add(variable, variableValue);
-                    }
-                }
-
-                bindings.add(bindingBuilder.build());
-            }
-
-            return ResultSetStream.create(new ArrayList<>(vars), bindings.iterator());
-
+            return ResultSetStream.create(new ArrayList<>(vars), bindingIterator);
         } catch (SQLException e) {
-            log.error(e.getMessage());
-            throw new ARQException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -259,28 +211,5 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         }
 
         return context;
-    }
-
-    private boolean hasColumn(java.sql.ResultSet rs, String columnName) throws SQLException {
-        try {
-            rs.findColumn(columnName);
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    private String getAssociatedRDFType(int sqlType) {
-        // Implement this method to map SQL types to RDF types
-        // For example:
-        switch (sqlType) {
-            case Types.INTEGER:
-                return XSDDatatype.XSDinteger.getURI();
-            case Types.VARCHAR:
-                return XSDDatatype.XSDstring.getURI();
-            // Add more cases as needed
-            default:
-                return null;
-        }
     }
 }
