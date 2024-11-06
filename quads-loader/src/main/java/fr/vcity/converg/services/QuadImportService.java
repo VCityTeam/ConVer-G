@@ -3,6 +3,9 @@ package fr.vcity.converg.services;
 import fr.vcity.converg.dao.ResourceOrLiteral;
 import fr.vcity.converg.dao.Version;
 import fr.vcity.converg.repository.*;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Summary;
+import io.prometheus.metrics.model.snapshots.Unit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.graph.Triple;
@@ -70,6 +73,36 @@ public class QuadImportService implements IQuadImportService {
     Set<String> namedGraphs = new HashSet<>();
     List<TripleValueType> tripleValueTypes = new ArrayList<>();
 
+    Counter counterVersionTotal =
+            Counter.builder()
+                    .name("version_count_total")
+                    .help("number of version that have been imported in the database")
+                    .register();
+
+    Summary summaryVersionBatchingDuration =
+            Summary.builder()
+                    .name("file_at_version_batching_duration_seconds")
+                    .help("duration of the file batching in seconds at a certain version")
+                    .unit(Unit.SECONDS)
+                    .labelNames("filename", "version")
+                    .register();
+
+    Summary summaryVersionCatalogDuration =
+            Summary.builder()
+                    .name("file_at_version_catalog_duration_seconds")
+                    .help("duration of the file catalog in seconds at a certain version")
+                    .unit(Unit.SECONDS)
+                    .labelNames("filename", "version")
+                    .register();
+
+    Summary summaryVersionCondensingDuration =
+            Summary.builder()
+                    .name("file_at_version_condensing_duration_seconds")
+                    .help("duration of the file condensing in seconds at a certain version")
+                    .unit(Unit.SECONDS)
+                    .labelNames("filename", "version")
+                    .register();
+
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
             IFlatModelTripleRepository flatModelTripleRepository,
@@ -96,6 +129,9 @@ public class QuadImportService implements IQuadImportService {
         this.metadataIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
         this.metadataIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
         this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
+
+        // Prometheus metrics
+        counterVersionTotal.inc(this.versionRepository.count());
     }
 
     /**
@@ -107,9 +143,9 @@ public class QuadImportService implements IQuadImportService {
     public Integer importModel(MultipartFile file) throws RiotException {
         LocalDateTime startTransactionTime = LocalDateTime.now();
         Version version = versionRepository.save(file.getOriginalFilename(), startTransactionTime);
+        counterVersionTotal.inc();
 
         log.info("Current file: {}", file.getOriginalFilename());
-
 
         try (InputStream inputStream = file.getInputStream()) {
             Long start = System.nanoTime();
@@ -118,12 +154,18 @@ public class QuadImportService implements IQuadImportService {
             getQuadsStreamRDF(inputStream, file.getOriginalFilename(), version.getIndexVersion())
                     .finish();
             Long endBatching = System.nanoTime();
+            summaryVersionBatchingDuration
+                    .labelValues(file.getOriginalFilename(), version.getIndexVersion().toString())
+                    .observe(Unit.nanosToSeconds(endBatching - startBatching));
             log.info("[Measure] (Batching): {} ns for file: {};", endBatching - startBatching, file.getOriginalFilename());
 
             log.info("Saving quads to catalog");
             Long startCatalog = System.nanoTime();
             rdfResourceRepository.flatModelQuadsToCatalog();
             Long endCatalog = System.nanoTime();
+            summaryVersionCatalogDuration
+                    .labelValues(file.getOriginalFilename(), version.getIndexVersion().toString())
+                    .observe(Unit.nanosToSeconds(endCatalog - startCatalog));
             log.info("[Measure] (Catalog): {} ns for file: {};", endCatalog - startCatalog, file.getOriginalFilename());
 
             log.info("Condensing quads to catalog");
@@ -131,6 +173,9 @@ public class QuadImportService implements IQuadImportService {
             rdfVersionedQuadRepository.condenseModel();
             rdfVersionedQuadRepository.updateValidityVersionedQuad();
             Long endCondensing = System.nanoTime();
+            summaryVersionCondensingDuration
+                    .labelValues(file.getOriginalFilename(), version.getIndexVersion().toString())
+                    .observe(Unit.nanosToSeconds(endCondensing - startCondensing));
             log.info("[Measure] (Condensing): {} ns for file: {};", endCondensing - startCondensing, file.getOriginalFilename());
 
             flatModelQuadRepository.deleteAll();
