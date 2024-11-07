@@ -1,5 +1,6 @@
 package fr.vcity.converg.services;
 
+import fr.vcity.converg.MetricsSingleton;
 import fr.vcity.converg.dao.ResourceOrLiteral;
 import fr.vcity.converg.dao.Version;
 import fr.vcity.converg.repository.*;
@@ -73,35 +74,13 @@ public class QuadImportService implements IQuadImportService {
     Set<String> namedGraphs = new HashSet<>();
     List<TripleValueType> tripleValueTypes = new ArrayList<>();
 
-    Counter counterVersionTotal =
-            Counter.builder()
-                    .name("version_count_total")
-                    .help("number of version that have been imported in the database")
-                    .register();
+    Counter counterVersionTotal = MetricsSingleton.getInstance().counterVersionTotal;
 
-    Summary summaryVersionBatchingDuration =
-            Summary.builder()
-                    .name("file_at_version_batching_duration_seconds")
-                    .help("duration of the file batching in seconds at a certain version")
-                    .unit(Unit.SECONDS)
-                    .labelNames("filename", "version")
-                    .register();
+    Summary summaryVersionBatchingDuration = MetricsSingleton.getInstance().summaryVersionBatchingDuration;
 
-    Summary summaryVersionCatalogDuration =
-            Summary.builder()
-                    .name("file_at_version_catalog_duration_seconds")
-                    .help("duration of the file catalog in seconds at a certain version")
-                    .unit(Unit.SECONDS)
-                    .labelNames("filename", "version")
-                    .register();
+    Summary summaryVersionCatalogDuration = MetricsSingleton.getInstance().summaryVersionCatalogDuration;
 
-    Summary summaryVersionCondensingDuration =
-            Summary.builder()
-                    .name("file_at_version_condensing_duration_seconds")
-                    .help("duration of the file condensing in seconds at a certain version")
-                    .unit(Unit.SECONDS)
-                    .labelNames("filename", "version")
-                    .register();
+    Summary summaryVersionCondensingDuration = MetricsSingleton.getInstance().summaryVersionCondensingDuration;
 
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
