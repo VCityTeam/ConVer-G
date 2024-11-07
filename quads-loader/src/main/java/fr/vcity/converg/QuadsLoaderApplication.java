@@ -29,7 +29,7 @@ public class QuadsLoaderApplication {
                         .register();
 
         System.out.println(
-                "HTTPServer listening on port http://localhost:" + server.getPort() + "/metrics");
+                "HTTPServer listening on port:" + server.getPort() + "/metrics");
 
         while (true) {
             Thread.sleep(1000);

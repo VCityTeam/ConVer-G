@@ -7,28 +7,24 @@ import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLPositionType;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Summary;
+import io.prometheus.metrics.model.snapshots.Unit;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.sparql.ARQException;
 import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
-import org.apache.jena.sparql.engine.binding.Binding;
-import org.apache.jena.sparql.engine.binding.BindingBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
 
 /**
@@ -39,6 +35,12 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     private static final Logger log = LoggerFactory.getLogger(SPARQLtoSQLTranslator.class);
 
     private final JdbcConnection jdbcConnection;
+
+    private final Summary queryTranslationDuration = MetricsSingleton.getInstance().queryTranslationDuration;
+
+    private final Summary queryExecutionDuration = MetricsSingleton.getInstance().queryExecutionDuration;
+
+    private final Counter selectQueryCounter = MetricsSingleton.getInstance().selectQueryCounter;
 
     /**
      * Constructor of the SPARQLtoSQLTranslator
@@ -58,19 +60,24 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     public ResultSet translateAndExecSelect(Query query) {
         Op op = Algebra.compile(query);
 
-        Long start = System.nanoTime();
+        Long startTranslation = System.nanoTime();
         SQLQuery qu = buildSPARQLContext(op)
                 .finalizeQuery();
+        Long endTranslation = System.nanoTime();
 
-        Long end = System.nanoTime();
-
-        log.info("[Measure] (Query translation duration): {} ns for query: {};", end - start, query);
+        queryTranslationDuration
+                .labelValues(String.valueOf(selectQueryCounter.get()))
+                .observe(Unit.nanosToSeconds(endTranslation - startTranslation));
+        log.info("[Measure] (Query translation duration): {} ns for query: {};", endTranslation - startTranslation, query);
         log.info("Query result: {};", qu.getSql());
 
         try {
             Long startExec = System.nanoTime();
             java.sql.ResultSet rs = jdbcConnection.executeSQL(qu.getSql());
             Long endExec = System.nanoTime();
+            queryExecutionDuration
+                    .labelValues(String.valueOf(selectQueryCounter.get()))
+                    .observe(Unit.nanosToSeconds(endExec - startExec));
             log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
 
             BindingIterator bindingIterator = new BindingIterator(rs);

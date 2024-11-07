@@ -15,6 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <prometheus.project.version>1.3.2</prometheus.project.version>
     </properties>
 
     <dependencies>
@@ -87,6 +88,23 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.1.0-jre</version>
+        </dependency>
+
+        <!-- Prometheus exporter -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-core</artifactId>
+            <version>${prometheus.project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
+            <version>${prometheus.project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
+            <version>${prometheus.project.version}</version>
         </dependency>
     </dependencies>
 

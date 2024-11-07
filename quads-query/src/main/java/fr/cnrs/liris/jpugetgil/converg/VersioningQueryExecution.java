@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import io.prometheus.metrics.core.metrics.Counter;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.graph.Triple;
@@ -22,6 +23,8 @@ public class VersioningQueryExecution implements QueryExecution {
     private final Query query;
 
     private final SPARQLLanguageTranslator translator;
+
+    private final Counter selectQueryCounter = MetricsSingleton.getInstance().selectQueryCounter;
 
     private static final String TARGET_LANG = System.getenv("TARGET_LANG") == null ?
             "SQL" : getSupportedTargetLanguage(System.getenv("TARGET_LANG"));
@@ -71,6 +74,9 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public org.apache.jena.query.ResultSet execSelect() {
+        // Increment the counter for the number of SELECT queries
+        selectQueryCounter.inc();
+
         return translator.translateAndExecSelect(query);
     }
 
