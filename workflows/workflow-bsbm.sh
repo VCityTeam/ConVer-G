@@ -3,8 +3,8 @@
 # Check if the argument is provided
 # check if there are 2 or 4 arguments
 
-if [ "$#" -ne 4 ] && [ "$#" -ne 7 ]; then
-    echo "Usage: $0 <number of version> <number of product> <step of products> <variability> ?<ram limitation> ?<number of cpu limitation> ?<log output file>"
+if [ "$#" -ne 3 ] && [ "$#" -ne 6 ]; then
+    echo "Usage: $0 <number of version> <number of product> <step of products> ?<ram limitation> ?<number of cpu limitation> ?<log output file>"
     exit 1
 fi
 
@@ -19,7 +19,7 @@ fi
 echo "----------------------------------------------------------------- [BEGIN WORKFLOW] -----------------------------------------------------------------"
 /bin/bash ./init_stack.sh
 
-/bin/bash ./bsbm/download-2.sh "$1" "$2" "$3" "$4"
+/bin/bash ./bsbm/download-2.sh "$1" "$2" "$3"
 
 /bin/bash ./bsbm/transform-2.sh
 
