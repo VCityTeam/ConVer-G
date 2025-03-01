@@ -7,28 +7,27 @@ import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class StSFlattenOperator extends StSOperator {
+public class FlattenSQLOperator extends SQLOperator {
     private final SQLQuery sqlQuery;
 
-    public StSFlattenOperator(SQLQuery sqlQuery) {
+    public FlattenSQLOperator(SQLQuery sqlQuery) {
         this.sqlQuery = sqlQuery;
         this.sqlVariables = sqlQuery.getContext().sqlVariables();
     }
 
     @Override
     public SQLQuery buildSQLQuery() {
-        String select = getSelect();
-        String join = flattenVariables();
+        String select = buildSelect();
+        String join = buildFrom();
         List<SQLVariable> sqlVariables = new ArrayList<>();
 
         for (SQLVariable sqlVariable : this.sqlVariables) {
-            if (sqlVariable.getSqlVarType() == SQLVarType.DATA) {
+            if (sqlVariable.getSqlVarType() == SQLVarType.ID) {
                 sqlVariables.add(sqlVariable);
-            } else if (sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME) {
-                sqlVariables.add(new SQLVariable(SQLVarType.DATA, sqlVariable.getSqlVarName(), true));
+            } else if (sqlVariable.getSqlVarType() == SQLVarType.CONDENSED) {
+                sqlVariables.add(new SQLVariable(SQLVarType.ID, sqlVariable.getSqlVarName()));
             }
         }
         SQLContext context = this.sqlQuery.getContext().setSQLVariables(sqlVariables);
@@ -38,18 +37,16 @@ public class StSFlattenOperator extends StSOperator {
         );
     }
 
-    private String getSelect() {
+    @Override
+    protected String buildSelect() {
         return this.sqlVariables.stream()
                 .map(sqlVariable -> {
-                    if (sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME) {
+                    if (sqlVariable.getSqlVarType() == SQLVarType.CONDENSED) {
                         return "vng.id_versioned_named_graph AS v$" + sqlVariable.getSqlVarName();
-                    } else if (sqlVariable.getSqlVarType() == SQLVarType.BIT_STRING) {
-                        return null;
                     } else {
                         return "flatten_table.v$" + sqlVariable.getSqlVarName();
                     }
                 })
-                .filter(Objects::nonNull)
                 .collect(Collectors.joining(", "));
     }
 
@@ -58,12 +55,21 @@ public class StSFlattenOperator extends StSOperator {
      *
      * @return the flattened variables
      */
-    private String flattenVariables() {
+    @Override
+    protected String buildFrom() {
         return this.sqlQuery.getContext().sqlVariables().stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.GRAPH_NAME)
+                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.CONDENSED)
                 .map(sqlVariable -> " JOIN versioned_named_graph vng ON flatten_table.ng$" +
                         sqlVariable.getSqlVarName() + " = vng.id_named_graph AND get_bit(flatten_table.bs$" +
                         sqlVariable.getSqlVarName() + ", vng.index_version - 1) = 1 \n")
                 .collect(Collectors.joining(" \n"));
+    }
+
+    /**
+     * @return 
+     */
+    @Override
+    protected String buildWhere() {
+        return "";
     }
 }
