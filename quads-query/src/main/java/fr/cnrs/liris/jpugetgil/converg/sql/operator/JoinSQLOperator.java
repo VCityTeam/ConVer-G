@@ -1,16 +1,13 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLClause;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLUtils;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
+import fr.cnrs.liris.jpugetgil.converg.sql.*;
 import fr.cnrs.liris.jpugetgil.converg.utils.Pair;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Node_Variable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JoinSQLOperator extends SQLOperator {
 
@@ -20,12 +17,14 @@ public class JoinSQLOperator extends SQLOperator {
 
     List<Pair<SQLVariable, SQLVariable>> commonVariables;
 
+    Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
+
     public JoinSQLOperator(SQLQuery leftQuery, SQLQuery rightQuery) {
         this.leftQuery = leftQuery;
         this.rightQuery = rightQuery;
         this.commonVariables = SQLUtils.buildCommonsVariables(
-                leftQuery.getContext().sqlVariables(),
-                rightQuery.getContext().sqlVariables()
+                leftQuery.getContext().sparqlVarOccurrences(),
+                rightQuery.getContext().sparqlVarOccurrences()
         );
     }
 
@@ -47,27 +46,13 @@ public class JoinSQLOperator extends SQLOperator {
         if (commonVariables.isEmpty()) {
             sqlJoinClauseBuilder.and("1 = 1");
         } else {
-            commonVariables.forEach(sqlVariablePair -> {
-                if (sqlVariablePair.getLeft().getSqlVarType().isLower(sqlVariablePair.getRight().getSqlVarType())) {
-                    // Change the representation of the variable
-                    leftQuery = new FlattenSQLOperator(leftQuery).buildSQLQuery();
-                    sqlVariablePair.setLeft(sqlVariablePair.getRight());
-                }
-                if (sqlVariablePair.getLeft().getSqlVarType().isHigher(sqlVariablePair.getRight().getSqlVarType())) {
-                    // Change the representation of the variable
-                    rightQuery = new FlattenSQLOperator(rightQuery).buildSQLQuery();
-                    sqlVariablePair.setRight(sqlVariablePair.getLeft());
-                }
-
-                sqlJoinClauseBuilder.and(
-                        SQLVariable.join(
-                                sqlVariablePair.getLeft(),
-                                sqlVariablePair.getRight(),
-                                "left_table",
-                                "right_table"
-                        )
-                );
-            });
+            commonVariables.forEach(sqlVariablePair -> sqlJoinClauseBuilder.and(
+                    sqlVariablePair.getLeft().joinJoin(
+                            sqlVariablePair.getRight(),
+                            "left_table",
+                            "right_table"
+                    )
+            ));
         }
 
         return " FROM (" + leftQuery.getSql() + ") left_table JOIN (" +
@@ -79,20 +64,19 @@ public class JoinSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildSelect() {
-        Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences = SQLUtils.mergeMapOccurrences(
+        mergedMapOccurrences = SQLUtils.mergeMapOccurrences(
                 leftQuery.getContext().sparqlVarOccurrences(),
                 rightQuery.getContext().sparqlVarOccurrences()
         );
 
-        mergedMapOccurrences
+        return "SELECT " + mergedMapOccurrences
                 .keySet()
                 .stream()
-                .filter(Node_Variable.class::isInstance)
-                .forEach((node) -> {
-//            String variableSelect = SQLUtils.digestVarOccurrences(node, mergedMapOccurrences.get(node));
-        });
-
-²        return "";
+                .map((node) -> SQLUtils.generateNodeProjectionByListSPARQLOccurrences(
+                        leftQuery.getContext().sparqlVarOccurrences().get(node),
+                        rightQuery.getContext().sparqlVarOccurrences().get(node)
+                ))
+                .collect(Collectors.joining(", ")) + "\n";
     }
 
     /**
@@ -100,11 +84,32 @@ public class JoinSQLOperator extends SQLOperator {
      */
     @Override
     public SQLQuery buildSQLQuery() {
+        joinSubQueries();
+
         String select = buildSelect();
         String from = buildFrom();
         String where = buildWhere();
 
+        return new SQLQuery(
+                select + from + where,
+                new SQLContext(
+                        mergedMapOccurrences,
+                        leftQuery.getContext().condensedMode()
+                ));
+    }
 
-        return null;
+    private void joinSubQueries() {
+        commonVariables.forEach(sqlVariablePair -> {
+            if (sqlVariablePair.getLeft().getSqlVarType().isLower(sqlVariablePair.getRight().getSqlVarType())) {
+                // Change the representation of the variable
+                leftQuery = new FlattenSQLOperator(leftQuery, sqlVariablePair.getRight()).buildSQLQuery();
+                sqlVariablePair.setLeft(sqlVariablePair.getRight());
+            }
+            if (sqlVariablePair.getLeft().getSqlVarType().isHigher(sqlVariablePair.getRight().getSqlVarType())) {
+                // Change the representation of the variable
+                rightQuery = new FlattenSQLOperator(rightQuery, sqlVariablePair.getRight()).buildSQLQuery();
+                sqlVariablePair.setRight(sqlVariablePair.getLeft());
+            }
+        });
     }
 }

@@ -27,9 +27,12 @@ public class QuadPatternSQLOperator extends SQLOperator {
 
     SQLContext context;
 
+    Node graph;
+
     public QuadPatternSQLOperator(OpQuadPattern opQuadPattern, SQLContext context) {
         this.opQuadPattern = opQuadPattern;
         this.context = context;
+        this.graph = opQuadPattern.getGraphNode();
     }
 
     /**
@@ -38,17 +41,16 @@ public class QuadPatternSQLOperator extends SQLOperator {
     @Override
     public SQLQuery buildSQLQuery() {
         context = context
-                .setGraph(opQuadPattern.getGraphNode())
                 .setVarOccurrences(createVarOccurrencesMap());
-        context = context
-                .setSQLVariables(createSQLVariables());
 
         String select = "SELECT " + buildSelect() + "\n";
         String from = "FROM " + buildFrom() + "\n";
-        String where = "WHERE " + buildWhere();
+        String where = buildWhere();
+
+        String query = !where.isEmpty() ? select + from + "WHERE " + where : select + from;
 
         return new SQLQuery(
-                select + from + where,
+                query,
                 context
         );
     }
@@ -58,11 +60,11 @@ public class QuadPatternSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildSelect() {
-        if (context.graph() == Quad.defaultGraphNodeGenerated) {
+        if (this.graph.isURI() && this.graph == Quad.defaultGraphNodeGenerated) {
             return generateSelectMetadata();
-        } else if (context.graph() instanceof Node_Variable) {
+        } else if (this.graph.isVariable()) {
             return SQLUtils.intersectionValidity(opQuadPattern.getBasicPattern().size()) +
-                    " as bs$" + context.graph().getName() + ", " + getSelectVariables();
+                    " as bs$" + this.graph.getName() + ", " + getSelectVariables();
         } else {
             return getSelectVariables();
         }
@@ -87,7 +89,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildWhere() {
-        return opQuadPattern.getGraphNode() == Quad.defaultGraphNodeGenerated ?
+        return opQuadPattern.getGraphNode().isURI() && opQuadPattern.getGraphNode() == Quad.defaultGraphNodeGenerated ?
                 generateWhereMetadata() : generateWhere();
     }
 
@@ -98,13 +100,11 @@ public class QuadPatternSQLOperator extends SQLOperator {
      */
     private String generateSelectMetadata() {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
-                        .filter(Node_Variable.class::isInstance), (node, index) -> {
-//                    this.sqlVariables.add(new SQLVariable(SQLVarType.ID, node.getName()));
-
-                    return "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
-                            "." + SQLUtils.getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst().getType()) +
-                            " as v$" + node.getName();
-                })
+                        .filter(Node_Variable.class::isInstance), (node, index) ->
+                        "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
+                                "." + SQLUtils.getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst().getType()) +
+                                " as v$" + node.getName()
+                )
                 .collect(Collectors.joining(", "));
     }
 
@@ -117,7 +117,6 @@ public class QuadPatternSQLOperator extends SQLOperator {
         return Streams.mapWithIndex(context.sparqlVarOccurrences().keySet().stream()
                 .filter(Node_Variable.class::isInstance), (node, index) -> {
             if (context.sparqlVarOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
-//                this.sqlVariables.add(new SQLVariable(SQLVarType.CONDENSED, node.getName()));
 
                 return (
                         "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() +
@@ -125,7 +124,6 @@ public class QuadPatternSQLOperator extends SQLOperator {
                 );
             }
 
-//            this.sqlVariables.add(new SQLVariable(SQLVarType.ID, node.getName()));
             return (
                     "t" + context.sparqlVarOccurrences().get(node).getFirst().getPosition() + "." +
                             SQLUtils.getColumnByOccurrence(context.sparqlVarOccurrences().get(node).getFirst().getType()) +
@@ -143,7 +141,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
         List<Triple> triples = opQuadPattern.getBasicPattern().getList();
 
-        if (context.graph() instanceof Node_Variable) {
+        if (this.graph.isVariable()) {
             sqlClauseBuilder = sqlClauseBuilder.and(
                     new NotEqualToOperator()
                             .buildComparisonOperatorSQL(
@@ -156,7 +154,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
         SQLUtils.getEqualitiesBGP(sqlClauseBuilder, context.sparqlVarOccurrences());
 
         for (int i = 0; i < triples.size(); i++) {
-            switch (context.graph()) {
+            switch (this.graph) {
                 case Node_Variable ignored -> {
                     if (i < triples.size() - 1) {
                         sqlClauseBuilder = sqlClauseBuilder.and(
@@ -191,7 +189,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
                                         "1"
                                 )
                 );
-                default -> throw new ARQException("Unexpected value: " + context.graph());
+                default -> throw new ARQException("Unexpected value: " + this.graph);
             }
 
             sqlClauseBuilder.and(SQLUtils.buildFiltersOnIds(triples, i));
@@ -213,27 +211,19 @@ public class QuadPatternSQLOperator extends SQLOperator {
         return sqlClauseBuilder.build().clause;
     }
 
-    private List<SQLVariable> createSQLVariables() {
-        List<SQLVariable> sqlVars = new ArrayList<>();
-        context.sparqlVarOccurrences().keySet().stream()
-                .filter(Node_Variable.class::isInstance)
-                .forEach(node -> {
-                    if (context.sparqlVarOccurrences().get(node).getFirst().getType() == SPARQLPositionType.GRAPH_NAME) {
-                        sqlVars.add(new SQLVariable(SQLVarType.CONDENSED, node.getName()));
-                    } else {
-                        sqlVars.add(new SQLVariable(SQLVarType.ID, node.getName()));
-                    }
-                });
-        return sqlVars;
-    }
-
     private Map<Node, List<SPARQLOccurrence>> createVarOccurrencesMap() {
         Map<Node, List<SPARQLOccurrence>> newVarOccurrences = new HashMap<>();
         SPARQLContextType sparqlContextType = opQuadPattern.getGraphNode() == Quad.defaultGraphNodeGenerated ?
                 SPARQLContextType.METADATA : SPARQLContextType.VERSIONED_DATA;
 
-        newVarOccurrences.computeIfAbsent(opQuadPattern.getGraphNode(), k -> new ArrayList<>())
-                .add(new SPARQLOccurrence(SPARQLPositionType.GRAPH_NAME, 0, sparqlContextType));
+        if (sparqlContextType == SPARQLContextType.VERSIONED_DATA) {
+            newVarOccurrences.computeIfAbsent(opQuadPattern.getGraphNode(), k -> new ArrayList<>())
+                    .add(new SPARQLOccurrence(
+                            SPARQLPositionType.GRAPH_NAME,
+                            0, sparqlContextType,
+                            new SQLVariable(SQLVarType.CONDENSED, opQuadPattern.getGraphNode().getName())
+                    ));
+        }
 
         for (int i = 0; i < opQuadPattern.getPattern().getList().size(); i++) {
             Quad quad = opQuadPattern.getPattern().getList().get(i);
@@ -241,12 +231,30 @@ public class QuadPatternSQLOperator extends SQLOperator {
             Node predicate = quad.getPredicate();
             Node object = quad.getObject();
 
-            newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.SUBJECT, i, sparqlContextType));
-            newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.PREDICATE, i, sparqlContextType));
-            newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
-                    .add(new SPARQLOccurrence(SPARQLPositionType.OBJECT, i, sparqlContextType));
+            if (subject.isVariable()) {
+                newVarOccurrences.computeIfAbsent(subject, k -> new ArrayList<>())
+                        .add(new SPARQLOccurrence(
+                                SPARQLPositionType.SUBJECT,
+                                i, sparqlContextType,
+                                new SQLVariable(SQLVarType.ID, subject.getName())
+                        ));
+            }
+            if (predicate.isVariable()) {
+                newVarOccurrences.computeIfAbsent(predicate, k -> new ArrayList<>())
+                        .add(new SPARQLOccurrence(
+                                SPARQLPositionType.PREDICATE,
+                                i, sparqlContextType,
+                                new SQLVariable(SQLVarType.ID, predicate.getName())
+                        ));
+            }
+            if (object.isVariable()) {
+                newVarOccurrences.computeIfAbsent(object, k -> new ArrayList<>())
+                        .add(new SPARQLOccurrence(
+                                SPARQLPositionType.OBJECT,
+                                i, sparqlContextType,
+                                new SQLVariable(SQLVarType.ID, object.getName())
+                        ));
+            }
         }
 
         return newVarOccurrences;

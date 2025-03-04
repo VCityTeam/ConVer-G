@@ -1,50 +1,80 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLVarType;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
+import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
+import fr.cnrs.liris.jpugetgil.converg.sql.*;
+import fr.cnrs.liris.jpugetgil.converg.utils.Pair;
+import org.apache.jena.graph.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FlattenSQLOperator extends SQLOperator {
     private final SQLQuery sqlQuery;
+    private final SQLVariable joinedSQLVariable;
 
-    public FlattenSQLOperator(SQLQuery sqlQuery) {
+    public FlattenSQLOperator(SQLQuery sqlQuery, SQLVariable joinedSQLVariable) {
         this.sqlQuery = sqlQuery;
-        this.sqlVariables = sqlQuery.getContext().sqlVariables();
+        this.joinedSQLVariable = joinedSQLVariable;
     }
 
     @Override
     public SQLQuery buildSQLQuery() {
         String select = buildSelect();
         String join = buildFrom();
-        List<SQLVariable> sqlVariables = new ArrayList<>();
-
-        for (SQLVariable sqlVariable : this.sqlVariables) {
-            if (sqlVariable.getSqlVarType() == SQLVarType.ID) {
-                sqlVariables.add(sqlVariable);
-            } else if (sqlVariable.getSqlVarType() == SQLVarType.CONDENSED) {
-                sqlVariables.add(new SQLVariable(SQLVarType.ID, sqlVariable.getSqlVarName()));
-            }
-        }
-        SQLContext context = this.sqlQuery.getContext().setSQLVariables(sqlVariables);
+        SQLContext newContext = flattenContext();
 
         return new SQLQuery(
-                "SELECT " + select + " FROM (" + sqlQuery.getSql() + ") flatten_table " + join, context
+                "SELECT " + select + " FROM (" + sqlQuery.getSql() + ") flatten_table " + join,
+                newContext
         );
+    }
+
+    private SQLContext flattenContext() {
+        Map<Node, List<SPARQLOccurrence>> newSPARQLOccurrences = new HashMap<>();
+
+        sqlQuery.getContext().sparqlVarOccurrences().forEach((node, occurrences) -> {
+            if (node.getName().equals(joinedSQLVariable.getSqlVarName())) {
+                List<SPARQLOccurrence> sparqlOccurrences = new ArrayList<>();
+                occurrences.forEach(occurrence -> {
+                    if (occurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
+                        newSPARQLOccurrences
+                                .computeIfAbsent(node, k -> sparqlOccurrences)
+                                .add(new SPARQLOccurrence(
+                                        occurrence.getType(),
+                                        occurrence.getPosition(),
+                                        occurrence.getContextType(),
+                                        new SQLVariable(SQLVarType.ID, occurrence.getSqlVariable().getSqlVarName())
+                                ));
+                    } else {
+                        newSPARQLOccurrences.computeIfAbsent(node, k -> sparqlOccurrences).add(occurrence);
+                    }
+                });
+            } else {
+                newSPARQLOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences);
+            }
+        });
+        return sqlQuery.getContext()
+                .setVarOccurrences(newSPARQLOccurrences);
     }
 
     @Override
     protected String buildSelect() {
-        return this.sqlVariables.stream()
-                .map(sqlVariable -> {
-                    if (sqlVariable.getSqlVarType() == SQLVarType.CONDENSED) {
-                        return "vng.id_versioned_named_graph AS v$" + sqlVariable.getSqlVarName();
+        Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences = this.sqlQuery
+                .getContext()
+                .sparqlVarOccurrences();
+
+        return sparqlVarOccurrences.keySet()
+                .stream()
+                .map(node -> {
+                    SQLVariable sqlVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
+
+                    if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(joinedSQLVariable.getSqlVarName())) {
+                        return sqlVar.joinProjections(this.joinedSQLVariable, "flatten_table", "vng");
                     } else {
-                        return "flatten_table.v$" + sqlVariable.getSqlVarName();
+                        return sqlVar.getSelect("flatten_table");
                     }
                 })
                 .collect(Collectors.joining(", "));
@@ -57,16 +87,19 @@ public class FlattenSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildFrom() {
-        return this.sqlQuery.getContext().sqlVariables().stream()
-                .filter(sqlVariable -> sqlVariable.getSqlVarType() == SQLVarType.CONDENSED)
-                .map(sqlVariable -> " JOIN versioned_named_graph vng ON flatten_table.ng$" +
-                        sqlVariable.getSqlVarName() + " = vng.id_named_graph AND get_bit(flatten_table.bs$" +
-                        sqlVariable.getSqlVarName() + ", vng.index_version - 1) = 1 \n")
+        Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences = this.sqlQuery.getContext().sparqlVarOccurrences();
+        return sparqlVarOccurrences.keySet()
+                .stream()
+                .filter(node -> node.getName().equals(joinedSQLVariable.getSqlVarName()))
+                .map(node -> sparqlVarOccurrences.get(node).stream()
+                        .map(sparqlOccurrence -> sparqlOccurrence.getSqlVariable()
+                                .joinJoin(joinedSQLVariable, "flatten_table", "vng"))
+                        .collect(Collectors.joining(" \n")))
                 .collect(Collectors.joining(" \n"));
     }
 
     /**
-     * @return 
+     * @return
      */
     @Override
     protected String buildWhere() {

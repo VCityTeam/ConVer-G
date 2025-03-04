@@ -15,8 +15,6 @@ public abstract class SQLOperator {
         log.info("Created {} SQL operator.", this.getClass().getSimpleName());
     }
 
-    List<SQLVariable> sqlVariables = new ArrayList<>();
-
     public abstract SQLQuery buildSQLQuery();
 
     protected abstract String buildSelect();

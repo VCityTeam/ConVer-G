@@ -8,10 +8,7 @@ import fr.cnrs.liris.jpugetgil.converg.utils.Pair;
 import org.apache.jena.graph.*;
 import org.apache.jena.sparql.ARQNotImplemented;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -110,7 +107,7 @@ public class SQLUtils {
     /**
      * Get the equalities between the variables in var occurrences
      *
-     * @param sqlClauseBuilder the SQL clause builder
+     * @param sqlClauseBuilder     the SQL clause builder
      * @param sparqlVarOccurrences the var occurrences
      */
     public static void getEqualitiesBGP(SQLClause.SQLClauseBuilder sqlClauseBuilder, Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences) {
@@ -129,17 +126,27 @@ public class SQLUtils {
     }
 
     public static List<Pair<SQLVariable, SQLVariable>> buildCommonsVariables(
-            List<SQLVariable> leftSQLVariables,
-            List<SQLVariable> rightSQLVariables
+            Map<Node, List<SPARQLOccurrence>> leftNodeListMap,
+            Map<Node, List<SPARQLOccurrence>> rightNodeListMap
     ) {
         List<Pair<SQLVariable, SQLVariable>> sqlJoinedVars = new ArrayList<>();
-        leftSQLVariables
-                .forEach(leftSQLVar -> {
-                    rightSQLVariables.forEach(rightSQLVar -> {
-                        if (rightSQLVar.getSqlVarName().equals(leftSQLVar.getSqlVarName())) {
-                            sqlJoinedVars.add(new Pair<>(leftSQLVar, rightSQLVar));
-                        }
-                    });
+
+        leftNodeListMap
+                .forEach((leftNode, leftSPARQLOccurrence) -> {
+                    if (rightNodeListMap.containsKey(leftNode)) {
+                        List<SPARQLOccurrence> rightSPARQLOccurrence = rightNodeListMap.get(leftNode);
+
+                        var rightMaxSPARQLOcc = rightSPARQLOccurrence
+                                .stream()
+                                .max(Comparator.comparingInt(o -> o.getSqlVariable().getSqlVarType().level))
+                                .orElseThrow();
+                        var leftMaxSPARQLOcc = leftSPARQLOccurrence
+                                .stream()
+                                .max(Comparator.comparingInt(o -> o.getSqlVariable().getSqlVarType().level))
+                                .orElseThrow();
+
+                        sqlJoinedVars.add(new Pair<>(leftMaxSPARQLOcc.getSqlVariable(), rightMaxSPARQLOcc.getSqlVariable()));
+                    }
                 });
 
         return sqlJoinedVars;
@@ -149,7 +156,11 @@ public class SQLUtils {
             Map<Node, List<SPARQLOccurrence>> leftMapOccurrences,
             Map<Node, List<SPARQLOccurrence>> rightMapOccurrences
     ) {
-        Map<Node, List<SPARQLOccurrence>> mergedOccurrences = new HashMap<>(leftMapOccurrences);
+        Map<Node, List<SPARQLOccurrence>> mergedOccurrences = new HashMap<>();
+
+        leftMapOccurrences.forEach((node, occurrences) ->
+                mergedOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences)
+        );
 
         rightMapOccurrences.forEach((node, occurrences) ->
                 mergedOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences)
@@ -158,20 +169,34 @@ public class SQLUtils {
         return mergedOccurrences;
     }
 
-//    public static String digestVarOccurrences(
-//            Node associatedNode,
-//            List<SPARQLOccurrence> sparqlOccurrences
-//    ) {
-//        sparqlOccurrences.stream().max((SPARQLOccurrence so1, SPARQLOccurrence so2) -> Integer.compare(
-//                translateSPARQLPositionToSQLVarType(so1.getType()).level,
-//                translateSPARQLPositionToSQLVarType(so2.getType()).level)
-//        );
-//    }
-
-    private static SQLVarType translateSPARQLPositionToSQLVarType(SPARQLPositionType positionType) {
-        return switch (positionType) {
-            case SUBJECT, PREDICATE, OBJECT -> SQLVarType.ID;
-            case GRAPH_NAME -> SQLVarType.CONDENSED;
-        };
+    public static SQLVariable getMaxSQLVariableByOccurrences(
+            List<SPARQLOccurrence> sparqlOccurrences
+    ) {
+        return sparqlOccurrences.stream()
+                .max(Comparator.comparingInt((SPARQLOccurrence so) -> so.getSqlVariable().getSqlVarType().level)
+                ).orElseThrow().getSqlVariable();
     }
+
+    public static String generateNodeProjectionByListSPARQLOccurrences(
+            List<SPARQLOccurrence> leftSparqlOccurrences,
+            List<SPARQLOccurrence> rightSparqlOccurrences
+    ) {
+
+        boolean presentLeft = leftSparqlOccurrences != null;
+        boolean presentRight = rightSparqlOccurrences != null;
+
+        if (presentLeft && presentRight) {
+            SQLVariable leftSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(leftSparqlOccurrences);
+            SQLVariable rightSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(rightSparqlOccurrences);
+            return leftSQLVariable.joinProjections(rightSQLVariable, "left_table", "right_table");
+        } else if (presentLeft) {
+            SQLVariable leftSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(leftSparqlOccurrences);
+
+            return leftSQLVariable.getSelect("left_table");
+        }
+
+        assert rightSparqlOccurrences != null;
+        SQLVariable rightSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(rightSparqlOccurrences);
+
+        return rightSQLVariable.getSelect("right_table");    }
 }
