@@ -1,8 +1,9 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
-import fr.cnrs.liris.jpugetgil.converg.sql.*;
-import fr.cnrs.liris.jpugetgil.converg.utils.Pair;
+import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
+import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.converg.sql.SQLUtils;
 import org.apache.jena.graph.Node;
 
 import java.util.List;
@@ -16,14 +17,13 @@ public class UnionSQLOperator extends SQLOperator {
 
     Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
 
-
     public UnionSQLOperator(SQLQuery leftQuery, SQLQuery rightQuery) {
         this.leftQuery = leftQuery;
         this.rightQuery = rightQuery;
     }
 
     /**
-     * @return
+     * @return the Where part of the Union SQL Operator
      */
     @Override
     protected String buildWhere() {
@@ -31,7 +31,7 @@ public class UnionSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return the From part of the Union SQL Operator
      */
     @Override
     protected String buildFrom() {
@@ -42,7 +42,7 @@ public class UnionSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return the select part of the Union SQL Operator
      */
     @Override
     protected String buildSelect() {
@@ -50,7 +50,7 @@ public class UnionSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return then new SQLQuery containing the union of the two subqueries
      */
     @Override
     public SQLQuery buildSQLQuery() {

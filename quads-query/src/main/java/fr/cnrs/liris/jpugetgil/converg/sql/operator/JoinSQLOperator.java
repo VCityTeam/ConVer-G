@@ -33,7 +33,7 @@ public class JoinSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return the Where part of the Join SQL Operator
      */
     @Override
     protected String buildWhere() {
@@ -41,7 +41,7 @@ public class JoinSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return the From part of the Join SQL Operator
      */
     @Override
     protected String buildFrom() {
@@ -64,7 +64,7 @@ public class JoinSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return the select part of the Join SQL Operator
      */
     @Override
     protected String buildSelect() {
@@ -84,7 +84,7 @@ public class JoinSQLOperator extends SQLOperator {
     }
 
     /**
-     * @return
+     * @return then new SQLQuery containing the join of the two subqueries
      */
     @Override
     public SQLQuery buildSQLQuery() {
@@ -102,6 +102,9 @@ public class JoinSQLOperator extends SQLOperator {
                 ));
     }
 
+    /**
+     * @implNote flatten joined variable if they have two different representation
+     */
     private void joinSubQueries() {
         commonVariables.forEach(sqlVariablePair -> {
             if (sqlVariablePair.getLeft().getSqlVarType().isLower(sqlVariablePair.getRight().getSqlVarType())) {
