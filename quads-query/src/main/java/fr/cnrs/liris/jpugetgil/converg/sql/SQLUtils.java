@@ -152,6 +152,20 @@ public class SQLUtils {
         return sqlJoinedVars;
     }
 
+    public static List<SQLVariable> getAllCondensedVariables(Map<Node, List<SPARQLOccurrence>> mapOccurrences) {
+        List<SQLVariable> condensedVariables = new ArrayList<>();
+
+        mapOccurrences.forEach(((node, sparqlOccurrences) -> {
+            for (SPARQLOccurrence sparqlOccurrence: sparqlOccurrences) {
+                if (sparqlOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
+                    condensedVariables.add(sparqlOccurrence.getSqlVariable());
+                }
+            }
+        }));
+
+        return condensedVariables;
+    }
+
     public static Map<Node, List<SPARQLOccurrence>> mergeMapOccurrences(
             Map<Node, List<SPARQLOccurrence>> leftMapOccurrences,
             Map<Node, List<SPARQLOccurrence>> rightMapOccurrences

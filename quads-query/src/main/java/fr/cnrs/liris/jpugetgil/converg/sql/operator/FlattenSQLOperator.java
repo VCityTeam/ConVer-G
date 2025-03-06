@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 
 public class FlattenSQLOperator extends SQLOperator {
     private final SQLQuery sqlQuery;
-    private final SQLVariable joinedSQLVariable;
+    private final SQLVariable flattenedVariable;
     private final String FLATTEN_TABLE_NAME = "flatten_table";
 
-    public FlattenSQLOperator(SQLQuery sqlQuery, SQLVariable joinedSQLVariable) {
+    public FlattenSQLOperator(SQLQuery sqlQuery, SQLVariable flattenedVariable) {
         this.sqlQuery = sqlQuery;
-        this.joinedSQLVariable = joinedSQLVariable;
+        this.flattenedVariable = flattenedVariable;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class FlattenSQLOperator extends SQLOperator {
         Map<Node, List<SPARQLOccurrence>> newSPARQLOccurrences = new HashMap<>();
 
         sqlQuery.getContext().sparqlVarOccurrences().forEach((node, occurrences) -> {
-            if (node.getName().equals(joinedSQLVariable.getSqlVarName())) {
+            if (node.getName().equals(flattenedVariable.getSqlVarName())) {
                 List<SPARQLOccurrence> sparqlOccurrences = new ArrayList<>();
                 occurrences.forEach(occurrence -> {
                     if (occurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
@@ -71,8 +71,8 @@ public class FlattenSQLOperator extends SQLOperator {
                 .map(node -> {
                     SQLVariable sqlVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
 
-                    if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(joinedSQLVariable.getSqlVarName())) {
-                        return sqlVar.joinProjections(this.joinedSQLVariable, FLATTEN_TABLE_NAME, "vng");
+                    if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(flattenedVariable.getSqlVarName())) {
+                        return sqlVar.selectFlattenVariable();
                     } else {
                         return sqlVar.getSelect(FLATTEN_TABLE_NAME);
                     }
@@ -90,10 +90,10 @@ public class FlattenSQLOperator extends SQLOperator {
         Map<Node, List<SPARQLOccurrence>> sparqlVarOccurrences = this.sqlQuery.getContext().sparqlVarOccurrences();
         return sparqlVarOccurrences.keySet()
                 .stream()
-                .filter(node -> node.getName().equals(joinedSQLVariable.getSqlVarName()))
+                .filter(node -> node.getName().equals(flattenedVariable.getSqlVarName()))
                 .map(node -> sparqlVarOccurrences.get(node).stream()
                         .map(sparqlOccurrence -> sparqlOccurrence.getSqlVariable()
-                                .joinJoin(joinedSQLVariable, FLATTEN_TABLE_NAME, "vng"))
+                                .fromFlattenVariable(FLATTEN_TABLE_NAME))
                         .collect(Collectors.joining(" \n")))
                 .collect(Collectors.joining(" \n"));
     }

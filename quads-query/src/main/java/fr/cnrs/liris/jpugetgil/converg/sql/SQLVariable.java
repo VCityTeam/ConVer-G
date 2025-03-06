@@ -61,6 +61,33 @@ public class SQLVariable {
         return Objects.hash(sqlVarType, sqlVarName);
     }
 
+    public String selectFlattenVariable() {
+        if (this.sqlVarType != SQLVarType.CONDENSED) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
+        }
+        return "vng.id_versioned_named_graph AS v$" + this.sqlVarName;
+    }
+
+    public String fromFlattenVariable(String tableName) {
+        if (this.sqlVarType != SQLVarType.CONDENSED) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
+        }
+
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+        return "JOIN versioned_named_graph vng ON " + sqlClauseBuilder.and(new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                tableName + ".ng$" + this.sqlVarName,
+                                "vng.id_named_graph"
+                        ))
+                .and(
+                        new EqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        "get_bit(" + tableName + ".bs$" + this.sqlVarName + ", vng.index_version - 1)",
+                                        "1"
+                                )
+                ).build().clause;
+    }
+
     private String joinProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return switch (leftSQLVar.getSqlVarType()) {
             case VALUE -> switch (rightSQLVar.getSqlVarType()) {
@@ -77,7 +104,7 @@ public class SQLVariable {
             case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
                 case VALUE, UNBOUND_GRAPH ->
                         throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
-                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
+                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + rightSQLVar.getSqlVarName();
                 case CONDENSED -> leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " +
                         rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + " AS bs$" + leftSQLVar.getSqlVarName() + ", " +
                         leftTableName + ".ng$" + leftSQLVar.getSqlVarName();
@@ -128,10 +155,10 @@ public class SQLVariable {
                 case VALUE, UNBOUND_GRAPH ->
                         throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
                 case ID -> "JOIN versioned_named_graph vng ON " + sqlClauseBuilder.and(new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
-                                rightTableName + ".id_named_graph"
-                        ))
+                                .buildComparisonOperatorSQL(
+                                        leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
+                                        rightTableName + ".id_named_graph"
+                                ))
                         .and(
                                 new EqualToOperator()
                                         .buildComparisonOperatorSQL(

@@ -5,6 +5,7 @@ import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.JoinSQLOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.QuadPatternSQLOperator;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.UnionSQLOperator;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.snapshots.Unit;
@@ -111,28 +112,28 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     buildSPARQLContext(opJoin.getLeft(), context),
                     buildSPARQLContext(opJoin.getRight(), context)
             ).buildSQLQuery();
+            case OpUnion opUnion -> new UnionSQLOperator(
+                    buildSPARQLContext(opUnion.getLeft(), context),
+                    buildSPARQLContext(opUnion.getRight(), context)
+            ).buildSQLQuery();
 //            case OpLeftJoin opLeftJoin -> {
 //                // Jointure avec un/des variable qui sont dans un optional
 //                buildSPARQLContext(opLeftJoin.getLeft(), context);
 //                buildSPARQLContext(opLeftJoin.getRight(), context);
 //                throw new ARQNotImplemented("TODO: OpLeftJoin not implemented");
 //            }
-//            case OpUnion opUnion -> new StSUnionOperator(
-//                    buildSPARQLContext(opUnion.getLeft(), context),
-//                    buildSPARQLContext(opUnion.getRight(), context)
-//            ).buildSQLQuery();
 //            case OpProject opProject -> new StSProjectOperator(
 //                    opProject,
 //                    buildSPARQLContext(opProject.getSubOp(), context)
 //            ).buildSQLQuery();
-//            case OpTable ignored -> new SQLQuery(
-//                    null,
-//                    context
-//            );
-//            case OpNull ignored -> new SQLQuery(
-//                    null,
-//                    context
-//            );
+            case OpTable ignored -> new SQLQuery(
+                    null,
+                    context
+            );
+            case OpNull ignored -> new SQLQuery(
+                    null,
+                    context
+            );
             case OpQuadPattern opQuadPattern -> new QuadPatternSQLOperator(opQuadPattern, context)
                     .buildSQLQuery();
             case OpOrder opOrder -> throw new ARQNotImplemented("TODO: OpOrder not implemented");
