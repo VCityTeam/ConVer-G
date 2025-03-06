@@ -33,9 +33,9 @@ public class SQLVariable {
     }
 
     public String getSelect(String tableName) {
-        return tableName + switch (this.sqlVarType) {
-            case VALUE, ID -> ".v$" + this.sqlVarName;
-            case CONDENSED -> ".ng$" + this.sqlVarName + ", " + tableName + ".bs$" + this.sqlVarName;
+        return switch (this.sqlVarType) {
+            case VALUE, ID -> tableName + ".v$" + this.sqlVarName;
+            case CONDENSED -> tableName + ".ng$" + this.sqlVarName + ", " + tableName + ".bs$" + this.sqlVarName;
             case UNBOUND_GRAPH -> null;
         };
     }
@@ -64,12 +64,12 @@ public class SQLVariable {
     private String joinProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return switch (leftSQLVar.getSqlVarType()) {
             case VALUE -> switch (rightSQLVar.getSqlVarType()) {
-                case VALUE -> leftTableName + ".v$" + leftSQLVar.getSqlVarName();
+                case VALUE -> leftSQLVar.getSelect(leftTableName);
                 case ID, CONDENSED, UNBOUND_GRAPH ->
                         throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
             };
             case ID -> switch (rightSQLVar.getSqlVarType()) {
-                case ID -> leftTableName + ".v$" + leftSQLVar.getSqlVarName();
+                case ID -> leftSQLVar.getSelect(leftTableName);
                 case CONDENSED -> leftTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
                 case VALUE, UNBOUND_GRAPH ->
                         throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
@@ -77,7 +77,7 @@ public class SQLVariable {
             case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
                 case VALUE, UNBOUND_GRAPH ->
                         throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
-                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName(); // "vng.id_versioned_named_graph AS v$" + sqlVar.getSqlVarName()
+                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
                 case CONDENSED -> leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " +
                         rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + " AS bs$" + leftSQLVar.getSqlVarName() + ", " +
                         leftTableName + ".ng$" + leftSQLVar.getSqlVarName();

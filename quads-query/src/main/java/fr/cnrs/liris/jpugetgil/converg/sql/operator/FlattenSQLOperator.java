@@ -2,7 +2,6 @@ package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
 import fr.cnrs.liris.jpugetgil.converg.sql.*;
-import fr.cnrs.liris.jpugetgil.converg.utils.Pair;
 import org.apache.jena.graph.Node;
 
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 public class FlattenSQLOperator extends SQLOperator {
     private final SQLQuery sqlQuery;
     private final SQLVariable joinedSQLVariable;
+    private final String FLATTEN_TABLE_NAME = "flatten_table";
 
     public FlattenSQLOperator(SQLQuery sqlQuery, SQLVariable joinedSQLVariable) {
         this.sqlQuery = sqlQuery;
@@ -27,7 +27,7 @@ public class FlattenSQLOperator extends SQLOperator {
         SQLContext newContext = flattenContext();
 
         return new SQLQuery(
-                "SELECT " + select + " FROM (" + sqlQuery.getSql() + ") flatten_table " + join,
+                "SELECT " + select + " FROM (" + sqlQuery.getSql() + ") " + FLATTEN_TABLE_NAME + " " + join,
                 newContext
         );
     }
@@ -72,9 +72,9 @@ public class FlattenSQLOperator extends SQLOperator {
                     SQLVariable sqlVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
 
                     if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(joinedSQLVariable.getSqlVarName())) {
-                        return sqlVar.joinProjections(this.joinedSQLVariable, "flatten_table", "vng");
+                        return sqlVar.joinProjections(this.joinedSQLVariable, FLATTEN_TABLE_NAME, "vng");
                     } else {
-                        return sqlVar.getSelect("flatten_table");
+                        return sqlVar.getSelect(FLATTEN_TABLE_NAME);
                     }
                 })
                 .collect(Collectors.joining(", "));
@@ -93,7 +93,7 @@ public class FlattenSQLOperator extends SQLOperator {
                 .filter(node -> node.getName().equals(joinedSQLVariable.getSqlVarName()))
                 .map(node -> sparqlVarOccurrences.get(node).stream()
                         .map(sparqlOccurrence -> sparqlOccurrence.getSqlVariable()
-                                .joinJoin(joinedSQLVariable, "flatten_table", "vng"))
+                                .joinJoin(joinedSQLVariable, FLATTEN_TABLE_NAME, "vng"))
                         .collect(Collectors.joining(" \n")))
                 .collect(Collectors.joining(" \n"));
     }

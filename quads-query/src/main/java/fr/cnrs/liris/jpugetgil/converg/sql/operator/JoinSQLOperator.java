@@ -19,6 +19,10 @@ public class JoinSQLOperator extends SQLOperator {
 
     Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
 
+    private final String LEFT_TABLE_NAME = "left_table";
+    private final String RIGHT_TABLE_NAME = "right_table";
+
+
     public JoinSQLOperator(SQLQuery leftQuery, SQLQuery rightQuery) {
         this.leftQuery = leftQuery;
         this.rightQuery = rightQuery;
@@ -49,14 +53,14 @@ public class JoinSQLOperator extends SQLOperator {
             commonVariables.forEach(sqlVariablePair -> sqlJoinClauseBuilder.and(
                     sqlVariablePair.getLeft().joinJoin(
                             sqlVariablePair.getRight(),
-                            "left_table",
-                            "right_table"
+                            LEFT_TABLE_NAME,
+                            RIGHT_TABLE_NAME
                     )
             ));
         }
 
-        return " FROM (" + leftQuery.getSql() + ") left_table JOIN (" +
-                rightQuery.getSql() + ") right_table ON " + sqlJoinClauseBuilder.build().clause;
+        return " FROM (" + leftQuery.getSql() + ") " + LEFT_TABLE_NAME + " JOIN (" +
+                rightQuery.getSql() + ") " + RIGHT_TABLE_NAME + " ON " + sqlJoinClauseBuilder.build().clause;
     }
 
     /**
