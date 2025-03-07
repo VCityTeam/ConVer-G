@@ -120,6 +120,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 //                buildSPARQLContext(opLeftJoin.getRight(), context);
 //                throw new ARQNotImplemented("TODO: OpLeftJoin not implemented");
 //            }
+            case OpGroup opGroup -> new GroupSQLOperator(
+                    opGroup,
+                    buildSPARQLContext(opGroup.getSubOp(), context)
+            ).buildSQLQuery();
             case OpMinus opMinus -> new MinusSQLOperator(
                     buildSPARQLContext(opMinus.getLeft(), context),
                     buildSPARQLContext(opMinus.getRight(), context)
@@ -127,6 +131,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
             case OpProject opProject -> new ProjectSQLOperator(
                     opProject,
                     buildSPARQLContext(opProject.getSubOp(), context)
+            ).buildSQLQuery();
+            case OpExtend opExtend -> new ExtendSQLOperator(
+                    opExtend,
+                    buildSPARQLContext(opExtend.getSubOp(), context)
             ).buildSQLQuery();
             case OpTable ignored -> new SQLQuery(
                     null,

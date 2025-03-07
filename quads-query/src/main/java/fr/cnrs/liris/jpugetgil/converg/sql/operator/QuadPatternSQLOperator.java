@@ -49,9 +49,16 @@ public class QuadPatternSQLOperator extends SQLOperator {
 
         String query = !where.isEmpty() ? select + from + "WHERE " + where : select + from;
 
+        SQLQuery sqlQuery = new SQLQuery(query, context);
+
+        if (!this.context.condensedMode() && this.graph.isVariable()) {
+            SQLVariable graphVariable = new SQLVariable(SQLVarType.CONDENSED, this.graph.getName());
+            sqlQuery = new FlattenSQLOperator(sqlQuery, graphVariable).buildSQLQuery();
+        }
+
         return new SQLQuery(
-                query,
-                context
+                sqlQuery.getSql(),
+                sqlQuery.getContext()
         );
     }
 

@@ -32,6 +32,11 @@ public class FlattenSQLOperator extends SQLOperator {
         );
     }
 
+    /**
+     * Flatten the context of the SQL query
+     *
+     * @return the new context where the variable is flattened
+     */
     private SQLContext flattenContext() {
         Map<Node, List<SPARQLOccurrence>> newSPARQLOccurrences = new HashMap<>();
 
@@ -72,7 +77,7 @@ public class FlattenSQLOperator extends SQLOperator {
                     SQLVariable sqlVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
 
                     if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(flattenedVariable.getSqlVarName())) {
-                        return sqlVar.selectFlattenVariable();
+                        return sqlVar.getSelectFlattenVariable();
                     } else {
                         return sqlVar.getSelect(FLATTEN_TABLE_NAME);
                     }

@@ -77,16 +77,39 @@ public class SQLVariable {
         return Objects.hash(sqlVarType, sqlVarName);
     }
 
+
+    /**
+     * Identify the SQL variable (SELECT)
+     *
+     * @return the identified SQL variable Select part
+     */
+    public String getSelectIdentifyVariable() {
+        return "rl.name as v$" + this.sqlVarName;
+    }
+
     /**
      * Flatten the SQL variable (SELECT)
      *
      * @return the flatten SQL select part
      */
-    public String selectFlattenVariable() {
+    public String getSelectFlattenVariable() {
         if (this.sqlVarType != SQLVarType.CONDENSED) {
             throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
         }
         return "vng.id_versioned_named_graph AS v$" + this.sqlVarName;
+    }
+
+    /**
+     * Identify the SQL variable (JOIN)
+     *
+     * @return the identified SQL variable JOIN part
+     */
+    public String fromIdentifiedVariable(String identifyTableName) {
+        if (this.sqlVarType != SQLVarType.ID) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.ID + "level to be identified.");
+        }
+
+        return " JOIN resource_or_literal rl ON " + this.getSelect(identifyTableName) + " = rl.id_resource_or_literal";
     }
 
     /**
