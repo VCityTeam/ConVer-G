@@ -3,10 +3,7 @@ package fr.cnrs.liris.jpugetgil.converg;
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
-import fr.cnrs.liris.jpugetgil.converg.sql.operator.JoinSQLOperator;
-import fr.cnrs.liris.jpugetgil.converg.sql.operator.ProjectSQLOperator;
-import fr.cnrs.liris.jpugetgil.converg.sql.operator.QuadPatternSQLOperator;
-import fr.cnrs.liris.jpugetgil.converg.sql.operator.UnionSQLOperator;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.snapshots.Unit;
@@ -123,6 +120,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 //                buildSPARQLContext(opLeftJoin.getRight(), context);
 //                throw new ARQNotImplemented("TODO: OpLeftJoin not implemented");
 //            }
+            case OpMinus opMinus -> new MinusSQLOperator(
+                    buildSPARQLContext(opMinus.getLeft(), context),
+                    buildSPARQLContext(opMinus.getRight(), context)
+            ).buildSQLQuery();
             case OpProject opProject -> new ProjectSQLOperator(
                     opProject,
                     buildSPARQLContext(opProject.getSubOp(), context)
@@ -137,6 +138,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
             );
             case OpQuadPattern opQuadPattern -> new QuadPatternSQLOperator(opQuadPattern, context)
                     .buildSQLQuery();
+            case OpSlice opSlice -> new SliceSQLOperator(
+                    opSlice,
+                    buildSPARQLContext(opSlice.getSubOp(), context)
+            ).buildSQLQuery();
             case OpOrder opOrder -> throw new ARQNotImplemented("TODO: OpOrder not implemented");
             case OpTopN opTopN -> throw new ARQNotImplemented("TODO: OpTopN not implemented");
             case OpPath opPath -> throw new ARQNotImplemented("TODO: OpPath not implemented");
