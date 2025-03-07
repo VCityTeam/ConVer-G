@@ -40,10 +40,26 @@ public class SQLVariable {
         };
     }
 
+    /**
+     * Join the two SQL variables
+     *
+     * @param rightSQLVar the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the join SQL projections
+     */
     public String joinProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return joinProjections(this, rightSQLVar, leftTableName, rightTableName);
     }
 
+    /**
+     * Join the two SQL variables
+     *
+     * @param rightSQLVar the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the join SQL join
+     */
     public String joinJoin(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return joinJoin(this, rightSQLVar, leftTableName, rightTableName);
     }
@@ -61,6 +77,11 @@ public class SQLVariable {
         return Objects.hash(sqlVarType, sqlVarName);
     }
 
+    /**
+     * Flatten the SQL variable (SELECT)
+     *
+     * @return the flatten SQL select part
+     */
     public String selectFlattenVariable() {
         if (this.sqlVarType != SQLVarType.CONDENSED) {
             throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
@@ -68,6 +89,12 @@ public class SQLVariable {
         return "vng.id_versioned_named_graph AS v$" + this.sqlVarName;
     }
 
+    /**
+     * Flatten the SQL variable (FROM)
+     *
+     * @param tableName the table name
+     * @return the flatten SQL from part
+     */
     public String fromFlattenVariable(String tableName) {
         if (this.sqlVarType != SQLVarType.CONDENSED) {
             throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
@@ -88,6 +115,13 @@ public class SQLVariable {
                 ).build().clause;
     }
 
+    /**
+     * Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the join SQL projections
+     */
     private String joinProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return switch (leftSQLVar.getSqlVarType()) {
             case VALUE -> switch (rightSQLVar.getSqlVarType()) {
@@ -114,6 +148,13 @@ public class SQLVariable {
         };
     }
 
+    /**
+     * Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the join SQL
+     */
     private String joinJoin(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
 

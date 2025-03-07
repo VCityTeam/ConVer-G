@@ -14,6 +14,7 @@ import java.util.stream.IntStream;
 
 public class SQLUtils {
 
+
     public static String intersectionValidity(Integer size) {
         return "(" + Streams.mapWithIndex(IntStream.range(1, 1 + size), (triple, index) ->
                 "t" + index + ".validity"
@@ -125,6 +126,13 @@ public class SQLUtils {
         }
     }
 
+    /**
+     * Build the common variables between two maps of occurrences
+     *
+     * @param leftNodeListMap  the left node list map
+     * @param rightNodeListMap the right node list map
+     * @return the list of common variables
+     */
     public static List<Pair<SQLVariable, SQLVariable>> buildCommonsVariables(
             Map<Node, List<SPARQLOccurrence>> leftNodeListMap,
             Map<Node, List<SPARQLOccurrence>> rightNodeListMap
@@ -152,11 +160,17 @@ public class SQLUtils {
         return sqlJoinedVars;
     }
 
+    /**
+     * Get all condensed variables from the map occurrences
+     *
+     * @param mapOccurrences the map occurrences
+     * @return the list of condensed variables
+     */
     public static List<SQLVariable> getAllCondensedVariables(Map<Node, List<SPARQLOccurrence>> mapOccurrences) {
         List<SQLVariable> condensedVariables = new ArrayList<>();
 
         mapOccurrences.forEach(((node, sparqlOccurrences) -> {
-            for (SPARQLOccurrence sparqlOccurrence: sparqlOccurrences) {
+            for (SPARQLOccurrence sparqlOccurrence : sparqlOccurrences) {
                 if (sparqlOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
                     condensedVariables.add(sparqlOccurrence.getSqlVariable());
                 }
@@ -166,6 +180,13 @@ public class SQLUtils {
         return condensedVariables;
     }
 
+    /**
+     * Merge two maps of occurrences
+     *
+     * @param leftMapOccurrences  the left map occurrences
+     * @param rightMapOccurrences the right map occurrences
+     * @return the merged map occurrences
+     */
     public static Map<Node, List<SPARQLOccurrence>> mergeMapOccurrences(
             Map<Node, List<SPARQLOccurrence>> leftMapOccurrences,
             Map<Node, List<SPARQLOccurrence>> rightMapOccurrences
@@ -183,6 +204,12 @@ public class SQLUtils {
         return mergedOccurrences;
     }
 
+    /**
+     * Get the max (representation) SQL variable by occurrences
+     *
+     * @param sparqlOccurrences the sparql occurrences
+     * @return the max representation SQL variable
+     */
     public static SQLVariable getMaxSQLVariableByOccurrences(
             List<SPARQLOccurrence> sparqlOccurrences
     ) {
@@ -191,6 +218,13 @@ public class SQLUtils {
                 ).orElseThrow().getSqlVariable();
     }
 
+    /**
+     * Generate the projection of the SQL query according to the occurrences
+     *
+     * @param leftSparqlOccurrences  the left sparql occurrences
+     * @param rightSparqlOccurrences the right sparql occurrences
+     * @return the projection of the SQL query
+     */
     public static String generateNodeProjectionByListSPARQLOccurrences(
             List<SPARQLOccurrence> leftSparqlOccurrences,
             List<SPARQLOccurrence> rightSparqlOccurrences
@@ -212,5 +246,6 @@ public class SQLUtils {
         assert rightSparqlOccurrences != null;
         SQLVariable rightSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(rightSparqlOccurrences);
 
-        return rightSQLVariable.getSelect("right_table");    }
+        return rightSQLVariable.getSelect("right_table");
+    }
 }

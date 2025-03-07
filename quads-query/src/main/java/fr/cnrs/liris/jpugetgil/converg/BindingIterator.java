@@ -140,15 +140,19 @@ public class BindingIterator implements Iterator<Binding> {
 
     private String getAssociatedRDFType(int sqlType) {
         // Implement this method to map SQL types to RDF types
-        // For example:
-        switch (sqlType) {
-            case Types.INTEGER:
-                return XSDDatatype.XSDinteger.getURI();
-            case Types.VARCHAR:
-                return XSDDatatype.XSDstring.getURI();
+        return switch (sqlType) {
+            case Types.INTEGER -> XSDDatatype.XSDinteger.getURI();
+            case Types.VARCHAR -> XSDDatatype.XSDstring.getURI();
+            case Types.BOOLEAN -> XSDDatatype.XSDboolean.getURI();
+            case Types.DOUBLE -> XSDDatatype.XSDdouble.getURI();
+            case Types.FLOAT -> XSDDatatype.XSDfloat.getURI();
+            case Types.DECIMAL -> XSDDatatype.XSDdecimal.getURI();
+            case Types.TIMESTAMP -> XSDDatatype.XSDdateTime.getURI();
+            case Types.DATE -> XSDDatatype.XSDdate.getURI();
+            case Types.TIME -> XSDDatatype.XSDtime.getURI();
+            case Types.BIGINT -> XSDDatatype.XSDlong.getURI();
             // Add more cases as needed
-            default:
-                return null;
-        }
+            default -> null; // or a default type
+        };
     }
 }

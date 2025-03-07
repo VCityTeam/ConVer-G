@@ -4,6 +4,7 @@ import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.JoinSQLOperator;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.ProjectSQLOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.QuadPatternSQLOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.UnionSQLOperator;
 import io.prometheus.metrics.core.metrics.Counter;
@@ -122,10 +123,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 //                buildSPARQLContext(opLeftJoin.getRight(), context);
 //                throw new ARQNotImplemented("TODO: OpLeftJoin not implemented");
 //            }
-//            case OpProject opProject -> new StSProjectOperator(
-//                    opProject,
-//                    buildSPARQLContext(opProject.getSubOp(), context)
-//            ).buildSQLQuery();
+            case OpProject opProject -> new ProjectSQLOperator(
+                    opProject,
+                    buildSPARQLContext(opProject.getSubOp(), context)
+            ).buildSQLQuery();
             case OpTable ignored -> new SQLQuery(
                     null,
                     context

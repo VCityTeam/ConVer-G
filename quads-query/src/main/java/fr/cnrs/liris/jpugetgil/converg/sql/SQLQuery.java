@@ -6,7 +6,7 @@ public class SQLQuery {
 
     private String sql;
 
-    private final SQLContext context;
+    private SQLContext context;
 
     private OpSlice opSlice;
 
@@ -29,6 +29,10 @@ public class SQLQuery {
 
     public SQLContext getContext() {
         return context;
+    }
+
+    public void setContext(SQLContext context) {
+        this.context = context;
     }
 
     public SQLQuery finalizeQuery() {

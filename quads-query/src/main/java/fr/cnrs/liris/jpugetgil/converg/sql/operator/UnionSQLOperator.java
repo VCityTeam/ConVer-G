@@ -15,8 +15,6 @@ public class UnionSQLOperator extends SQLOperator {
 
     SQLQuery rightQuery;
 
-    Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
-
     public UnionSQLOperator(SQLQuery leftQuery, SQLQuery rightQuery) {
         this.leftQuery = leftQuery;
         this.rightQuery = rightQuery;
@@ -62,10 +60,8 @@ public class UnionSQLOperator extends SQLOperator {
 
         return new SQLQuery(
                 select + from + where,
-                new SQLContext(
-                        mergedMapOccurrences,
-                        leftQuery.getContext().condensedMode()
-                ));
+                leftQuery.getContext()
+        );
     }
 
     private void unionSubQueries() {
