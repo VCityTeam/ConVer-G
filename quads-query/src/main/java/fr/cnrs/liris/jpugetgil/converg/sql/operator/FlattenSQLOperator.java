@@ -74,12 +74,15 @@ public class FlattenSQLOperator extends SQLOperator {
         return sparqlVarOccurrences.keySet()
                 .stream()
                 .map(node -> {
-                    SQLVariable sqlVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
+                    SPARQLOccurrence maxSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(sparqlVarOccurrences.get(node));
 
-                    if (sqlVar.getSqlVarType() == SQLVarType.CONDENSED && sqlVar.getSqlVarName().equals(flattenedVariable.getSqlVarName())) {
-                        return sqlVar.getSelectFlattenVariable();
+                    if (
+                            maxSPARQLOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED &&
+                            maxSPARQLOccurrence.getSqlVariable().getSqlVarName().equals(flattenedVariable.getSqlVarName())
+                    ) {
+                        return maxSPARQLOccurrence.getSqlVariable().getSelectFlattenVariable();
                     } else {
-                        return sqlVar.getSelect(FLATTEN_TABLE_NAME);
+                        return maxSPARQLOccurrence.getSqlVariable().getSelect(FLATTEN_TABLE_NAME);
                     }
                 })
                 .collect(Collectors.joining(", "));

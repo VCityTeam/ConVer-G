@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class SQLOperator {
-    private static final Logger log = LoggerFactory.getLogger(SQLOperator.class);
+    protected static final Logger log = LoggerFactory.getLogger(SQLOperator.class);
 
     protected SQLOperator() {
         log.info("Created {} SQL operator.", this.getClass().getSimpleName());

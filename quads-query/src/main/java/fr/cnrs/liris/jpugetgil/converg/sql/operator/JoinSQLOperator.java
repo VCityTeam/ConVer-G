@@ -11,22 +11,22 @@ import java.util.stream.Collectors;
 
 public class JoinSQLOperator extends SQLOperator {
 
-    SQLQuery leftQuery;
-
-    SQLQuery rightQuery;
-
-    List<Pair<SQLVariable, SQLVariable>> commonVariables;
-
-    Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
+    protected SQLQuery leftQuery;
+    protected SQLQuery rightQuery;
+    protected List<Pair<SQLVariable, SQLVariable>> commonVariables;
+    protected Map<Node, List<SPARQLOccurrence>> mergedMapOccurrences;
 
     private final String LEFT_TABLE_NAME = "left_table";
     private final String RIGHT_TABLE_NAME = "right_table";
-
 
     public JoinSQLOperator(SQLQuery leftQuery, SQLQuery rightQuery) {
         this.leftQuery = leftQuery;
         this.rightQuery = rightQuery;
         this.commonVariables = SQLUtils.buildCommonsVariables(
+                leftQuery.getContext().sparqlVarOccurrences(),
+                rightQuery.getContext().sparqlVarOccurrences()
+        );
+        this.mergedMapOccurrences = SQLUtils.mergeMapOccurrences(
                 leftQuery.getContext().sparqlVarOccurrences(),
                 rightQuery.getContext().sparqlVarOccurrences()
         );
@@ -68,11 +68,6 @@ public class JoinSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildSelect() {
-        mergedMapOccurrences = SQLUtils.mergeMapOccurrences(
-                leftQuery.getContext().sparqlVarOccurrences(),
-                rightQuery.getContext().sparqlVarOccurrences()
-        );
-
         return "SELECT " + mergedMapOccurrences
                 .keySet()
                 .stream()
@@ -98,14 +93,16 @@ public class JoinSQLOperator extends SQLOperator {
                 select + from + where,
                 new SQLContext(
                         mergedMapOccurrences,
-                        leftQuery.getContext().condensedMode()
+                        leftQuery.getContext().condensedMode(),
+                        null,
+                        null
                 ));
     }
 
     /**
      * @implNote flatten joined variable if they have two different representation
      */
-    private void joinSubQueries() {
+    protected void joinSubQueries() {
         commonVariables.forEach(sqlVariablePair -> {
             if (sqlVariablePair.getLeft().getSqlVarType().isLower(sqlVariablePair.getRight().getSqlVarType())) {
                 // Change the representation of the variable

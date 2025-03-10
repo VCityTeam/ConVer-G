@@ -16,4 +16,9 @@ public class GreaterThan extends AbstractFunction<E_GreaterThan> {
     public String toSQLStringAgg() {
         return "(" + args[0].toSQLStringAgg() + "::float" + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + "::float)";
     }
+
+    @Override
+    public String toNameSQLString() {
+        return "(" + args[0].toNameSQLString() + "::float" + getJenaExpr().getOpName() + args[1].toNameSQLString() + "::float)";
+    }
 }

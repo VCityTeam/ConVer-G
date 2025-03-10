@@ -4,5 +4,6 @@ public enum SPARQLPositionType {
     SUBJECT,
     PREDICATE,
     OBJECT,
-    GRAPH_NAME
+    GRAPH_NAME,
+    AGGREGATED
 }

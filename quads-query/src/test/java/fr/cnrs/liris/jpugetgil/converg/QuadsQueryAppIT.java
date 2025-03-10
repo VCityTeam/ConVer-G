@@ -3,12 +3,10 @@ package fr.cnrs.liris.jpugetgil.converg;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import jakarta.json.Json;
-import org.apache.jena.atlas.json.JSON;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -23,22 +21,23 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 /**
  * Unit test for SPARQL queries.
  */
-class QuadsQueryAppTest {
-    private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppTest.class);
+@Tag("integration")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class QuadsQueryAppIT {
+    private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
-    @Order(1)
+    // v --- this should be integration tests --- v
+    @Order(2)
     @ParameterizedTest
     @ValueSource(strings = {"0", "1", "2", "3", "5", "6", "7", "8", "9", "10", "11"})
     void querySPARQLN(String queryNumber) throws Exception {
@@ -117,7 +116,7 @@ class QuadsQueryAppTest {
         assertEquals(bgJSONNode.size(), quadsQueryJSONNode.size());
 
         for (int i = 0; i < quadsQueryJSONNode.size(); i++) {
-                assertTrue(findMatchingJSONNode(bgJSONNode, bgJSONNode.get(i)));
+            assertTrue(findMatchingJSONNode(bgJSONNode, bgJSONNode.get(i)));
         }
     }
 

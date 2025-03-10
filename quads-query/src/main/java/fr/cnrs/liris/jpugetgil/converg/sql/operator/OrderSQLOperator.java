@@ -1,25 +1,25 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
-import org.apache.jena.sparql.algebra.op.OpSlice;
+import org.apache.jena.sparql.algebra.op.OpOrder;
 
-public class SliceSQLOperator extends SQLOperator {
+public class OrderSQLOperator extends SQLOperator {
 
-    OpSlice opSlice;
+    OpOrder opOrder;
 
     SQLQuery query;
 
-    public SliceSQLOperator(OpSlice opSlice, SQLQuery query) {
-        this.opSlice = opSlice;
+    public OrderSQLOperator(OpOrder opOrder, SQLQuery query) {
+        this.opOrder = opOrder;
         this.query = query;
     }
 
     /**
-     * @return the SQL query with the slice operator
+     * @return the SQL query of the distinct operator
      */
     @Override
     public SQLQuery buildSQLQuery() {
-        query.setContext(query.getContext().setOpSlice(opSlice));
+        query.setContext(query.getContext().setOpOrder(opOrder));
         return query;
     }
 
@@ -44,6 +44,6 @@ public class SliceSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildWhere() {
-        return null;
+        return "";
     }
 }

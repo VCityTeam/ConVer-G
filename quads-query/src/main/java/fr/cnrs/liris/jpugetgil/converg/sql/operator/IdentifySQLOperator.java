@@ -41,12 +41,15 @@ public class IdentifySQLOperator extends SQLOperator {
         return sparqlVarOccurrences.keySet()
                 .stream()
                 .map(node -> {
-                    SQLVariable maxVar = SQLUtils.getMaxSQLVariableByOccurrences(sparqlVarOccurrences.get(node));
+                    SPARQLOccurrence maxSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(sparqlVarOccurrences.get(node));
 
-                    if (maxVar.getSqlVarName().equals(identifiedVariable.getSqlVarName()) && maxVar.getSqlVarType() == SQLVarType.ID) {
-                        return maxVar.getSelectIdentifyVariable();
+                    if (
+                            maxSPARQLOccurrence.getSqlVariable().getSqlVarName().equals(identifiedVariable.getSqlVarName()) &&
+                                    maxSPARQLOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.ID
+                    ) {
+                        return maxSPARQLOccurrence.getSqlVariable().getSelectIdentifyVariable();
                     } else {
-                        return maxVar.getSelect(IDENTIFY_TABLE_NAME);
+                        return maxSPARQLOccurrence.getSqlVariable().getSelect(IDENTIFY_TABLE_NAME);
                     }
                 })
                 .collect(Collectors.joining(", "));

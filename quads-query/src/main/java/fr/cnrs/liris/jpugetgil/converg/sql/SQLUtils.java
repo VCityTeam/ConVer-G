@@ -210,11 +210,25 @@ public class SQLUtils {
      * @param sparqlOccurrences the sparql occurrences
      * @return the max representation SQL variable
      */
-    public static SQLVariable getMaxSQLVariableByOccurrences(
+    public static SPARQLOccurrence getMaxSPARQLOccurrence(
             List<SPARQLOccurrence> sparqlOccurrences
     ) {
         return sparqlOccurrences.stream()
                 .max(Comparator.comparingInt((SPARQLOccurrence so) -> so.getSqlVariable().getSqlVarType().level)
+                ).orElseThrow();
+    }
+
+    /**
+     * Get the min (representation) SQL variable by occurrences
+     *
+     * @param sparqlOccurrences the sparql occurrences
+     * @return the min representation SQL variable
+     */
+    public static SQLVariable getMinSQLVariableByOccurrences(
+            List<SPARQLOccurrence> sparqlOccurrences
+    ) {
+        return sparqlOccurrences.stream()
+                .min(Comparator.comparingInt((SPARQLOccurrence so) -> so.getSqlVariable().getSqlVarType().level)
                 ).orElseThrow().getSqlVariable();
     }
 
@@ -229,23 +243,24 @@ public class SQLUtils {
             List<SPARQLOccurrence> leftSparqlOccurrences,
             List<SPARQLOccurrence> rightSparqlOccurrences
     ) {
-
         boolean presentLeft = leftSparqlOccurrences != null;
         boolean presentRight = rightSparqlOccurrences != null;
 
         if (presentLeft && presentRight) {
-            SQLVariable leftSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(leftSparqlOccurrences);
-            SQLVariable rightSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(rightSparqlOccurrences);
-            return leftSQLVariable.joinProjections(rightSQLVariable, "left_table", "right_table");
+            SPARQLOccurrence leftMAXSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
+            SPARQLOccurrence rightSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
+            return leftMAXSPARQLOccurrence
+                    .getSqlVariable()
+                    .joinProjections(rightSPARQLOccurrence.getSqlVariable(), "left_table", "right_table");
         } else if (presentLeft) {
-            SQLVariable leftSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(leftSparqlOccurrences);
+            SPARQLOccurrence leftSQLVariable = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
 
-            return leftSQLVariable.getSelect("left_table");
+            return leftSQLVariable.getSqlVariable().getSelect("left_table");
         }
 
         assert rightSparqlOccurrences != null;
-        SQLVariable rightSQLVariable = SQLUtils.getMaxSQLVariableByOccurrences(rightSparqlOccurrences);
+        SPARQLOccurrence rightSQLVariable = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
 
-        return rightSQLVariable.getSelect("right_table");
+        return rightSQLVariable.getSqlVariable().getSelect("right_table");
     }
 }

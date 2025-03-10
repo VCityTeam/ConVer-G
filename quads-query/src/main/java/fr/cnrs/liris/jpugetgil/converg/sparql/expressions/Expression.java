@@ -97,6 +97,10 @@ public interface Expression {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }
 
+    default String toNameSQLString() {
+        throw new IllegalArgumentException("This expression does not have a SQL representation.");
+    }
+
     /**
      * Updates the filter configuration to take this expression's variables into account
      *

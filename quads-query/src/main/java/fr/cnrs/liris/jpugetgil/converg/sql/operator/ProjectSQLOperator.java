@@ -19,6 +19,8 @@ public class ProjectSQLOperator extends SQLOperator {
 
     SQLQuery query;
 
+    private final String PROJECT_TABLE_NAME = "project_table";
+
     public ProjectSQLOperator(OpProject opProject, SQLQuery query) {
         this.opProject = opProject;
         this.query = query;
@@ -37,10 +39,7 @@ public class ProjectSQLOperator extends SQLOperator {
 
         String query = !where.isEmpty() ? select + from + "WHERE " + where : select + from;
 
-        return new SQLQuery(
-                query,
-                this.query.getContext()
-        );
+        return new SQLQuery(query, this.query.getContext());
     }
 
     /**
@@ -48,21 +47,15 @@ public class ProjectSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildSelect() {
-        return this.query.getContext().sparqlVarOccurrences().keySet()
-                .stream()
-                .map(node -> {
-                    SQLVariable maxVariable = SQLUtils.getMaxSQLVariableByOccurrences(this.query.getContext().sparqlVarOccurrences().get(node));
+        return this.query.getContext().sparqlVarOccurrences().keySet().stream().map(node -> {
+            SPARQLOccurrence maxSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(
+                    this.query.getContext().sparqlVarOccurrences().get(node)
+            );
 
-                    return switch (maxVariable.getSqlVarType()) {
-                        case VALUE, ID:
-                            yield "project_table.v$" + maxVariable.getSqlVarName().replace(".", "agg");
-                        case CONDENSED:
-                            yield "project_table.bs$" + maxVariable.getSqlVarName().replace(".", "agg") + ", " + "project_table.ng$" + maxVariable.getSqlVarName().replace(".", "agg");
-                        case UNBOUND_GRAPH:
-                            yield null;
-                    };
-                })
-                .collect(Collectors.joining(", "));
+            maxSPARQLOccurrence.getSqlVariable().setSqlVarName(maxSPARQLOccurrence.getSqlVariable().getSqlVarName().replace(".", "agg"));
+
+            return maxSPARQLOccurrence.getSqlVariable().getSelect(PROJECT_TABLE_NAME);
+        }).collect(Collectors.joining(", "));
     }
 
     /**
@@ -70,7 +63,7 @@ public class ProjectSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildFrom() {
-        return "(" + this.query.getSql() + ") project_table";
+        return "(" + this.query.getSql() + ") " + PROJECT_TABLE_NAME;
     }
 
     /**
@@ -96,7 +89,6 @@ public class ProjectSQLOperator extends SQLOperator {
             }
         }
 
-        return this.query.getContext()
-                .setVarOccurrences(newSparqlVarOccurrences);
+        return this.query.getContext().setVarOccurrences(newSparqlVarOccurrences);
     }
 }

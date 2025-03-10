@@ -46,15 +46,11 @@ Using a SQL as a backend for SPARQL has been done in some cases.
   SELECT queries over that RDF to SQL queries over the original relational data.
   The goal is to provide a specification for SPARQL tool vendors and a foundation for the Semantic Web. It highlights
   the importance of creating a computable mapping from SPARQL semantics to SQL semantics.
-- *
-  *[Evaluating SPARQL to SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)
-  **
+- **[Evaluating SPARQL to SQL Translation in Ontop - Free University of Bozen-Bolzano](https://www.inf.unibz.it/~calvanese/papers/rodr-etal-ORE-2013.pdf)**
   This research paper discusses the importance of mapping relational databases into RDF using the R2RML standard.
   It mentions the research focused on translating SPARQL queries into SQL and evaluates the SPARQL to SQL translation in
   the Ontop system.
-- *
-  *[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)
-  **
+- **[RDF and SPARQL: Using Semantic Web Technology to Integrate the World's Data - W3C](https://www.w3.org/2007/03/VLDB/)**
   This resource explains how RDF and SPARQL can be used to improve access to relational databases. It discusses
   techniques for improving mappings between RDF and relational data and mentions that several query engines map SPARQL
   queries to relational queries,

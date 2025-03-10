@@ -16,4 +16,9 @@ public class LogicalOr extends AbstractFunction<E_LogicalOr> {
     public String toSQLStringAgg() {
         return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
     }
+
+    @Override
+    public String toNameSQLString() {
+        return "(" + args[0].toNameSQLString() + getJenaExpr().getOpName() + args[1].toNameSQLString() + ")";
+    }
 }
