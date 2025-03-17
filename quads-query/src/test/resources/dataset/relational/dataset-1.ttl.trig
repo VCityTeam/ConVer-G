@@ -1,0 +1,18 @@
+@prefix ex: <http://example.edu/> .
+@prefix building: <http://example.edu/Building#> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ng: <https://github.com/VCityTeam/ConVer-G/Named-Graph#> .
+
+ng:Test {
+    building:1 schema:height "10.5"^^xsd:float ;
+        schema:width "5"^^xsd:float .
+    building:2 schema:height "9.1"^^xsd:float ;
+        schema:width "6"^^xsd:float .
+}
+
+ng:Test-2 {
+    building:1 schema:height "11"^^xsd:float .
+     building:2 schema:height "9.1"^^xsd:float ;
+        schema:width "6"^^xsd:float .
+}

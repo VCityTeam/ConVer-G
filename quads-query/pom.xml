@@ -143,6 +143,15 @@
                             <goal>integration-test</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>failsafe-verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <failIfNoTests>true</failIfNoTests>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

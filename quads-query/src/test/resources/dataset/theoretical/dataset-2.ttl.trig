@@ -1,0 +1,15 @@
+@prefix ex: <http://example.edu/> .
+@prefix building: <http://example.edu/Building#> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix vng: <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#> .
+
+vng:8547d86b9ef85c0c7841eb21b56665bfc051707d073e2517f547eace661b3dadaf7cfadb7c04a7920cc5e46a4458722f880eb3db5255ce904ede9c36bc6ef599 {
+    building:1 schema:height "10.5"^^xsd:float ;
+        schema:width "5.1"^^xsd:float .
+    building:3 schema:height "15"^^xsd:float .
+}
+
+vng:1fc86158fea772eeb48b5fe353bf7cf3661500b0ddcf8a6b11537fabaf524122a8dab5608562c301d1a28702c141ab353c00c489f08c61ad41fd6992852449ec {
+    building:1 schema:height "10.5"^^xsd:float .
+}

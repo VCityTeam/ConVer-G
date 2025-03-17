@@ -95,4 +95,4 @@ jobs:
           architecture: x64
 
       - name: Run integration tests
-        run: mvn integration-test
+        run: mvn verify
