@@ -223,7 +223,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
         SPARQLContextType sparqlContextType = opQuadPattern.getGraphNode() == Quad.defaultGraphNodeGenerated ?
                 SPARQLContextType.METADATA : SPARQLContextType.VERSIONED_DATA;
 
-        if (sparqlContextType == SPARQLContextType.VERSIONED_DATA) {
+        if (sparqlContextType == SPARQLContextType.VERSIONED_DATA && opQuadPattern.getGraphNode().isVariable()) {
             newVarOccurrences.computeIfAbsent(opQuadPattern.getGraphNode(), k -> new ArrayList<>())
                     .add(new SPARQLOccurrence(
                             SPARQLPositionType.GRAPH_NAME,

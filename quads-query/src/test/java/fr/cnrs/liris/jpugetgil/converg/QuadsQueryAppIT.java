@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,15 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Unit test for SPARQL queries.
  */
-@Tag("integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class QuadsQueryAppIT {
     private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
-    // v --- this should be integration tests --- v
-    @Order(2)
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "5", "6", "7", "8", "9", "10", "11"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"})
     void querySPARQLN(String queryNumber) throws Exception {
         log.info("Query number : " + queryNumber);
         Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
