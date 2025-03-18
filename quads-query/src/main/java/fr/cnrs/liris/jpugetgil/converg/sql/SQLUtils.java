@@ -197,7 +197,11 @@ public class SQLUtils {
             for (SPARQLOccurrence occurrence : occurrences) {
                 if (mergedOccurrences.containsKey(node)) {
                     if (!mergedOccurrences.get(node).contains(occurrence)) {
-                        mergedOccurrences.get(node).add(occurrence);
+                        List<SPARQLOccurrence> savedOccurrences = mergedOccurrences.get(node);
+                        savedOccurrences.add(occurrence);
+                        SPARQLOccurrence maxOccurrence = getMaxSPARQLOccurrence(savedOccurrences);
+
+                        mergedOccurrences.put(node, new ArrayList<>(List.of(maxOccurrence)));
                     }
                 } else {
                     mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));
@@ -209,7 +213,11 @@ public class SQLUtils {
             for (SPARQLOccurrence occurrence : occurrences) {
                 if (mergedOccurrences.containsKey(node)) {
                     if (!mergedOccurrences.get(node).contains(occurrence)) {
-                        mergedOccurrences.get(node).add(occurrence);
+                        List<SPARQLOccurrence> savedOccurrences = mergedOccurrences.get(node);
+                        savedOccurrences.add(occurrence);
+                        SPARQLOccurrence maxOccurrence = getMaxSPARQLOccurrence(savedOccurrences);
+
+                        mergedOccurrences.put(node, new ArrayList<>(List.of(maxOccurrence)));
                     }
                 } else {
                     mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));

@@ -151,7 +151,7 @@ public class GroupSQLOperator extends SQLOperator {
     private String getGroupByVars() {
         return opGroup.getGroupVars().getVars()
                 .stream()
-                .map(variable -> new SQLVariable(SQLVarType.VALUE, variable.getName()).getSelect()) //
+                .map(variable -> new SQLVariable(SQLVarType.VALUE, variable.getName()).getSelect())
                 .collect(Collectors.joining(", "));
     }
 }
