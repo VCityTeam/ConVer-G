@@ -34,7 +34,7 @@ class QuadsQueryAppIT {
     private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"})
     void querySPARQLN(String queryNumber) throws Exception {
         log.info("Query number : {}", queryNumber);
         Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");

@@ -15,6 +15,11 @@ public abstract class AbstractExpression<E extends Expr> implements Expression {
     }
 
     @Override
+    public boolean requiresValue() {
+        return true;
+    }
+
+    @Override
     public E getJenaExpr() {
         return expr;
     }

@@ -15,7 +15,7 @@ import java.util.Objects;
  */
 public class SQLVariable {
 
-    private final SQLVarType sqlVarType;
+    private SQLVarType sqlVarType;
 
     private String sqlVarName;
 
@@ -24,6 +24,10 @@ public class SQLVariable {
     public SQLVariable(SQLVarType sqlVarType, String sqlVarName) {
         this.sqlVarType = sqlVarType;
         this.sqlVarName = sqlVarName;
+    }
+
+    public void setSqlVarType(SQLVarType sqlVarType) {
+        this.sqlVarType = sqlVarType;
     }
 
     public boolean isOptional() {

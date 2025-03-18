@@ -1,10 +1,15 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
+import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
 import fr.cnrs.liris.jpugetgil.converg.sparql.transformer.FilterConfiguration;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.converg.sql.*;
+import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.algebra.op.OpFilter;
+import org.apache.jena.sparql.core.Var;
+
+import java.util.List;
+import java.util.Map;
 
 public class FilterSQLOperator extends SQLOperator  {
     private final OpFilter opFilter;
@@ -24,6 +29,8 @@ public class FilterSQLOperator extends SQLOperator  {
     public SQLQuery buildSQLQuery() {
         var filterCfg = new FilterConfiguration();
         expression.updateFilterConfiguration(filterCfg, true);
+
+        this.sqlQuery = flattenIdentifyQuery();
 
         String select = buildSelect();
         String from = buildFrom();
@@ -58,5 +65,40 @@ public class FilterSQLOperator extends SQLOperator  {
     @Override
     protected String buildWhere() {
         return "WHERE " + expression.toSQLString();
+    }
+
+    private SQLQuery flattenIdentifyQuery() {
+        SQLQuery newQuery = this.sqlQuery;
+
+        boolean requiresValue = opFilter.getExprs().getList().stream()
+                .map(Expression::fromJenaExpr)
+                .anyMatch(Expression::requiresValue);
+
+        if (requiresValue) {
+            for (Map.Entry<Node, List<SPARQLOccurrence>> entry : this.sqlQuery.getContext().sparqlVarOccurrences().entrySet()) {
+                List<SPARQLOccurrence> sparqlOccurrences = entry.getValue();
+                SPARQLOccurrence maxSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(sparqlOccurrences);
+
+                if (
+                        opFilter.getExprs().getVarsMentioned()
+                                .stream()
+                                .anyMatch(var -> var.getVarName().equals(maxSPARQLOccurrence.getSqlVariable().getSqlVarName()))
+                ) {
+                    if (maxSPARQLOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
+                        newQuery = new FlattenSQLOperator(newQuery, maxSPARQLOccurrence.getSqlVariable()).buildSQLQuery();
+
+                        SQLVariable newSQLVar = maxSPARQLOccurrence.getSqlVariable();
+                        newSQLVar.setSqlVarType(SQLVarType.ID);
+                        maxSPARQLOccurrence.setSqlVariable(newSQLVar);
+                    }
+
+                    if (maxSPARQLOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.ID) {
+                        newQuery = new IdentifySQLOperator(newQuery, maxSPARQLOccurrence.getSqlVariable()).buildSQLQuery();
+                    }
+                }
+            }
+        }
+
+        return newQuery;
     }
 }

@@ -89,6 +89,8 @@ public interface Expression {
      */
     Expr getJenaExpr();
 
+    boolean requiresValue();
+
     default String toSQLString() {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }

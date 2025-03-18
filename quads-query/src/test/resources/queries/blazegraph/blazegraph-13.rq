@@ -1,0 +1,9 @@
+# Query the graph store for all quads with a given subject and where the object is greater than 10.
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?graph ?predicate ?object WHERE {
+    GRAPH ?graph {
+      building:1 ?predicate ?object .
+      FILTER(?object > 10)
+    }
+}
