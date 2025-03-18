@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.FilterSQLOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
@@ -14,7 +15,6 @@ import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
-import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.slf4j.Logger;
@@ -151,6 +151,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     opLeftJoin,
                     buildSPARQLContext(opLeftJoin.getLeft(), context),
                     buildSPARQLContext(opLeftJoin.getRight(), context)
+            ).buildSQLQuery();
+            case OpFilter opFilter -> new FilterSQLOperator(
+                    opFilter,
+                    buildSPARQLContext(opFilter.getSubOp())
             ).buildSQLQuery();
             case OpTable ignored -> new SQLQuery(
                     null,
