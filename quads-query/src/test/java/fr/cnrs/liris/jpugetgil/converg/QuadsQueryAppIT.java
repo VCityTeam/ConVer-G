@@ -34,9 +34,9 @@ class QuadsQueryAppIT {
     private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"})
     void querySPARQLN(String queryNumber) throws Exception {
-        log.info("Query number : " + queryNumber);
+        log.info("Query number : {}", queryNumber);
         Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
         Path pathBlazegraph = Path.of("src/test/resources/queries/blazegraph/blazegraph-" + queryNumber + ".rq");
         HttpRequest requestStS = getHttpRequestByURLandPath("http://localhost:8081/rdf/query", pathSts);

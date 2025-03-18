@@ -193,13 +193,72 @@ public class SQLUtils {
     ) {
         Map<Node, List<SPARQLOccurrence>> mergedOccurrences = new HashMap<>();
 
-        leftMapOccurrences.forEach((node, occurrences) ->
-                mergedOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences)
-        );
+        leftMapOccurrences.forEach((node, occurrences) -> {
+            for (SPARQLOccurrence occurrence : occurrences) {
+                if (mergedOccurrences.containsKey(node)) {
+                    if (!mergedOccurrences.get(node).contains(occurrence)) {
+                        mergedOccurrences.get(node).add(occurrence);
+                    }
+                } else {
+                    mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));
+                }
+            }
+        });
 
-        rightMapOccurrences.forEach((node, occurrences) ->
-                mergedOccurrences.computeIfAbsent(node, k -> new ArrayList<>()).addAll(occurrences)
-        );
+        rightMapOccurrences.forEach((node, occurrences) -> {
+            for (SPARQLOccurrence occurrence : occurrences) {
+                if (mergedOccurrences.containsKey(node)) {
+                    if (!mergedOccurrences.get(node).contains(occurrence)) {
+                        mergedOccurrences.get(node).add(occurrence);
+                    }
+                } else {
+                    mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));
+                }
+            }
+        });
+
+        return mergedOccurrences;
+    }
+
+    /**
+     * Merge two maps of occurrences in a left join
+     *
+     * @param leftMapOccurrences  the left map occurrences
+     * @param rightMapOccurrences the right map occurrences
+     * @return the merged map occurrences in a left join
+     */
+    public static Map<Node, List<SPARQLOccurrence>> mergeMapOccurrencesLeftJoin(
+            Map<Node, List<SPARQLOccurrence>> leftMapOccurrences,
+            Map<Node, List<SPARQLOccurrence>> rightMapOccurrences
+    ) {
+        Map<Node, List<SPARQLOccurrence>> mergedOccurrences = new HashMap<>();
+
+        leftMapOccurrences.forEach((node, occurrences) -> {
+            for (SPARQLOccurrence occurrence : occurrences) {
+                if (mergedOccurrences.containsKey(node)) {
+                    if (!mergedOccurrences.get(node).contains(occurrence)) {
+                        mergedOccurrences.get(node).add(occurrence);
+                    }
+                } else {
+                    mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));
+                }
+            }
+        });
+
+        rightMapOccurrences.forEach((node, occurrences) -> {
+            for (SPARQLOccurrence occurrence : occurrences) {
+                if (mergedOccurrences.containsKey(node)) {
+                    if (!mergedOccurrences.get(node).contains(occurrence)) {
+                        mergedOccurrences.get(node).add(occurrence);
+                    }
+                } else {
+                    SQLVariable sqlVariable = occurrence.getSqlVariable();
+                    sqlVariable.setOptional(true);
+                    occurrence.setSqlVariable(sqlVariable);
+                    mergedOccurrences.put(node, new ArrayList<>(List.of(occurrence)));
+                }
+            }
+        });
 
         return mergedOccurrences;
     }
@@ -252,6 +311,31 @@ public class SQLUtils {
             return leftMAXSPARQLOccurrence
                     .getSqlVariable()
                     .joinProjections(rightSPARQLOccurrence.getSqlVariable(), "left_table", "right_table");
+        } else if (presentLeft) {
+            SPARQLOccurrence leftSQLVariable = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
+
+            return leftSQLVariable.getSqlVariable().getSelect("left_table");
+        }
+
+        assert rightSparqlOccurrences != null;
+        SPARQLOccurrence rightSQLVariable = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
+
+        return rightSQLVariable.getSqlVariable().getSelect("right_table");
+    }
+
+    public static String generateLeftJoinNodeProjectionByListSPARQLOccurrences(
+            List<SPARQLOccurrence> leftSparqlOccurrences,
+            List<SPARQLOccurrence> rightSparqlOccurrences
+    ) {
+        boolean presentLeft = leftSparqlOccurrences != null;
+        boolean presentRight = rightSparqlOccurrences != null;
+
+        if (presentLeft && presentRight) {
+            SPARQLOccurrence leftMAXSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
+            SPARQLOccurrence rightSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
+            return leftMAXSPARQLOccurrence
+                    .getSqlVariable()
+                    .leftJoinProjections(rightSPARQLOccurrence.getSqlVariable(), "left_table", "right_table");
         } else if (presentLeft) {
             SPARQLOccurrence leftSQLVariable = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
 
