@@ -16,6 +16,11 @@ public abstract class AbstractFunction<E extends ExprFunction> extends AbstractE
     }
 
     @Override
+    public boolean requiresValue() {
+        return requiresValue;
+    }
+
+    @Override
     public void updateFilterConfiguration(FilterConfiguration configuration, boolean unusedRequiresValue) {
         for (Expression e : args) {
             e.updateFilterConfiguration(configuration, this.requiresValue);

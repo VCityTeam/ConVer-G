@@ -19,21 +19,23 @@ public class SQLVariable {
 
     private String sqlVarName;
 
-    private boolean isValue = false;
+    private boolean isOptional = false;
 
-    private boolean isGraphNameOrMetadata;
-
-    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isGraphNameOrMetadata) {
+    public SQLVariable(SQLVarType sqlVarType, String sqlVarName) {
         this.sqlVarType = sqlVarType;
         this.sqlVarName = sqlVarName;
-        this.isGraphNameOrMetadata = isGraphNameOrMetadata;
     }
 
-    public SQLVariable(SQLVarType sqlVarType, String sqlVarName, boolean isGraphNameOrMetadata, boolean isValue) {
+    public void setSqlVarType(SQLVarType sqlVarType) {
         this.sqlVarType = sqlVarType;
-        this.sqlVarName = sqlVarName;
-        this.isValue = isValue;
-        this.isGraphNameOrMetadata = isGraphNameOrMetadata;
+    }
+
+    public boolean isOptional() {
+        return isOptional;
+    }
+
+    public void setOptional(boolean optional) {
+        isOptional = optional;
     }
 
     public SQLVarType getSqlVarType() {
@@ -44,84 +46,72 @@ public class SQLVariable {
         return sqlVarName;
     }
 
-    public boolean isValue() {
-        return isValue;
+    public void setSqlVarName(String sqlVarName) {
+        this.sqlVarName = sqlVarName;
     }
 
-    public boolean isGraphNameOrMetadata() {
-        return isGraphNameOrMetadata;
-    }
-
-    public String join(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+    public String getSelect() {
         return switch (this.sqlVarType) {
-            case DATA -> switch (rightSQLVar.getSqlVarType()) {
-                case DATA -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".v$" + this.sqlVarName,
-                                rightTableName + ".v$" + rightSQLVar.getSqlVarName()
-                        );
-                case GRAPH_NAME -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".v$" + this.sqlVarName,
-                                rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
-                        );
-                case VERSIONED_NAMED_GRAPH -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".v$" + this.sqlVarName,
-                                rightTableName + ".vng$" + rightSQLVar.getSqlVarName()
-                        );
-                case BIT_STRING -> throw new ARQNotImplemented("BITSTRING - DATA join Not supported yet.");
-                case AGGREGATED -> throw new ARQNotImplemented("AGGREGATED - DATA join Not supported yet.");
-            };
-            case VERSIONED_NAMED_GRAPH -> switch (rightSQLVar.getSqlVarType()) {
-                case VERSIONED_NAMED_GRAPH -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".vng$" + this.sqlVarName,
-                                rightTableName + ".vng$" + rightSQLVar.getSqlVarName()
-                        );
-                case GRAPH_NAME -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".vng$" + this.sqlVarName,
-                                rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
-                        );
-                case DATA -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".vng$" + this.sqlVarName,
-                                rightTableName + ".v$" + rightSQLVar.getSqlVarName()
-                        );
-                case BIT_STRING -> throw new ARQNotImplemented("VNG - BITSTRING join Not supported yet.");
-                case AGGREGATED -> throw new ARQNotImplemented("VNG - AGGREGATED join Not supported yet.");
-            };
-            case BIT_STRING -> switch (rightSQLVar.getSqlVarType()) {
-                case DATA, VERSIONED_NAMED_GRAPH, GRAPH_NAME -> throw new ARQNotImplemented("BITSTRING - DATA/VNG/GRAPHNAME join Not supported yet.");
-                case BIT_STRING -> new NotEqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                "bit_count(" + leftTableName + ".bs$" + this.sqlVarName + " & " + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")",
-                                "0"
-                        );
-                case AGGREGATED -> throw new ARQNotImplemented("BITSTRING - AGGREGATED join Not supported yet.");
-            };
-            case GRAPH_NAME -> switch (rightSQLVar.getSqlVarType()) {
-                case BIT_STRING -> throw new ARQNotImplemented("GRAPHNAME - BISTRING join Not supported yet.");
-                case VERSIONED_NAMED_GRAPH -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".ng$" + this.sqlVarName,
-                                rightTableName + ".vng$" + rightSQLVar.getSqlVarName()
-                        );
-                case DATA -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".ng$" + this.sqlVarName,
-                                rightTableName + ".v$" + rightSQLVar.getSqlVarName()
-                        );
-                case GRAPH_NAME -> new EqualToOperator()
-                        .buildComparisonOperatorSQL(
-                                leftTableName + ".ng$" + this.sqlVarName,
-                                rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
-                        );
-                case AGGREGATED -> throw new ARQNotImplemented("GRAPHNAME - AGGREGATED join Not supported yet.");
-            };
-            case AGGREGATED -> throw new ARQNotImplemented("AGGREGATED - * join Not supported yet.");
+            case VALUE, ID -> "v$" + this.sqlVarName;
+            case CONDENSED -> "ng$" + this.sqlVarName + ", bs$" + this.sqlVarName;
+            case UNBOUND_GRAPH -> null;
         };
+    }
+
+    public String getSelect(String tableName) {
+        return switch (this.sqlVarType) {
+            case VALUE, ID -> tableName + ".v$" + this.sqlVarName;
+            case CONDENSED -> tableName + ".ng$" + this.sqlVarName + ", " + tableName + ".bs$" + this.sqlVarName;
+            case UNBOUND_GRAPH -> null;
+        };
+    }
+
+    /**
+     * Join the two SQL variables
+     *
+     * @param rightSQLVar    the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the join SQL projections
+     */
+    public String joinProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return joinProjections(this, rightSQLVar, leftTableName, rightTableName);
+    }
+
+    /**
+     * Left Join the two SQL variables
+     *
+     * @param rightSQLVar    the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the left join SQL projections
+     */
+    public String leftJoinProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return leftJoinProjections(this, rightSQLVar, leftTableName, rightTableName);
+    }
+
+    /**
+     * Join the two SQL variables
+     *
+     * @param rightSQLVar    the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the join SQL join
+     */
+    public String joinJoin(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return joinJoin(this, rightSQLVar, leftTableName, rightTableName);
+    }
+
+    /**
+     * Left Join the two SQL variables
+     *
+     * @param rightSQLVar    the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the left join SQL join
+     */
+    public String joinLeftJoin(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return joinLeftJoin(this, rightSQLVar, leftTableName, rightTableName);
     }
 
     @Override
@@ -135,5 +125,275 @@ public class SQLVariable {
     @Override
     public int hashCode() {
         return Objects.hash(sqlVarType, sqlVarName);
+    }
+
+
+    /**
+     * Identify the SQL variable (SELECT)
+     *
+     * @return the identified SQL variable Select part
+     */
+    public String getSelectIdentifyVariable() {
+        return "rl.name as v$" + this.sqlVarName;
+    }
+
+    /**
+     * Flatten the SQL variable (SELECT)
+     *
+     * @return the flatten SQL select part
+     */
+    public String getSelectFlattenVariable() {
+        if (this.sqlVarType != SQLVarType.CONDENSED) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
+        }
+        return getVNGName() + ".id_versioned_named_graph AS v$" + this.sqlVarName;
+    }
+
+    /**
+     * Identify the SQL variable (JOIN)
+     *
+     * @return the identified SQL variable JOIN part
+     */
+    public String fromIdentifiedVariable(String identifyTableName) {
+        if (this.sqlVarType != SQLVarType.ID) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.ID + "level to be identified.");
+        }
+
+        return " JOIN resource_or_literal rl ON " + this.getSelect(identifyTableName) + " = rl.id_resource_or_literal";
+    }
+
+    /**
+     * Flatten the SQL variable (FROM)
+     *
+     * @param tableName the table name
+     * @return the flatten SQL from part
+     */
+    public String fromFlattenVariable(String tableName) {
+        if (this.sqlVarType != SQLVarType.CONDENSED) {
+            throw new RuntimeException("The variable must be at " + SQLVarType.CONDENSED + "level to be flattened.");
+        }
+
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+        return "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                tableName + ".ng$" + this.sqlVarName,
+                                getVNGName() + ".id_named_graph"
+                        ))
+                .and(
+                        new EqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        "get_bit(" + tableName + ".bs$" + this.sqlVarName + ", " + getVNGName() + ".index_version - 1)",
+                                        "1"
+                                )
+                ).build().clause;
+    }
+
+    /**
+     * Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the join SQL projections
+     */
+    private String joinProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return switch (leftSQLVar.getSqlVarType()) {
+            case VALUE -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE -> leftSQLVar.getSelect(leftTableName);
+                case ID, CONDENSED, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case ID -> switch (rightSQLVar.getSqlVarType()) {
+                case ID -> leftSQLVar.getSelect(leftTableName);
+                case CONDENSED -> leftTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + rightSQLVar.getSqlVarName();
+                case CONDENSED -> leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " +
+                        rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + " AS bs$" + leftSQLVar.getSqlVarName() + ", " +
+                        leftTableName + ".ng$" + leftSQLVar.getSqlVarName();
+            };
+            case UNBOUND_GRAPH ->
+                    throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+        };
+    }
+
+    /**
+     * Left Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the left join SQL projections
+     */
+    private String leftJoinProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return switch (leftSQLVar.getSqlVarType()) {
+            case VALUE -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE -> leftSQLVar.getSelect(leftTableName);
+                case ID, CONDENSED, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case ID -> switch (rightSQLVar.getSqlVarType()) {
+                case ID -> leftSQLVar.getSelect(leftTableName);
+                case CONDENSED -> leftTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + rightSQLVar.getSqlVarName();
+                case CONDENSED ->
+                        "COALESCE(" + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " + rightTableName + ".bs$"
+                                + rightSQLVar.getSqlVarName() + "," + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + ") AS bs$"
+                                + leftSQLVar.getSqlVarName() + ", " + leftTableName + ".ng$" + leftSQLVar.getSqlVarName();
+            };
+            case UNBOUND_GRAPH ->
+                    throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+        };
+    }
+
+    /**
+     * Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the join SQL
+     */
+    private String joinJoin(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+
+        return switch (leftSQLVar.getSqlVarType()) {
+            case VALUE -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE -> new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                leftSQLVar.getSelect(leftTableName),
+                                rightSQLVar.getSelect(rightTableName)
+                        );
+                case ID -> leftSQLVar.getSelect(leftTableName);
+                case CONDENSED, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case ID -> switch (rightSQLVar.getSqlVarType()) {
+                case ID -> new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                leftSQLVar.getSelect(leftTableName),
+                                rightSQLVar.getSelect(rightTableName)
+                        );
+                case CONDENSED ->
+                        "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+                                        .buildComparisonOperatorSQL(
+                                                rightTableName + ".ng$" + rightSQLVar.getSqlVarName(),
+                                                leftTableName + ".id_named_graph"
+                                        ))
+                                .and(
+                                        new EqualToOperator()
+                                                .buildComparisonOperatorSQL(
+                                                        "get_bit(" + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ", " + leftTableName + ".index_version - 1)",
+                                                        "1"
+                                                )
+                                ).build().clause;
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+                case ID ->
+                        "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+                                        .buildComparisonOperatorSQL(
+                                                leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
+                                                rightTableName + ".id_named_graph"
+                                        ))
+                                .and(
+                                        new EqualToOperator()
+                                                .buildComparisonOperatorSQL(
+                                                        "get_bit(" + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + ", " + rightTableName + ".index_version - 1)",
+                                                        "1"
+                                                )
+                                ).build().clause;
+                case CONDENSED -> sqlClauseBuilder
+                        .and(new NotEqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        "bit_count(" + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")",
+                                        "0"
+                                ))
+                        .and(new EqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
+                                        rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
+                                ))
+                        .build()
+                        .clause;
+            };
+            case UNBOUND_GRAPH ->
+                    throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+        };
+    }
+
+    /**
+     * Left Join the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the left join SQL
+     */
+    private String joinLeftJoin(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
+
+        return switch (leftSQLVar.getSqlVarType()) {
+            case VALUE -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE -> new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                leftSQLVar.getSelect(leftTableName),
+                                rightSQLVar.getSelect(rightTableName)
+                        );
+                case ID -> leftSQLVar.getSelect(leftTableName);
+                case CONDENSED, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case ID -> switch (rightSQLVar.getSqlVarType()) {
+                case ID -> new EqualToOperator()
+                        .buildComparisonOperatorSQL(
+                                leftSQLVar.getSelect(leftTableName),
+                                rightSQLVar.getSelect(rightTableName)
+                        );
+                case CONDENSED ->
+                        "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+                                        .buildComparisonOperatorSQL(
+                                                rightTableName + ".ng$" + rightSQLVar.getSqlVarName(),
+                                                leftTableName + ".id_named_graph"
+                                        ))
+                                .build().clause;
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+                case ID ->
+                        "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
+                                        rightTableName + ".id_named_graph"
+                                )).build().clause;
+                case CONDENSED -> sqlClauseBuilder
+                        .and(new EqualToOperator()
+                                .buildComparisonOperatorSQL(
+                                        leftTableName + ".ng$" + leftSQLVar.getSqlVarName(),
+                                        rightTableName + ".ng$" + rightSQLVar.getSqlVarName()
+                                ))
+                        .build()
+                        .clause;
+            };
+            case UNBOUND_GRAPH ->
+                    throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+        };
+    }
+
+    private String getVNGName() {
+        return "vng";
     }
 }

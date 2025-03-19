@@ -13,4 +13,6 @@ ng:Test {
 
 ng:Test-2 {
     building:1 schema:height "11"^^xsd:float .
+    building:2 schema:height "9.1"^^xsd:float ;
+        schema:width "6"^^xsd:float .
 }

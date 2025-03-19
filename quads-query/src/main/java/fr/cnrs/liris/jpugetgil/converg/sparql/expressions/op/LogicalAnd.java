@@ -9,11 +9,16 @@ public class LogicalAnd extends AbstractFunction<E_LogicalAnd> {
 
     @Override
     public String toSQLString() {
-        return "(" + args[0].toSQLString() + getJenaExpr().getOpName() + args[1].toSQLString() + ")";
+        return "(" + args[0].toSQLString() + " AND " + args[1].toSQLString() + ")";
     }
 
     @Override
     public String toSQLStringAgg() {
-        return "(" + args[0].toSQLStringAgg() + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + ")";
+        return "(" + args[0].toSQLStringAgg() + " AND " + args[1].toSQLStringAgg() + ")";
+    }
+
+    @Override
+    public String toNameSQLString() {
+        return "(" + args[0].toNameSQLString() + " AND " + args[1].toNameSQLString() + ")";
     }
 }

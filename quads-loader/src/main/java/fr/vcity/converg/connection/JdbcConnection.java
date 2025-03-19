@@ -34,6 +34,8 @@ public class JdbcConnection {
     private JdbcConnection() throws SQLException {
         try {
             connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USERNAME, CONNECTION_PASSWORD);
+            log.info("Connection established successfully with the database");
+            log.info("Connection URL: {}", CONNECTION_URL);
             statement = connection.createStatement();
         } catch (SQLException exception) {
             log.error(exception.getMessage());

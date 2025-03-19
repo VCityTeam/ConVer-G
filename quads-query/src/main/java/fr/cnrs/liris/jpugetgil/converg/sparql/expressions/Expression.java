@@ -89,11 +89,17 @@ public interface Expression {
      */
     Expr getJenaExpr();
 
+    boolean requiresValue();
+
     default String toSQLString() {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }
 
     default String toSQLStringAgg() {
+        throw new IllegalArgumentException("This expression does not have a SQL representation.");
+    }
+
+    default String toNameSQLString() {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }
 

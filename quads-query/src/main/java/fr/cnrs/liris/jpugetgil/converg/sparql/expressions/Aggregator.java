@@ -17,6 +17,11 @@ public class Aggregator extends AbstractExpression<ExprAggregator> {
         super(expr);
     }
 
+    @Override
+    public boolean requiresValue() {
+        return getAggregator().getRequiresValue();
+    }
+
     public AbstractAggregator<?> getAggregator() {
         ExprAggregator expAggr = this.getJenaExpr();
         return switch (expAggr.getAggregator()) {

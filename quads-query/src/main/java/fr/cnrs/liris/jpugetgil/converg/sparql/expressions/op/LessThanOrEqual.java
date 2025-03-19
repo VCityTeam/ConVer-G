@@ -16,4 +16,9 @@ public class LessThanOrEqual extends AbstractFunction<E_LessThanOrEqual> {
     public String toSQLStringAgg() {
         return "(" + args[0].toSQLStringAgg() + "::float" + getJenaExpr().getOpName() + args[1].toSQLStringAgg() + "::float)";
     }
+
+    @Override
+    public String toNameSQLString() {
+        return "(" + args[0].toNameSQLString() + "::float" + getJenaExpr().getOpName() + args[1].toNameSQLString() + "::float)";
+    }
 }
