@@ -1,0 +1,9 @@
+# Find the graph that are in the version dataset-1.ttl.trig
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT ?graph WHERE {
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+    ?vg vers:is-in-version vers:dataset-1.ttl.trig ;
+        vers:is-version-of ?graph .
+  }
+}

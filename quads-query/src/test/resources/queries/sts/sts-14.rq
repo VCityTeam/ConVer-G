@@ -1,0 +1,6 @@
+# Find the number of versions
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT (COUNT(?version) as ?countversion) WHERE {
+        ?vg vers:is-in-version ?version .
+}
