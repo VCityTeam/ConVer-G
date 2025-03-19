@@ -149,6 +149,9 @@ public class FinalizeSQLOperator extends SQLOperator {
                     SQLVariable maxSQLVariable = maxSPARQLOccurrence.getSqlVariable();
                     if (maxSPARQLOccurrence.getType() == SPARQLPositionType.AGGREGATED) {
                         return null;
+                    } else if (maxSPARQLOccurrence.getSqlVariable().getSqlVarType() == SQLVarType.VALUE) {
+                        return " LEFT JOIN resource_or_literal rl" + index + " ON " +
+                                maxSQLVariable.getSelect(FINALIZE_TABLE_NAME) + " = rl" + index + ".name";
                     } else {
                         if (maxSQLVariable.isOptional()) {
                             return " LEFT JOIN resource_or_literal rl" + index + " ON " +
