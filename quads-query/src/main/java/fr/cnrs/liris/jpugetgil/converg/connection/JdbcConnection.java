@@ -1,10 +1,12 @@
 package fr.cnrs.liris.jpugetgil.converg.connection;
 
+import org.postgresql.PGProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.Objects;
+import java.util.Properties;
 
 /**
  * Created by jpugetgil.
@@ -31,15 +33,19 @@ public class JdbcConnection {
      */
     private JdbcConnection() throws SQLException {
         try {
-            connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USERNAME, CONNECTION_PASSWORD);
+            Properties connectionProperties = new Properties();
+            connectionProperties.setProperty(PGProperty.USER.getName(), CONNECTION_USERNAME);
+            connectionProperties.setProperty(PGProperty.PASSWORD.getName(), CONNECTION_PASSWORD);
+            connectionProperties.setProperty(PGProperty.CONNECT_TIMEOUT.getName(), "120");
+
+            connection = DriverManager.getConnection(CONNECTION_URL, connectionProperties);
             log.info("Connection established successfully with the database");
             log.info("Connection URL: {}", CONNECTION_URL);
             statement = connection.createStatement();
         } catch (SQLException exception) {
             log.error(exception.getMessage());
         } finally {
-            if (Objects.isNull(statement)) {
-                assert connection != null;
+            if (connection != null && Objects.isNull(statement)) {
                 connection.close();
             }
         }
