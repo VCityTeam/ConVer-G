@@ -1,0 +1,8 @@
+# Query the graph store the object count for each predicate of building:1
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?predicate (COUNT(?object) AS ?countobject) WHERE {
+    GRAPH ?graph {
+      building:1 ?predicate ?object .
+    }
+} GROUP BY ?predicate

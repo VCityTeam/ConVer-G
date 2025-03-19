@@ -1,0 +1,8 @@
+# Query the graph store the maximum value of the object for each predicate of building:1
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?predicate (MAX(?object) AS ?maxobject) WHERE {
+    GRAPH ?graph {
+      building:1 ?predicate ?object .
+    }
+} GROUP BY ?predicate

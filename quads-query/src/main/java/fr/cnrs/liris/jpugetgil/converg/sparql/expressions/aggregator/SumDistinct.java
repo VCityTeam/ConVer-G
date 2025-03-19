@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
+import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggSumDistinct;
 
@@ -29,5 +30,17 @@ public class SumDistinct extends AbstractAggregator<AggSumDistinct> {
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");
         return "SUM(DISTINCT " + joinedExpression + ") AS " + varName;
+    }
+
+    @Override
+    public String toSQLString(OpGroup opGroup, String alias) {
+        List<Expression> expressions = getExpressionList();
+
+        String joinedExpression = "DISTINCT " + expressions.stream()
+                .map(expression -> expression.toSQLString() + "::float")
+                .collect(Collectors.joining(""));
+
+        String varName = "agg" + getVariable().getVarName().replace(".", "");
+        return "(SUM(bit_count(bs$" + alias + ") * " + joinedExpression + ")) AS " + varName;
     }
 }

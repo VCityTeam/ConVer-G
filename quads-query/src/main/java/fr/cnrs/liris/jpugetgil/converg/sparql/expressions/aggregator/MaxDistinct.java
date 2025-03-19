@@ -2,6 +2,7 @@ package fr.cnrs.liris.jpugetgil.converg.sparql.expressions.aggregator;
 
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.AbstractAggregator;
 import fr.cnrs.liris.jpugetgil.converg.sparql.expressions.Expression;
+import org.apache.jena.sparql.algebra.op.OpGroup;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.aggregate.AggMaxDistinct;
 
@@ -29,5 +30,10 @@ public class MaxDistinct extends AbstractAggregator<AggMaxDistinct> {
 
         String varName = "agg" + getVariable().getVarName().replace(".", "");
         return "MAX(DISTINCT " + joinedExpression + ") AS " + varName;
+    }
+
+    @Override
+    public String toSQLString(OpGroup opGroup, String alias) {
+        return this.toSQLString();
     }
 }

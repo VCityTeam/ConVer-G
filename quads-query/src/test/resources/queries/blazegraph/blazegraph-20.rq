@@ -1,0 +1,9 @@
+# Query the graph store for the average height of buildings in each versioned graph
+PREFIX building: <http://example.edu/Building#>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?graph (AVG(DISTINCT ?object) AS ?avgdistinctobject) WHERE {
+    GRAPH ?graph {
+      building:1 schema:height ?object .
+    }
+} GROUP BY ?graph
