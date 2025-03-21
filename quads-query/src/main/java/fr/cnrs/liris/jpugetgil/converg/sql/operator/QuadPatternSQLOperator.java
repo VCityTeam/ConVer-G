@@ -41,7 +41,7 @@ public class QuadPatternSQLOperator extends SQLOperator {
     @Override
     public SQLQuery buildSQLQuery() {
         context = context
-                .setVarOccurrences(createVarOccurrencesMap());
+                .copyWithNewVarOccurrences(createVarOccurrencesMap());
 
         String select = "SELECT " + buildSelect() + "\n";
         String from = "FROM " + buildFrom() + "\n";

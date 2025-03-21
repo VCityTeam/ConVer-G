@@ -1,20 +1,20 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
-import fr.cnrs.liris.jpugetgil.converg.sql.operator.FilterSQLOperator;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.snapshots.Unit;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
+import org.apache.jena.sparql.core.ResultBinding;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 
     private final Summary queryExecutionDuration = MetricsSingleton.getInstance().queryExecutionDuration;
 
-    private final Counter selectQueryCounter = MetricsSingleton.getInstance().selectQueryCounter;
+    private final Counter queryCounter = MetricsSingleton.getInstance().queryCounter;
 
     /**
      * Constructor of the SPARQLtoSQLTranslator
@@ -56,35 +56,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
      * @return the SQL query
      */
     public ResultSet translateAndExecSelect(Query query) {
-        Op op = Algebra.compile(query);
-
-        // Transform the op to a quad form
-        Op quadOp = Algebra.toQuadForm(op);
-
-        Long startTranslation = System.nanoTime();
-        SQLQuery builtQuery = buildSPARQLContext(quadOp);
-        SQLQuery finalizedQuery = new FinalizeSQLOperator(builtQuery)
-                .buildSQLQuery();
-
-        Long endTranslation = System.nanoTime();
-
-        queryTranslationDuration
-                .labelValues(String.valueOf(selectQueryCounter.get()))
-                .observe(Unit.nanosToSeconds(endTranslation - startTranslation));
-        log.info("[Measure] (Query translation duration): {} ns for query: {};", endTranslation - startTranslation, query);
-        log.info("Query result: {};", finalizedQuery.getSql());
+        SQLQuery finalizedQuery = getSqlQuery(query);
 
         try {
-            Long startExec = System.nanoTime();
-            java.sql.ResultSet rs = jdbcConnection.executeSQL(finalizedQuery.getSql());
-            Long endExec = System.nanoTime();
-            queryExecutionDuration
-                    .labelValues(String.valueOf(selectQueryCounter.get()))
-                    .observe(Unit.nanosToSeconds(endExec - startExec));
-            log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
-
-            BindingIterator bindingIterator = new BindingIterator(rs);
-
+            BindingIterator bindingIterator = getQueryBindingIterator(query, finalizedQuery);
             Set<Var> vars = bindingIterator
                     .getVars();
 
@@ -95,12 +70,38 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     }
 
     @Override
-    Dataset translateAndExecConstruct(Query query) {
-        // TODO: Implement the Construct query
-        Op op = Algebra.compile(query);
+    public Dataset translateAndExecConstruct(Query query) {
+        SQLQuery finalizedQuery = getSqlQuery(query);
 
+        try {
+            BindingIterator bindingIterator = getQueryBindingIterator(query, finalizedQuery);
 
-        return null;
+            Set<Var> vars = bindingIterator
+                    .getVars();
+
+            Model resultSetModel = ModelFactory.createDefaultModel();
+
+            while (bindingIterator.hasNext()) {
+                QuerySolution solution = new ResultBinding(resultSetModel, bindingIterator.next());
+
+            }
+
+            return DatasetFactory.create(resultSetModel);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private BindingIterator getQueryBindingIterator(Query query, SQLQuery finalizedQuery) throws SQLException {
+        Long startExec = System.nanoTime();
+        java.sql.ResultSet rs = jdbcConnection.executeSQL(finalizedQuery.getSql());
+        Long endExec = System.nanoTime();
+        queryExecutionDuration
+                .labelValues(String.valueOf(queryCounter.get()))
+                .observe(Unit.nanosToSeconds(endExec - startExec));
+        log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
+
+        return new BindingIterator(rs);
     }
 
     public SQLQuery buildSPARQLContext(Op op) {
@@ -171,5 +172,26 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
             case OpLabel opLabel -> throw new ARQNotImplemented("TODO: OpLabel not implemented");
             default -> throw new ARQNotImplemented("TODO: operator " + op.getClass().getName() + "not implemented");
         };
+    }
+
+    private SQLQuery getSqlQuery(Query query) {
+        Op op = Algebra.compile(query);
+
+        // Transform the op to a quad form
+        Op quadOp = Algebra.toQuadForm(op);
+
+        Long startTranslation = System.nanoTime();
+        SQLQuery builtQuery = buildSPARQLContext(quadOp);
+        SQLQuery finalizedQuery = new FinalizeSQLOperator(builtQuery)
+                .buildSQLQuery();
+
+        Long endTranslation = System.nanoTime();
+
+        queryTranslationDuration
+                .labelValues(String.valueOf(queryCounter.get()))
+                .observe(Unit.nanosToSeconds(endTranslation - startTranslation));
+        log.info("[Measure] (Query translation duration): {} ns for query: {};", endTranslation - startTranslation, query);
+        log.info("Query result: {};", finalizedQuery.getSql());
+        return finalizedQuery;
     }
 }

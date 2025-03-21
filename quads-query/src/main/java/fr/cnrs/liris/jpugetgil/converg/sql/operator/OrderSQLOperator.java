@@ -19,7 +19,7 @@ public class OrderSQLOperator extends SQLOperator {
      */
     @Override
     public SQLQuery buildSQLQuery() {
-        query.setContext(query.getContext().setOpOrder(opOrder));
+        query.setContext(query.getContext().copyWithNewOpOrder(opOrder));
         return query;
     }
 

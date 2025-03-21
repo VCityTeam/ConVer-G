@@ -107,6 +107,6 @@ public class IdentifySQLOperator extends SQLOperator {
             }
         });
         return sqlQuery.getContext()
-                .setVarOccurrences(newSPARQLOccurrences);
+                .copyWithNewVarOccurrences(newSPARQLOccurrences);
     }
 }

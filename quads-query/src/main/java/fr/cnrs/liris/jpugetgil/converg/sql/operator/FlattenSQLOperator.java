@@ -62,7 +62,7 @@ public class FlattenSQLOperator extends SQLOperator {
             }
         });
         return sqlQuery.getContext()
-                .setVarOccurrences(newSPARQLOccurrences);
+                .copyWithNewVarOccurrences(newSPARQLOccurrences);
     }
 
     @Override

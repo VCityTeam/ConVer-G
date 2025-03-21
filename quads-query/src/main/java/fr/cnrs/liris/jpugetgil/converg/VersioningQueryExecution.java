@@ -24,7 +24,7 @@ public class VersioningQueryExecution implements QueryExecution {
 
     private final SPARQLLanguageTranslator translator;
 
-    private final Counter selectQueryCounter = MetricsSingleton.getInstance().selectQueryCounter;
+    private final Counter selectQueryCounter = MetricsSingleton.getInstance().queryCounter;
 
     private static final String TARGET_LANG = System.getenv("TARGET_LANG") == null ?
             "SQL" : getSupportedTargetLanguage(System.getenv("TARGET_LANG"));

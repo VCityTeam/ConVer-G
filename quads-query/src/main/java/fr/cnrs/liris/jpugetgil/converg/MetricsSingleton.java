@@ -13,7 +13,7 @@ public class MetricsSingleton {
 
     private static MetricsSingleton metricsSingleton;
 
-    public Counter selectQueryCounter;
+    public Counter queryCounter;
 
     public Summary queryTranslationDuration;
 
@@ -23,9 +23,9 @@ public class MetricsSingleton {
      * Constructor method in order to create db connection & statement
      */
     private MetricsSingleton() {
-        selectQueryCounter = Counter.builder()
-                .name("select_query_counter")
-                .help("Number of SELECT queries asked to be translated")
+        queryCounter = Counter.builder()
+                .name("query_counter")
+                .help("Number of queries asked to be translated")
                 .register();
 
         queryTranslationDuration = Summary.builder()

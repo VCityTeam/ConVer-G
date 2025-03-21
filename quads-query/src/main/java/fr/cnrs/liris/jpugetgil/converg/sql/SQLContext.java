@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class represents the context of a SQL query.
+ * This record represents the context of a SQL query.
  *
  * @param sparqlVarOccurrences The occurrences of the variables in the context
  * @param condensedMode        If the condensed mode is activated
@@ -22,15 +22,15 @@ public record SQLContext(
         OpSlice opSlice,
         OpOrder opOrder
 ) {
-    public SQLContext setVarOccurrences(Map<Node, List<SPARQLOccurrence>> newVarOccurrences) {
+    public SQLContext copyWithNewVarOccurrences(Map<Node, List<SPARQLOccurrence>> newVarOccurrences) {
         return new SQLContext(newVarOccurrences, condensedMode, opSlice, opOrder);
     }
 
-    public SQLContext setOpSlice(OpSlice newOpSlice) {
+    public SQLContext copyWithNewOpSlice(OpSlice newOpSlice) {
         return new SQLContext(sparqlVarOccurrences, condensedMode, newOpSlice, opOrder);
     }
 
-    public SQLContext setOpOrder(OpOrder newOpOrder) {
+    public SQLContext copyWithNewOpOrder(OpOrder newOpOrder) {
         return new SQLContext(sparqlVarOccurrences, condensedMode, opSlice, newOpOrder);
     }
 }

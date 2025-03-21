@@ -4,7 +4,6 @@ import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLUtils;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLVariable;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.algebra.op.OpProject;
 
@@ -89,6 +88,6 @@ public class ProjectSQLOperator extends SQLOperator {
             }
         }
 
-        return this.query.getContext().setVarOccurrences(newSparqlVarOccurrences);
+        return this.query.getContext().copyWithNewVarOccurrences(newSparqlVarOccurrences);
     }
 }

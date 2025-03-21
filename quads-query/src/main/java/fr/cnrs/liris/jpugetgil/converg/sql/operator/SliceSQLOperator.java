@@ -19,7 +19,7 @@ public class SliceSQLOperator extends SQLOperator {
      */
     @Override
     public SQLQuery buildSQLQuery() {
-        query.setContext(query.getContext().setOpSlice(opSlice));
+        query.setContext(query.getContext().copyWithNewOpSlice(opSlice));
         return query;
     }
 

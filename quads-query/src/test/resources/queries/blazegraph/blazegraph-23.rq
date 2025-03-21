@@ -1,0 +1,13 @@
+# List all the height and width (optional) of the buildings in the dataset
+PREFIX schema: <http://schema.org/>
+
+SELECT ?g ?s ?o ?o2 WHERE {
+    GRAPH ?g {
+        ?s schema:height ?o .
+      	
+        OPTIONAL {
+        	?s schema:depth ?o2 .
+        }   
+    }
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+}

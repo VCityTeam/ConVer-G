@@ -87,6 +87,6 @@ public class ExtendSQLOperator extends SQLOperator {
                                 new SQLVariable(SQLVarType.VALUE, var.getVarName().replace(".", "agg"))
                         ))));
 
-        this.query.setContext(context.setVarOccurrences(sparqlVarOccurrences));
+        this.query.setContext(context.copyWithNewVarOccurrences(sparqlVarOccurrences));
     }
 }
