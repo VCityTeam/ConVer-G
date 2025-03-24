@@ -1,6 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
+import fr.cnrs.liris.jpugetgil.converg.utils.PgUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.sparql.core.Var;
@@ -10,7 +10,6 @@ import org.apache.jena.sparql.engine.binding.BindingBuilder;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -43,19 +42,19 @@ public class BindingIterator implements Iterator<Binding> {
                 Node variableValue;
 
                 try {
-                    if (hasColumn(resultSet, "name$" + v) && resultSet.getString("name$" + v) != null) {
+                    if (PgUtils.hasColumn(resultSet, "name$" + v) && resultSet.getString("name$" + v) != null) {
                         String value = resultSet.getString("name$" + v);
                         String valueType;
                         if (allVariables.contains("type$" + v)) {
                             valueType = resultSet.getString("type$" + v);
                         } else {
-                            valueType = getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn("name$" + v)));
+                            valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn("name$" + v)));
                         }
                         variableValue = valueType == null ?
                                 NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-                    } else if (hasColumn(resultSet, v) && resultSet.getString(v) != null) {
+                    } else if (PgUtils.hasColumn(resultSet, v) && resultSet.getString(v) != null) {
                         String value = resultSet.getString(v);
-                        String valueType = getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn(v)));
+                        String valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn(v)));
                         variableValue = NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
                     } else {
                         variableValue = null;
@@ -127,32 +126,5 @@ public class BindingIterator implements Iterator<Binding> {
                 vars.add(var);
             }
         }
-    }
-
-    private boolean hasColumn(java.sql.ResultSet rs, String columnName) {
-        try {
-            rs.findColumn(columnName);
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    private String getAssociatedRDFType(int sqlType) {
-        // Implement this method to map SQL types to RDF types
-        return switch (sqlType) {
-            case Types.INTEGER -> XSDDatatype.XSDinteger.getURI();
-            case Types.VARCHAR -> XSDDatatype.XSDstring.getURI();
-            case Types.BOOLEAN -> XSDDatatype.XSDboolean.getURI();
-            case Types.DOUBLE -> XSDDatatype.XSDdouble.getURI();
-            case Types.FLOAT -> XSDDatatype.XSDfloat.getURI();
-            case Types.DECIMAL -> XSDDatatype.XSDdecimal.getURI();
-            case Types.TIMESTAMP -> XSDDatatype.XSDdateTime.getURI();
-            case Types.DATE -> XSDDatatype.XSDdate.getURI();
-            case Types.TIME -> XSDDatatype.XSDtime.getURI();
-            case Types.BIGINT -> XSDDatatype.XSDlong.getURI();
-            // Add more cases as needed
-            default -> null; // or a default type
-        };
     }
 }

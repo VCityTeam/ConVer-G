@@ -4,17 +4,22 @@ import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
+import fr.cnrs.liris.jpugetgil.converg.utils.PgUtils;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.snapshots.Unit;
-import org.apache.jena.query.*;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.*;
-import org.apache.jena.sparql.core.ResultBinding;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
 import org.slf4j.Logger;
@@ -23,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -59,7 +65,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         SQLQuery finalizedQuery = getSqlQuery(query);
 
         try {
-            BindingIterator bindingIterator = getQueryBindingIterator(query, finalizedQuery);
+            BindingIterator bindingIterator = new BindingIterator(getSQLResultSet(query, finalizedQuery));
             Set<Var> vars = bindingIterator
                     .getVars();
 
@@ -74,34 +80,26 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         SQLQuery finalizedQuery = getSqlQuery(query);
 
         try {
-            BindingIterator bindingIterator = getQueryBindingIterator(query, finalizedQuery);
+            java.sql.ResultSet rs = getSQLResultSet(query, finalizedQuery);
+            DatasetGraph dsg = DatasetFactory.createGeneral().asDatasetGraph();
 
-            Set<Var> vars = bindingIterator
-                    .getVars();
+            List<Quad> quadList = query.getConstructTemplate().getQuads();
 
-            Model resultSetModel = ModelFactory.createDefaultModel();
+            while (rs.next()) {
+                for (Quad quad : quadList) {
+                    Node graphNode = getTypedNode(quad.getGraph(), rs);
+                    Node subjectNode = getTypedNode(quad.getSubject(), rs);
+                    Node predicateNode = getTypedNode(quad.getPredicate(), rs);
+                    Node objectNode = getTypedNode(quad.getObject(), rs);
 
-            while (bindingIterator.hasNext()) {
-                QuerySolution solution = new ResultBinding(resultSetModel, bindingIterator.next());
-
+                    dsg.add(new Quad(graphNode, subjectNode, predicateNode, objectNode));
+                }
             }
 
-            return DatasetFactory.create(resultSetModel);
+            return DatasetFactory.wrap(dsg);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private BindingIterator getQueryBindingIterator(Query query, SQLQuery finalizedQuery) throws SQLException {
-        Long startExec = System.nanoTime();
-        java.sql.ResultSet rs = jdbcConnection.executeSQL(finalizedQuery.getSql());
-        Long endExec = System.nanoTime();
-        queryExecutionDuration
-                .labelValues(String.valueOf(queryCounter.get()))
-                .observe(Unit.nanosToSeconds(endExec - startExec));
-        log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
-
-        return new BindingIterator(rs);
     }
 
     public SQLQuery buildSPARQLContext(Op op) {
@@ -193,5 +191,34 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         log.info("[Measure] (Query translation duration): {} ns for query: {};", endTranslation - startTranslation, query);
         log.info("Query result: {};", finalizedQuery.getSql());
         return finalizedQuery;
+    }
+
+    private java.sql.ResultSet getSQLResultSet(Query query, SQLQuery finalizedQuery) throws SQLException {
+        Long startExec = System.nanoTime();
+        java.sql.ResultSet rs = jdbcConnection.executeSQL(finalizedQuery.getSql());
+        Long endExec = System.nanoTime();
+        queryExecutionDuration
+                .labelValues(String.valueOf(queryCounter.get()))
+                .observe(Unit.nanosToSeconds(endExec - startExec));
+        log.info("[Measure] (Query execution duration): {} ns for query: {};", endExec - startExec, query);
+        return rs;
+    }
+
+    private static Node getTypedNode(Node node, java.sql.ResultSet rs) throws SQLException {
+        if (node.isVariable()) {
+            String v = node.getName();
+            String value = rs.getString("name$" + v);
+
+            if (PgUtils.hasColumn(rs, "type$" + v)) {
+                String valueType = rs.getString("type$" + v);
+
+                node = valueType == null ?
+                        NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
+            } else {
+                node = NodeFactory.createURI(rs.getString("name$" + node.getName()));
+            }
+        }
+
+        return node;
     }
 }
