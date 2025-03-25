@@ -34,7 +34,7 @@ class QuadsQueryAppIT {
     private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNCardinality(String queryNumber) throws Exception {
         log.info("Query number : {}", queryNumber);
         Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
@@ -46,7 +46,7 @@ class QuadsQueryAppIT {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"})
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNContent(String queryNumber) throws Exception {
         log.info("Query number : {}", queryNumber);
         Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
@@ -177,7 +177,6 @@ class QuadsQueryAppIT {
             JsonNodeComparator jsonNodeComparator = new JsonNodeComparator();
 
             if (jsonNodeComparator.compare(jsonNode, matcher) == 0) {
-                log.info("{} is found in the JSON array : {}", matcher, jsonArray.get(i));
                 return true;
             }
         }

@@ -1,0 +1,11 @@
+prefix schema: <http://schema.org/>
+
+SELECT * WHERE {
+  GRAPH ?graph {
+    ?subject schema:width ?object .
+    OPTIONAL {
+    	?subject schema:alpha ?object2 .
+    }
+  }
+  FILTER(?graph != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+}

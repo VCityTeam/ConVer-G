@@ -6,24 +6,26 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingBuilder;
+import org.postgresql.jdbc.PgResultSet;
 
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
 
 public class BindingIterator implements Iterator<Binding> {
-    private final ResultSet resultSet;
+    private final PgResultSet pgResultSet;
     private final ResultSetMetaData rsmd;
     private final List<String> allVariables = new ArrayList<>();
     private final List<String> variables = new ArrayList<>();
     private final Set<Var> vars = new HashSet<>();
+    private boolean hasNextValue;
 
-    public BindingIterator(ResultSet resultSet) throws SQLException {
-        this.resultSet = resultSet;
-        this.rsmd = resultSet.getMetaData();
+    public BindingIterator(PgResultSet pgResultSet) throws SQLException {
+        this.pgResultSet = pgResultSet;
+        this.rsmd = pgResultSet.getMetaData();
         buildAllVariablesAndVariables();
+        hasNextValue = pgResultSet.next();
     }
 
     public Set<Var> getVars() {
@@ -32,32 +34,41 @@ public class BindingIterator implements Iterator<Binding> {
 
     @Override
     public Binding next() {
-        try {
-            resultSet.next();
+        if (!hasNextValue) {
+            try {
+                if(pgResultSet.isClosed()) {
+                    throw new NoSuchElementException("No more elements and result set is closed.");
+                }
+            } catch(SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (!hasNextValue) {
+            throw new NoSuchElementException("No more elements.");
+        }
 
+        try {
             BindingBuilder bindingBuilder = Binding.builder();
 
             for (String v : variables) {
                 Var variable = Var.alloc(v);
-                Node variableValue;
+                Node variableValue = null;
 
                 try {
-                    if (PgUtils.hasColumn(resultSet, "name$" + v) && resultSet.getString("name$" + v) != null) {
-                        String value = resultSet.getString("name$" + v);
+                    if (PgUtils.hasColumn(pgResultSet, "name$" + v) && pgResultSet.getString("name$" + v) != null) {
+                        String value = pgResultSet.getString("name$" + v);
                         String valueType;
                         if (allVariables.contains("type$" + v)) {
-                            valueType = resultSet.getString("type$" + v);
+                            valueType = pgResultSet.getString("type$" + v);
                         } else {
-                            valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn("name$" + v)));
+                            valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(pgResultSet.findColumn("name$" + v)));
                         }
                         variableValue = valueType == null ?
                                 NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-                    } else if (PgUtils.hasColumn(resultSet, v) && resultSet.getString(v) != null) {
-                        String value = resultSet.getString(v);
-                        String valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(resultSet.findColumn(v)));
+                    } else if (PgUtils.hasColumn(pgResultSet, v) && pgResultSet.getString(v) != null) {
+                        String value = pgResultSet.getString(v);
+                        String valueType = PgUtils.getAssociatedRDFType(rsmd.getColumnType(pgResultSet.findColumn(v)));
                         variableValue = NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-                    } else {
-                        variableValue = null;
                     }
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
@@ -68,40 +79,23 @@ public class BindingIterator implements Iterator<Binding> {
                 }
             }
 
+            hasNextValue = pgResultSet.next();
             return bindingBuilder.build();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * @return true if the iteration has more elements
-     */
     @Override
     public boolean hasNext() {
-        try {
-            boolean hasNext = !resultSet.isLast();
-
-            if (!hasNext) {
-                resultSet.close();
-            }
-            return hasNext;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return hasNextValue;
     }
 
-    /**
-     * 
-     */
     @Override
     public void remove() {
         Iterator.super.remove();
     }
 
-    /**
-     * @param action The action to be performed for each element 
-     */
     @Override
     public void forEachRemaining(Consumer<? super Binding> action) {
         while (hasNext()) {

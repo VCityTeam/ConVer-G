@@ -22,6 +22,7 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.ResultSetStream;
+import org.postgresql.jdbc.PgResultSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,9 +194,9 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return finalizedQuery;
     }
 
-    private java.sql.ResultSet getSQLResultSet(Query query, SQLQuery finalizedQuery) throws SQLException {
+    private PgResultSet getSQLResultSet(Query query, SQLQuery finalizedQuery) throws SQLException {
         Long startExec = System.nanoTime();
-        java.sql.ResultSet rs = jdbcConnection.executeSQL(finalizedQuery.getSql());
+        PgResultSet rs = (PgResultSet) jdbcConnection.executeSQL(finalizedQuery.getSql());
         Long endExec = System.nanoTime();
         queryExecutionDuration
                 .labelValues(String.valueOf(queryCounter.get()))
