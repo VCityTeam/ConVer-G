@@ -18,7 +18,7 @@ public class PgUtils {
     public static String getAssociatedRDFType(int sqlType) {
         // Implement this method to map SQL types to RDF types
         return switch (sqlType) {
-            case Types.INTEGER -> XSDDatatype.XSDinteger.getURI();
+            case Types.INTEGER, Types.NUMERIC -> XSDDatatype.XSDinteger.getURI();
             case Types.VARCHAR -> XSDDatatype.XSDstring.getURI();
             case Types.BOOLEAN -> XSDDatatype.XSDboolean.getURI();
             case Types.DOUBLE -> XSDDatatype.XSDdouble.getURI();

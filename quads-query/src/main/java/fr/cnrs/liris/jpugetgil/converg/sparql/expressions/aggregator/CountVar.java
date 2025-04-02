@@ -34,6 +34,7 @@ public class CountVar extends AbstractAggregator<AggCountVar> {
 
     @Override
     public String toSQLString(OpGroup opGroup, String alias) {
-        return this.toSQLString();
+        String varName = "agg" + getVariable().getVarName().replace(".", "");
+        return "SUM(bit_count(bs$" + alias + ")) AS " + varName;
     }
 }
