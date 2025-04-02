@@ -355,4 +355,32 @@ public class SQLUtils {
 
         return rightSQLVariable.getSqlVariable().getSelect("right_table");
     }
+
+    public static String generateDifferenceLeftJoinNodeProjectionByListSPARQLOccurrences(
+            List<SPARQLOccurrence> leftSparqlOccurrences,
+            List<SPARQLOccurrence> rightSparqlOccurrences
+    ) {
+        boolean presentLeft = leftSparqlOccurrences != null;
+        boolean presentRight = rightSparqlOccurrences != null;
+
+        if (presentLeft && presentRight) {
+            SPARQLOccurrence leftMAXSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
+            SPARQLOccurrence rightSPARQLOccurrence = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
+            return leftMAXSPARQLOccurrence
+                    .getSqlVariable()
+                    .leftJoinDifferenceProjections(rightSPARQLOccurrence.getSqlVariable(), "left_table", "right_table");
+        }
+
+        if (presentLeft) {
+            SPARQLOccurrence leftSQLVariable = SQLUtils.getMaxSPARQLOccurrence(leftSparqlOccurrences);
+            return leftSQLVariable.getSqlVariable().getSelect("left_table");
+        }
+
+        if (presentRight) {
+            SPARQLOccurrence rightSQLVariable = SQLUtils.getMaxSPARQLOccurrence(rightSparqlOccurrences);
+            return rightSQLVariable.getSqlVariable().getNullSelect();
+        }
+
+        return "";
+    }
 }

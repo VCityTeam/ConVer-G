@@ -66,6 +66,10 @@ public class SQLVariable {
         };
     }
 
+    public String getNullSelect() {
+        return "NULL AS " + getSelect();
+    }
+
     /**
      * Join the two SQL variables
      *
@@ -88,6 +92,18 @@ public class SQLVariable {
      */
     public String leftJoinProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return leftJoinProjections(this, rightSQLVar, leftTableName, rightTableName);
+    }
+
+    /**
+     * Left Join differences the two SQL variables
+     *
+     * @param rightSQLVar    the right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @return the left join differences SQL projections
+     */
+    public String leftJoinDifferenceProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return leftJoinDifferenceProjections(this, rightSQLVar, leftTableName, rightTableName);
     }
 
     /**
@@ -248,6 +264,40 @@ public class SQLVariable {
                 case CONDENSED ->
                         "COALESCE(" + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & " + rightTableName + ".bs$"
                                 + rightSQLVar.getSqlVarName() + "," + leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + ") AS bs$"
+                                + leftSQLVar.getSqlVarName() + ", " + leftTableName + ".ng$" + leftSQLVar.getSqlVarName();
+            };
+            case UNBOUND_GRAPH ->
+                    throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+        };
+    }
+
+    /**
+     * Left Join differences the two SQL variables
+     *
+     * @param leftSQLVar  the left SQL variable
+     * @param rightSQLVar the right SQL variable
+     * @return the left join differences SQL projections
+     */
+    private String leftJoinDifferenceProjections(SQLVariable leftSQLVar, SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
+        return switch (leftSQLVar.getSqlVarType()) {
+            case VALUE -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE -> leftSQLVar.getSelect(leftTableName);
+                case ID, CONDENSED, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case ID -> switch (rightSQLVar.getSqlVarType()) {
+                case ID -> leftSQLVar.getSelect(leftTableName);
+                case CONDENSED -> leftTableName + ".id_versioned_named_graph AS v$" + leftSQLVar.getSqlVarName();
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+            };
+            case CONDENSED -> switch (rightSQLVar.getSqlVarType()) {
+                case VALUE, UNBOUND_GRAPH ->
+                        throw new ARQNotImplemented(leftSQLVar.getSqlVarType() + "-" + rightSQLVar.getSqlVarType() + " join Not supported yet.");
+                case ID -> rightTableName + ".id_versioned_named_graph AS v$" + rightSQLVar.getSqlVarName();
+                case CONDENSED ->
+                        leftTableName + ".bs$" + leftSQLVar.getSqlVarName() + " & ~bit_or(" + rightTableName + ".bs$"
+                                + rightSQLVar.getSqlVarName() + ") AS bs$"
                                 + leftSQLVar.getSqlVarName() + ", " + leftTableName + ".ng$" + leftSQLVar.getSqlVarName();
             };
             case UNBOUND_GRAPH ->
