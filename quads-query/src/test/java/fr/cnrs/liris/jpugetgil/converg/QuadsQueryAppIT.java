@@ -57,6 +57,31 @@ class QuadsQueryAppIT {
         sendRequestAndCompareResultsContent(requestStS, requestBlazegraph);
     }
 
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
+    void querySPARQLNCardinalityFlat(String queryNumber) throws Exception {
+        log.info("Query number : {}", queryNumber);
+        Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/blazegraph/blazegraph-" + queryNumber + ".rq");
+        HttpRequest requestStSFlat = getHttpRequestByURLandPath("http://localhost:8082/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
+
+        sendRequestAndCompareResultsCardinality(requestStSFlat, requestBlazegraph);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
+    void querySPARQLNContentFlat(String queryNumber) throws Exception {
+        log.info("Query number : {}", queryNumber);
+        Path pathSts = Path.of("src/test/resources/queries/sts/sts-" + queryNumber + ".rq");
+        Path pathBlazegraph = Path.of("src/test/resources/queries/blazegraph/blazegraph-" + queryNumber + ".rq");
+        HttpRequest requestStSFlat = getHttpRequestByURLandPath("http://localhost:8082/rdf/query", pathSts);
+        HttpRequest requestBlazegraph = getHttpRequestByURLandPath("http://localhost:9999/blazegraph/namespace/kb/sparql", pathBlazegraph);
+
+        sendRequestAndCompareResultsContent(requestStSFlat, requestBlazegraph);
+    }
+
     /**
      * Send the request to the two endpoints and compare the results cardinality.
      *

@@ -136,14 +136,18 @@ public class LeftJoinSQLOperator extends JoinSQLOperator {
         String fromSimOrNotExist = buildFrom();
         String whereSimOrNotExist = buildWhere();
 
-        String differenceSelect = buildDifferenceSelect();
-        String differenceFrom = buildDifferenceFrom();
-        String groupByDifferences = buildDifferenceGroupBy();
-
-        String sql = "WITH "+LEFT_TABLE_NAME+" AS (" + leftQuery.getSql() + "),\n" +
+        String sql = "WITH " + LEFT_TABLE_NAME + " AS (" + leftQuery.getSql() + "),\n" +
                 RIGHT_TABLE_NAME + " AS (" + rightQuery.getSql() + ")\n" +
-                selectSimOrNotExist + fromSimOrNotExist + whereSimOrNotExist + "\n UNION \n "
-                + differenceSelect + differenceFrom + whereSimOrNotExist + "\n" + groupByDifferences;
+                selectSimOrNotExist + fromSimOrNotExist + whereSimOrNotExist;
+
+        if (leftQuery.getContext().condensedMode()) {
+            String differenceSelect = buildDifferenceSelect();
+            String differenceFrom = buildDifferenceFrom();
+            String groupByDifferences = buildDifferenceGroupBy();
+
+            sql = sql + "\n UNION \n "
+                    + differenceSelect + differenceFrom + whereSimOrNotExist + "\n" + groupByDifferences;
+        }
 
         return new SQLQuery(
                 sql,

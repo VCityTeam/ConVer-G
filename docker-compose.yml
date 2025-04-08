@@ -73,9 +73,34 @@ services:
       - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
       - "DATASOURCE_USERNAME=postgres"
       - "DATASOURCE_PASSWORD=password"
+      - "CONDENSED_MODE=true"
     ports:
       - "8081:8081"
     container_name: quads-query
+    deploy:
+      resources:
+        limits:
+          cpus: ${QUERY_CPU_LIMITATION:-0.000}
+          memory: ${QUERY_RAM_LIMITATION:-16Gb}
+
+  ud-quads-query-flat:
+    build:
+      context: quads-query
+      dockerfile: Dockerfile
+      args:
+        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg
+        - DATASOURCE_USERNAME=postgres
+        - DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+    environment:
+      - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
+      - "DATASOURCE_USERNAME=postgres"
+      - "DATASOURCE_PASSWORD=password"
+      - "CONDENSED_MODE=false"
+    ports:
+      - "8082:8081"
+    container_name: quads-query-flat
     deploy:
       resources:
         limits:
