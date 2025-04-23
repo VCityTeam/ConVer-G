@@ -1,0 +1,9 @@
+# SPARQL query to find all the products with a rating greater than 4
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+
+SELECT ?vg ?s ?rating WHERE {
+    GRAPH ?vg {
+      ?s bsbm:rating3 ?rating .
+      FILTER(?rating > 4)
+    }
+}

@@ -15,7 +15,7 @@ WORKDIR /app
 COPY . .
 
 # Make the query.sh script executable
-RUN chmod +x /app/query.sh
+RUN chmod +x /app/typed-query.sh
 
 # Run the query.sh script
-ENTRYPOINT ["./query.sh"]
+ENTRYPOINT ["./typed-query.sh"]
