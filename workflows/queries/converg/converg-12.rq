@@ -1,0 +1,12 @@
+# SPARQL query to get all the ratings of the resources in the VCity dataset
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+
+SELECT ?vg ?s ?type ?rating WHERE {
+    GRAPH ?vg {
+        ?s a ?type .
+      	
+        OPTIONAL {
+        	?s bsbm:rating3 ?rating .
+        }   
+    }
+}

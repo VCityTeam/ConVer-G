@@ -1,4 +1,4 @@
-# Find the number of rating of reviews in each graph
+# SPARQL query to get the average rating of reviews per version
 PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
 PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
 

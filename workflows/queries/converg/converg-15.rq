@@ -1,0 +1,6 @@
+# Find the number of graph
+PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+
+SELECT (COUNT(?graph) as ?countgraph) WHERE {
+    ?vg vers:is-version-of ?graph .
+}
