@@ -4,17 +4,23 @@
 # Find all the queries and send them to the host with the given representation
 ######################################################
 
-log_folder="."
-
 host=$1
 converg_or_blazegraph=$2
 number_of_queries=$3
-log_folder=${4:"."}
+version=$4
+product=$5
+step=$6
+log_folder=$7
 
-JSON_LOG='{"component":"%s","query":"%s","try":"%s","duration":"%s"}\n'
+# check if log_folder is set
+if [ -z "$log_folder" ]; then
+  log_folder="."
+fi
 
-if [ "$#" -lt 3 ] ; then
-    echo "Usage: $0 <Host> <converg or blazegraph> <number of queries> ?<log folder>"
+JSON_LOG='{"component":"%s","query":"%s","try":"%s","duration":"%s","version":"%s","product":"%s","step":"%s"}\n'
+
+if [ "$#" -lt 6 ] ; then
+    echo "Usage: $0 <Host> <converg or blazegraph> <number of queries> <version> <product> <step> ?<log folder>"
     exit 1
 fi
 
@@ -37,7 +43,7 @@ if [ "$converg_or_blazegraph" = "converg" ] ; then
             --data "$content"
 
           end_query_relational=$(date +%s%3N)
-          printf "$JSON_LOG" "QuaQue" "$file" "$i" "$((end_query_relational-start_query_relational))ms"
+          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_relational-start_query_relational))ms" "$version" "$product" "$step"
       done
   done
 
@@ -62,7 +68,7 @@ if [ "$converg_or_blazegraph" = "blazegraph" ] ; then
                 --header 'Accept: application/sparql-results+json'
 
           end_query_triple=$(date +%s%3N)
-          printf "$JSON_LOG" "Blazegraph" "$file" "$i" "$((end_query_triple-start_query_triple))ms"
+          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_triple-start_query_triple))ms" "$version" "$product" "$step"
       done
   done
 
