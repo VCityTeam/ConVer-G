@@ -1,0 +1,8 @@
+# SPARQL Query: count the number of subject by rating
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+SELECT ?rating (COUNT(?s) as ?counts) WHERE {
+  GRAPH ?vg {
+      ?s a bsbm:Review ;
+  			bsbm:rating3 ?rating .
+  }
+} GROUP BY ?rating
