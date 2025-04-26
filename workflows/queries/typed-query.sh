@@ -17,7 +17,7 @@ if [ -z "$log_folder" ]; then
   log_folder="."
 fi
 
-JSON_LOG='{"component":"%s","query":"%s","try":"%s","duration":"%s","version":"%s","product":"%s","step":"%s"}\n'
+JSON_LOG='{"component":"%s","query":"%s","try":"%s","duration":"%s","version":"%s","product":"%s","step":"%s","time":"%s"}\n'
 
 if [ "$#" -lt 6 ] ; then
     echo "Usage: $0 <Host> <converg or blazegraph> <number of queries> <version> <product> <step> ?<log folder>"
@@ -34,6 +34,7 @@ if [ "$converg_or_blazegraph" = "converg" ] ; then
 
       for i in $(seq 1 "$number_of_queries");
       do
+          time_query=$(date +%s)
           start_query_relational=$(date +%s%3N)
           content=$(cat "$file")
           curl --location "http://$host:8081/rdf/query" \
@@ -43,7 +44,7 @@ if [ "$converg_or_blazegraph" = "converg" ] ; then
             --data "$content"
 
           end_query_relational=$(date +%s%3N)
-          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_relational-start_query_relational))ms" "$version" "$product" "$step"
+          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_relational-start_query_relational))ms" "$version" "$product" "$step" "$time_query"
       done
   done
 
@@ -60,6 +61,7 @@ if [ "$converg_or_blazegraph" = "blazegraph" ] ; then
 
       for i in $(seq 1 "$number_of_queries");
       do
+          time_query=$(date +%s)
           start_query_triple=$(date +%s%3N)
           content=$(cat "$file")
           curl --location "http://$host:9999/blazegraph/namespace/kb/sparql" -X POST --data-binary @"$file" \
@@ -68,7 +70,7 @@ if [ "$converg_or_blazegraph" = "blazegraph" ] ; then
                 --header 'Accept: application/sparql-results+json'
 
           end_query_triple=$(date +%s%3N)
-          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_triple-start_query_triple))ms" "$version" "$product" "$step"
+          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_triple-start_query_triple))ms" "$version" "$product" "$step" "$time_query"
       done
   done
 
