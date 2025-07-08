@@ -27,13 +27,23 @@ class RDFConverterTest {
         // Compare the result file with the expected file
         String expectedFile = inputFile + "-expected" + ".trig";
 
-        String expectedContent = new BufferedReader(new InputStreamReader(
+        String expectedContent;
+        try (BufferedReader expectedReader = new BufferedReader(new InputStreamReader(
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(expectedFile)),
-                StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+                StandardCharsets.UTF_8))) {
+            expectedContent = expectedReader.lines().collect(Collectors.joining("\n"));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        String resultContent = new BufferedReader(new InputStreamReader(
+        String resultContent;
+        try (BufferedReader resultReader = new BufferedReader(new InputStreamReader(
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resultFile)),
-                StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+                StandardCharsets.UTF_8))) {
+            resultContent = resultReader.lines().collect(Collectors.joining("\n"));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
 
         assertEquals(expectedContent, resultContent);
     }
@@ -53,13 +63,23 @@ class RDFConverterTest {
         // Compare the result file with the expected file
         String expectedFile = inputFile + "-expected" + ".trig";
 
-        String expectedContent = new BufferedReader(new InputStreamReader(
+        String expectedContent;
+        try (BufferedReader expectedReader = new BufferedReader(new InputStreamReader(
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(expectedFile)),
-                StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+                StandardCharsets.UTF_8))) {
+            expectedContent = expectedReader.lines().collect(Collectors.joining("\n"));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        String resultContent = new BufferedReader(new InputStreamReader(
+        String resultContent;
+        try (BufferedReader resultReader = new BufferedReader(new InputStreamReader(
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resultFile)),
-                StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+                StandardCharsets.UTF_8))) {
+            resultContent = resultReader.lines().collect(Collectors.joining("\n"));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
 
         assertEquals(expectedContent, resultContent);
     }

@@ -1,13 +1,8 @@
 package fr.cnrs.liris.jpugetgil.converg.sql.operator;
 
-import fr.cnrs.liris.jpugetgil.converg.sparql.SPARQLOccurrence;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLUtils;
-import org.apache.jena.graph.Node;
 
-import java.util.List;
-import java.util.Map;
 
 public class UnionSQLOperator extends SQLOperator {
 

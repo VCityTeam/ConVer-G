@@ -62,6 +62,26 @@ public class QuadImportController {
     }
 
     @Operation(
+            summary = "Flatten all versioned quads",
+            description = "Flattens all versioned quads into a flat representation"
+    )
+    @GetMapping(value = {"/flatten"})
+    ResponseEntity<Void> flattenVersionedQuads() {
+        try {
+            if (quadImporterEnabled) {
+                quadImportService.flattenVersionedQuads();
+                return ResponseEntity.ok(null);
+            } else {
+                return ResponseEntity.ok(null);
+            }
+        } catch (RiotException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
+        }
+    }
+
+    @Operation(
             summary = "Adds triple and creates a new metadata",
             description = "Adds all triple as a new metadata and considered as valid"
     )

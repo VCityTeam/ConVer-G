@@ -5,6 +5,13 @@ DROP INDEX IF EXISTS versioned_quad_ng_p_s_o;
 DROP INDEX IF EXISTS versioned_quad_ng_o_p_s;
 DROP INDEX IF EXISTS versioned_quad_ng_o_s_p;
 DROP TABLE IF EXISTS versioned_quad CASCADE;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_s_p_o;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_s_o_p;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_p_o_s;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_p_s_o;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_o_p_s;
+DROP INDEX IF EXISTS versioned_quad_flat_ng_o_s_p;
+DROP TABLE IF EXISTS versioned_quad_flat CASCADE;
 DROP TABLE IF EXISTS versioned_named_graph CASCADE;
 DROP INDEX IF EXISTS resource_or_literal_idx;
 DROP TABLE IF EXISTS resource_or_literal CASCADE;
@@ -40,6 +47,13 @@ CREATE TABLE IF NOT EXISTS versioned_quad
     PRIMARY KEY (id_object, id_predicate, id_subject, id_named_graph)
 );
 
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_predicate);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_predicate, id_object, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_predicate, id_subject, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_predicate, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_predicate);
+
 CREATE TABLE IF NOT EXISTS flat_model_quad
 (
     id_record      integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -64,12 +78,22 @@ CREATE TABLE IF NOT EXISTS flat_model_triple
     object_type    varchar
 );
 
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_predicate);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_predicate, id_object, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_predicate, id_subject, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_predicate, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_predicate);
+
+CREATE TABLE IF NOT EXISTS versioned_quad_flat
+(
+    id_object      integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_predicate   integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_subject     integer REFERENCES resource_or_literal (id_resource_or_literal),
+    id_versioned_named_graph integer REFERENCES resource_or_literal (id_resource_or_literal),
+    PRIMARY KEY (id_object, id_predicate, id_subject, id_versioned_named_graph)
+);
+
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_p_o ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_predicate, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_o_p ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_object, id_predicate);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_o_s ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_object, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_s_o ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_subject, id_object);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_p_s ON versioned_quad_flat (id_versioned_named_graph, id_object, id_predicate, id_subject);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_s_p ON versioned_quad_flat (id_versioned_named_graph, id_object, id_subject, id_predicate);
 
 CREATE TABLE IF NOT EXISTS version
 (

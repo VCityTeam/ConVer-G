@@ -147,6 +147,20 @@ public class QuadImportService implements IQuadImportService {
         return version.getIndexVersion();
     }
 
+
+    @Override
+    public void flattenVersionedQuads() {
+        log.info("Flattening versioned quads");
+
+        Long start = System.nanoTime();
+        versionedQuadComponent.flattenVersionedQuads();
+
+        rdfVersionedQuadRepository.deleteAll();
+        Long end = System.nanoTime();
+
+        log.info("[Measure] (Flattening and delete): {} ns", end - start);
+    }
+
     /**
      * Import RDF statements represented in language <code>of the file extension</code> to the model as valid in the new metadata.
      *

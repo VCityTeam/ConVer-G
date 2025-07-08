@@ -3,7 +3,6 @@ package fr.vcity.converg.repository;
 import fr.vcity.converg.connection.JdbcConnection;
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;

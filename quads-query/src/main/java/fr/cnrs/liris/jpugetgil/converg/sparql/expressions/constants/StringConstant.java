@@ -9,4 +9,8 @@ public class StringConstant extends Constant<NodeValueString> {
         super(expr);
         value = expr.asString();
     }
+
+    public String getValue() {
+        return value;
+    }
 }

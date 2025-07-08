@@ -4,7 +4,6 @@ import fr.vcity.converg.connection.JdbcConnection;
 import fr.vcity.converg.dto.CompleteVersionedQuad;
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -72,6 +71,24 @@ public class VersionedQuadComponent {
                 rs.getString(4),
                 rs.getBytes(5)
         );
+    }
+
+    public void flattenVersionedQuads() {
+        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
+        Connection connection = jdbcConnection.getConnection();
+
+        String insertFlatQuadSQL = """
+                INSERT INTO versioned_quad_flat (id_subject, id_predicate, id_object, id_versioned_named_graph)
+                SELECT v.id_subject, v.id_predicate, v.id_object, vng.id_versioned_named_graph
+                FROM versioned_quad v
+                JOIN versioned_named_graph vng ON get_bit(v.validity, vng.index_version - 1) = 1
+                    AND vng.id_named_graph = v.id_named_graph;""";
+        try {
+            PreparedStatement ps = connection.prepareStatement(insertFlatQuadSQL);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error occurred in statement", e);
+        }
     }
 
     public void saveQuads(List<QuadImportService.QuadValueType> quadValueTypes) {

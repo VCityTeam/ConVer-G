@@ -32,9 +32,9 @@ public class Pair<L, R> {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Pair)) return false;
-        Pair<L, R> pairo = (Pair<L, R>) o;
-        return this.left.equals(pairo.left) &&
-                this.right.equals(pairo.right);
+        if (!(o instanceof Pair<?, ?>)) return false;
+        Pair<?, ?> pairo = (Pair<?, ?>) o;
+        return (left == null ? pairo.left == null : left.equals(pairo.left)) &&
+               (right == null ? pairo.right == null : right.equals(pairo.right));
     }
 }

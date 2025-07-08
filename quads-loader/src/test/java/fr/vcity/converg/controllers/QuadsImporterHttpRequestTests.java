@@ -171,6 +171,15 @@ class QuadsImporterHttpRequestTests {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
+    @Test
+    @Order(6)
+    void flattenDataset() throws Exception {
+        String url = "http://localhost:" + port + "/import/flatten";
+
+        ResponseEntity<String> getResponse = restTemplate.getForEntity(url, String.class);
+        assertEquals(HttpStatus.OK, getResponse.getStatusCode());
+    }
+
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);

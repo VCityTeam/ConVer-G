@@ -7,6 +7,8 @@ public interface IQuadImportService {
 
     Integer importModel(MultipartFile file) throws RiotException;
 
+    void flattenVersionedQuads();
+
     void resetDatabase();
 
     void importMetadata(MultipartFile file) throws RiotException;
