@@ -1,0 +1,13 @@
+# SPARQL Query to retrieve all the vertices and their types and ratings from the graph
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+
+SELECT ?vg ?s ?type ?rating WHERE {
+    GRAPH ?vg {
+        ?s a ?type .
+      	
+        OPTIONAL {
+        	?s bsbm:rating3 ?rating .
+        }   
+    }
+    FILTER(?vg != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+}

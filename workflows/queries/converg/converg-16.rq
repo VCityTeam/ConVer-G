@@ -1,0 +1,10 @@
+# SPARQL query to get the maximum rating of each graph
+PREFIX building: <http://example.edu/Building#>
+PREFIX schema: <http://schema.org/>
+PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
+
+SELECT ?graph (MAX(?rating) AS ?maxrating) WHERE {
+    GRAPH ?graph {
+      ?s bsbm:rating3 ?rating .
+    }
+} GROUP BY ?graph
