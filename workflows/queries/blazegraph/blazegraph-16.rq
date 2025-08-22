@@ -7,5 +7,5 @@ SELECT ?graph (MAX(?rating) AS ?maxrating) WHERE {
     GRAPH ?graph {
       ?s bsbm:rating3 ?rating .
     }
-    FILTER(?vg != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+    FILTER(?graph != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
 } GROUP BY ?graph
