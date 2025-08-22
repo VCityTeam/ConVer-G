@@ -5,7 +5,7 @@
 ######################################################
 
 host=$1
-converg_or_blazegraph=$2
+component=$2
 number_of_queries=$3
 version=$4
 product=$5
@@ -20,11 +20,11 @@ fi
 JSON_LOG='{"component":"%s","query":"%s","try":"%s","duration":"%s","version":"%s","product":"%s","step":"%s","time":"%s"}\n'
 
 if [ "$#" -lt 6 ] ; then
-    echo "Usage: $0 <Host> <converg or blazegraph> <number of queries> <version> <product> <step> ?<log folder>"
+    echo "Usage: $0 <Host> <converg or blazegraph or jena> <number of queries> <version> <product> <step> ?<log folder>"
     exit 1
 fi
 
-if [ "$converg_or_blazegraph" = "converg" ] ; then
+if [ "$component" = "converg" ] ; then
   printf "\n%s$(date +%FT%T) - [quads-query] Query started."
 
   find . -type f -name "converg*.rq" -print0 | while IFS= read -r -d '' file
@@ -51,7 +51,7 @@ if [ "$converg_or_blazegraph" = "converg" ] ; then
   printf "\n%s$(date +%FT%T) - [quads-query] Query completed."
 fi
 
-if [ "$converg_or_blazegraph" = "blazegraph" ] ; then
+if [ "$component" = "blazegraph" ] ; then
   printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query started."
 
   find . -type f -name "blazegraph*.rq" -print0 | while IFS= read -r -d '' file
@@ -75,4 +75,31 @@ if [ "$converg_or_blazegraph" = "blazegraph" ] ; then
   done
 
   printf "\n%s$(date +%FT%T) - [Query - Blazegraph] Query completed."
+fi
+
+if [ "$component" = "jena" ] ; then
+  printf "\n%s$(date +%FT%T) - [Jena] Query started."
+
+  find . -type f -name "blazegraph*.rq" -print0 | while IFS= read -r -d '' file
+  do
+      printf "\n%s$(date +%FT%T) - [Jena] Query $file"
+      name=$(basename "$file")
+
+      for i in $(seq 1 "$number_of_queries");
+      do
+          time_query=$(date +%s)
+          start_query_jena=$(date +%s%3N)
+          content=$(cat "$file")
+          curl --location "http://$host:3030/mydataset/query" \
+            --header 'Content-Type: application/sparql-query' \
+            --header 'Accept: application/sparql-results+json' \
+            --output "$log_folder/$name.json" \
+            --data "$content"
+
+          end_query_jena=$(date +%s%3N)
+          printf "$JSON_LOG" "$host" "$file" "$i" "$((end_query_jena-start_query_jena))ms" "$version" "$product" "$step" "$time_query"
+      done
+  done
+
+  printf "\n%s$(date +%FT%T) - [Jena] Query completed."
 fi
