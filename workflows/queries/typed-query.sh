@@ -78,6 +78,11 @@ if [ "$component" = "blazegraph" ] ; then
 fi
 
 if [ "$component" = "jena" ] ; then
+  if [ -z "$ADMIN_PASSWORD" ]; then
+    echo "Error: ADMIN_PASSWORD environment variable is not set."
+    exit 1
+  fi
+
   printf "\n%s$(date +%FT%T) - [Jena] Query started."
 
   find . -type f -name "blazegraph*.rq" -print0 | while IFS= read -r -d '' file
@@ -91,6 +96,7 @@ if [ "$component" = "jena" ] ; then
           start_query_jena=$(date +%s%3N)
           content=$(cat "$file")
           curl --location "http://$host:3030/mydataset/query" \
+            -u admin:${ADMIN_PASSWORD} \
             --header 'Content-Type: application/sparql-query' \
             --header 'Accept: application/sparql-results+json' \
             --output "$log_folder/$name.json" \
