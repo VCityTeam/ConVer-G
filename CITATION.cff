@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use one of these softwares, please cite the articles."
+authors:
+- family-names: "Puget Gil"
+  given-names: "Jey"
+- family-names: "Coquery"
+  given-names: "Emmanuel"
+- family-names: "Samuel"
+  given-names: "John"
+title: "ConVer-G"
+version: 1.0.0
+date-released: 2024-10-21
+url: "https://github.com/VCityTeam/ConVer-G"
+preferred-citation:
+  type: inproceedings
+  authors:
+    - family-names: "Puget Gil"
+      given-names: "Jey"
+    - family-names: "Coquery"
+      given-names: "Emmanuel"
+    - family-names: "Samuel"
+      given-names: "John"
+    - family-names: "Gesquière"
+      given-names: "Gilles"
+  title: "ConVer-G: Concurrent versioning of knowledge graphs"
+  booktitle: "40ème conférence sur la gestion des données (BDA)"
+  address: "Orléans, France"
+  year: 2024
+  month: 10
+  url: "https://hal.science/hal-04690144"
+  keywords:
+    - graph
+    - RDF
+    - versioning
+    - concurrent versioning
+    - query
+  identifiers:
+    - type: hal
+      value: "hal-04690144"
+  notes: "PDF: https://hal.science/hal-04690144v1/file/converg-jpg.pdf"
