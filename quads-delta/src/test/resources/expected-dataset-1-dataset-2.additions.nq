@@ -1,0 +1,4 @@
+<http://example.edu/graph#Buildings> {
+    <http://example.edu/Building#2>
+            <http://schema.org/height>  "10"^^<http://www.w3.org/2001/XMLSchema#float> .
+}
