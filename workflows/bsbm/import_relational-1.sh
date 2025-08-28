@@ -15,10 +15,10 @@ printf "\n%s$(date +%FT%T) - [quads-loader] Versions import started."
 
 number_of_versions=$1
 
-find . -type f -name "*.ttl.trig" -print0 | while IFS= read -r -d '' file
+find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file
 do
-    # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
-    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
+    # Extract version number from the file name (assuming the format dataset-{version}.{format}.trig)
+    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.\w+\.trig)')
 
     # Check if the version is less than or equal to the specified number_of_versions
     if [ "$version" -le "$number_of_versions" ]; then

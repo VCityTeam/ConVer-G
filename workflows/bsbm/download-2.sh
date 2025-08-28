@@ -26,8 +26,8 @@ random_product_number=$(( ( RANDOM % 5 ) + 3 ))
 random_product_step=$(( ( RANDOM % 3 ) + 1 ))
 
 # Run the command versions_number times
-docker run --name "bsbm-$versions_number-$products_number" -v "$PWD:/app/data" vcity/bsbm generate-n "$versions_number" "$products_number" "$products_steps"
-docker run --name "bsbm-alt-$versions_number-$products_number" -v "$PWD:/app/data" -e "DATA_DESTINATION=alt" vcity/bsbm generate-n "$versions_number" "$random_product_number" "$random_product_step"
+docker run --name "bsbm-$versions_number-$products_number" -v "$PWD:/app/data" vcity/bsbm generate-n -v "$versions_number" -p "$products_number" -s "$products_steps" -f "nt"
+docker run --name "bsbm-alt-$versions_number-$products_number" -v "$PWD:/app/data" -e "DATA_DESTINATION=alt" vcity/bsbm generate-n -v "$versions_number" -p "$random_product_number" -s "$random_product_step" -f "nt"
 
 # Cleaning metadata
 docker ps --filter name=bsbm-* -aq | xargs docker stop | xargs docker rm
