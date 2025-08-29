@@ -25,7 +25,7 @@ public class RDFDelta {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            log.error("Usage: java -cp <jar> fr.vcity.RDFDelta <file1> <file2> <outputDir>");
+            log.error("Usage: java -cp <jar> fr.vcity.RDFDelta <file1> <file2>");
             System.exit(1);
         }
         String dataDir = "/data" + File.separator;
@@ -139,7 +139,7 @@ public class RDFDelta {
         int idx2 = file2Base.lastIndexOf('.');
         if (idx1 > 0) file1Base = file1Base.substring(0, idx1);
         if (idx2 > 0) file2Base = file2Base.substring(0, idx2);
-        String extension = isTriples ? ".ttl" : ".nq";
+        String extension = isTriples ? ".nt" : ".nq";
         String additionsOut = dataDir + file1Base + "-" + file2Base + ".additions" + extension;
         String deletionsOut = dataDir + file1Base + "-" + file2Base + ".deletions" + extension;
         return new String[] { additionsOut, deletionsOut };
@@ -150,7 +150,7 @@ public class RDFDelta {
      */
     private static void writeModel(Model model, String outFile) {
         try (FileOutputStream out = new FileOutputStream(outFile)) {
-            model.write(out, "TTL");
+            RDFDataMgr.write(out, model, Lang.NT) ;
         } catch (IOException e) {
             log.error("Error writing output file: " + outFile + ": " + e.getMessage());
             System.exit(4);
@@ -162,8 +162,8 @@ public class RDFDelta {
      */
     private static void writeDataset(Dataset dataset, String outFile) {
         try (OutputStream outStream = new FileOutputStream(outFile)) {
-            // Save the dataset in TriG format
-            RDFDataMgr.write(outStream, dataset, RDFFormat.TRIG_BLOCKS);
+            // Save the dataset in N-Quads format
+            RDFDataMgr.write(outStream, dataset, RDFFormat.NQUADS);
         } catch (Exception exception) {
             log.error(exception.getMessage());
             System.exit(1);

@@ -35,4 +35,9 @@ start_import_triple=$(date +%s%3N)
 end_import_triple=$(date +%s%3N)
 printf "[Measure] {Import triple} Import duration: %s ms\n" "$((end_import_triple-start_import_triple))"
 
+start_import_deltas=$(date +%s%3N)
+/bin/bash ./bsbm/import_deltas.sh "$1"
+end_import_deltas=$(date +%s%3N)
+printf "[Measure] {Import deltas} Import duration: %s ms\n" "$((end_import_deltas-start_import_deltas))"
+
 echo "------------------------------------------------------------------ [END WORKFLOW] ------------------------------------------------------------------"
