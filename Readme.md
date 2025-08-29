@@ -336,6 +336,8 @@ sequenceDiagram
     SPARQL API ->>- User client: Returns the result
 ```
 
+The workflows have been moved inside the [UD-knowledge-evolution-experiment](https://github.com/VCityTeam/UD-knowledge-evolution-experiment) repository.
+
 #### Entity linking
 
 Before importing the dataset inside the triple store and the relational database, we transform the data to match the
