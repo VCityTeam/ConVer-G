@@ -223,6 +223,62 @@ erDiagram
 ```
 
 #### Flowcharts
+##### Translation of a SPARQL query to SQL
+
+```mermaid
+flowchart TD
+    %% Main Control Flow
+    n1([SPARQL Query]) --> A("Compile SPARQL &<br>Initialize an empty SQL query")
+    A --> C("Get current operator from the algebraic plan")
+    C --> D{"Is operator composite?"}
+    
+    D -- No --> n3
+    D -- Yes --> E{"Operator Type?"}
+
+    %% Subgraphs for Operator Processing
+    subgraph s1 [Create Quad Pattern SQL Fragment]
+        direction TB
+        n3("Translate quads to SQL SELECT")
+        n3 --> n4("Filter rows based on given resources")
+        n4 --> J3("Add the Quad Pattern fragment to the SQL query")
+    end
+    
+    subgraph s4 [Create Join SQL Fragment]
+        direction TB
+        F1("Recursively evaluate left & right parts")
+        F1 --> n13{"Are there more<br>common variables?"}
+        n13 -- Yes --> IE1{"Are variable representations equal?"}
+        IE1 -- No --> Jo2("Unify to a lower representation")
+        Jo2 --> Jo1("Build join equality condition")
+        IE1 -- Yes --> Jo1
+        Jo1 --> n13
+        n13 -- No --> F2("Add the Join fragment to the SQL query")
+    end
+    
+    subgraph s2 [Create Group SQL Fragment]
+        direction TB
+        n5{"Is grouped variable condensed?"}
+        n5 -- Yes --> n6("Flatten representation")
+        n6 --> n10
+        n5 -- No --> n10("Build aggregations<br>(e.g., COUNT, SUM)")
+        n10 --> n11("Build GROUP BY variables")
+        n11 --> n12("Add the Group fragment to the SQL query")
+    end
+
+    %% Operator Dispatcher
+    E -- OpJoin --> F1
+    E -- OpGroup --> n5
+    E -- ... --> H("Process other composite operators")
+
+    %% Final Control Flow
+    J3 --> K
+    n12 --> K
+    F2 --> K
+    H --> K{"Are there more operators to process?"}
+    K -- Yes --> C
+    K -- No --> L("Return the built SQL query")
+    L --> n2([SQL Query])
+```
 
 ##### Query the relational database with a SPARQL query
 
