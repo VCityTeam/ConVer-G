@@ -9,5 +9,5 @@ LABEL maintainer="vcity, jey.puget-gil@liris.cnrs.fr"
 LABEL authors="jey.puget-gil@liris.cnrs.fr"
 
 RUN mkdir /opt/app
-COPY --from=build-loader-cli /app/target/quads-loader-cli-0.0.1-SNAPSHOT.jar /opt/app/quads-loader-cli.jar
-CMD [ "java", "-jar", "/opt/app/quads-loader-cli.jar" ]
+COPY --from=build-loader-cli /app/target/quads-cli-loader-0.0.1-SNAPSHOT.jar /opt/app/quads-cli-loader.jar
+CMD [ "java", "-jar", "/opt/app/quads-cli-loader.jar" ]
