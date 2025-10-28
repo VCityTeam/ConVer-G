@@ -7,12 +7,12 @@
 # To get a newer version, you will need to update the SHA.
 # You can also reference a tag or branch, but the action may change without warning.
 
-name: Publish Docker image Quads Query CLI
+name: Publish Docker image Quads Loader CLI
 
 on:
   push:
     tags:
-      - "qq-cli-v*"
+      - "ql-cli-v*"
 
 jobs:
   push_to_registry:
@@ -40,15 +40,15 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: vcity/quads-query-cli
+          images: vcity/quads-loader-cli
 
       # Build and push Docker image
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: quads-query-cli
-          file: ./quads-query-cli/Dockerfile
+          context: quads-loader-cli
+          file: ./quads-loader-cli/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
