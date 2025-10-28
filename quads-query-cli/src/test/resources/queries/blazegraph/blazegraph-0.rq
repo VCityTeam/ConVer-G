@@ -1,0 +1,7 @@
+# Query the graph store for all quads
+SELECT ?g ?s ?p ?o WHERE {
+    GRAPH ?g {
+      ?s ?p ?o .
+    }
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+}

@@ -1,0 +1,8 @@
+# Query the graph store for all quads with a given subject
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?g ?p ?o WHERE {
+    GRAPH ?g {
+        building:1 ?p ?o .
+    }
+}

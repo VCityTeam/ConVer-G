@@ -1,0 +1,9 @@
+# Query the graph store for all quads in a specific versioned graph with a given subject and a join on the subject (predicate might be equal to predicate2 and object might be equal to object2)
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?p ?o WHERE {
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#8547d86b9ef85c0c7841eb21b56665bfc051707d073e2517f547eace661b3dadaf7cfadb7c04a7920cc5e46a4458722f880eb3db5255ce904ede9c36bc6ef599>	 {
+      building:1 ?p ?o ;
+        ?p2 ?o2 .
+    }
+}

@@ -1,0 +1,8 @@
+# Find the max height in each versioned graph
+PREFIX schema: <http://schema.org/>
+
+SELECT ?vg (MAX(?height) as ?maxheight) WHERE {
+  GRAPH ?vg {
+      ?s schema:height ?height .
+  }
+} GROUP BY ?vg

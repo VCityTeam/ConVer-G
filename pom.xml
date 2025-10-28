@@ -24,6 +24,7 @@
     <module>quads-loader</module>
     <module>quads-cli-loader</module>
     <module>quads-query</module>
+    <module>quads-query-cli</module>
     <module>quads-delta</module>
   </modules>
 

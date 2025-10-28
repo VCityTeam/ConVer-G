@@ -1,0 +1,9 @@
+# Query the graph store for the maximum height of building 1 in each versioned graph
+PREFIX building: <http://example.edu/Building#>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?graph (MAX(?object) AS ?maxobject) WHERE {
+    GRAPH ?graph {
+      building:1 schema:height ?object .
+    }
+} GROUP BY ?graph

@@ -1,0 +1,13 @@
+# Give the graph name (metadata) of the versioned graph containing the building 1
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?graph ?p ?o WHERE {
+    GRAPH ?vg {
+      building:1 ?p ?o ;
+        ?p2 ?o2 .
+    }
+
+    GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+         ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-version-of> 	?graph .
+    }
+}
