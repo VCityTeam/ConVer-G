@@ -263,6 +263,26 @@ public class QuadImportService implements IQuadImportService {
                     saveBatchQuads();
                 }
             }
+
+            @Override
+            public void triple(Triple triple) {
+                namedGraphs.add(defaultGraphURI.getName());
+                quadValueTypes.add(new QuadValueType(
+                        getTripleValueType(triple),
+                        defaultGraphURI.getName(),
+                        version - 1
+                ));
+
+                if (namedGraphs.size() == 50000) {
+                    log.info("50000 named graph records found. Executing batch save named graph");
+                    saveBatchVersionedNamedGraph(filename, version);
+                }
+
+                if (quadValueTypes.size() == 50000) {
+                    log.info("50000 quads records found. Executing batch save quads");
+                    saveBatchQuads();
+                }
+            }
         };
 
         RDFParser.create()
