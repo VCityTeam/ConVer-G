@@ -96,20 +96,20 @@ public class VersionedQuadComponent {
         Connection connection = jdbcConnection.getConnection();
 
         String insertQuadValueSQL = """
-                INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)"""
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+                INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
 
         try {
             PreparedStatement ps = connection.prepareStatement(insertQuadValueSQL);
 
             for (QuadImportService.QuadValueType quadValueType : quadValueTypes) {
-                ps.setString(1, quadValueType.tripleValueType().sValue());
-                ps.setString(2, quadValueType.tripleValueType().sType());
-                ps.setString(3, quadValueType.tripleValueType().pValue());
-                ps.setString(4, quadValueType.tripleValueType().pType());
-                ps.setString(5, quadValueType.tripleValueType().oValue());
-                ps.setString(6, quadValueType.tripleValueType().oType());
-                ps.setString(7, quadValueType.namedGraph());
+                ps.setString(1, removeAllSpecialCharacters(quadValueType.tripleValueType().sValue()));
+                ps.setString(2, removeAllSpecialCharacters(quadValueType.tripleValueType().sType()));
+                ps.setString(3, removeAllSpecialCharacters(quadValueType.tripleValueType().pValue()));
+                ps.setString(4, removeAllSpecialCharacters(quadValueType.tripleValueType().pType()));
+                ps.setString(5, removeAllSpecialCharacters(quadValueType.tripleValueType().oValue()));
+                ps.setString(6, removeAllSpecialCharacters(quadValueType.tripleValueType().oType()));
+                ps.setString(7, removeAllSpecialCharacters(quadValueType.namedGraph()));
                 ps.setInt(8, quadValueType.version());
                 ps.addBatch();
             }
@@ -118,5 +118,16 @@ public class VersionedQuadComponent {
         } catch (SQLException e) {
             log.error("Error occurred in statement", e);
         }
+    }
+    
+    public String removeAllSpecialCharacters(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input
+            .replace("\n", " ")
+            .replace("\r", " ")
+            .replace("\t", " ")
+            .replace("\\", "\\\\");
     }
 }
