@@ -125,43 +125,80 @@ CREATE OR REPLACE FUNCTION version_named_graph(
     LANGUAGE plpgsql
 AS
 '
+DECLARE
+BEGIN
+    RETURN QUERY
+        WITH ng AS (INSERT INTO resource_or_literal
+            VALUES (DEFAULT, named_graph, NULL)
+            ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+            RETURNING *),
+             v AS (INSERT INTO resource_or_literal
+                 VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || filename, NULL)
+                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+                 RETURNING *),
+             vng AS (INSERT INTO resource_or_literal
+                 VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'' ||
+                                  encode(sha512((named_graph || filename)::bytea), ''hex''), NULL)
+                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+                 RETURNING *),
+             versioned AS (INSERT INTO versioned_named_graph
+                 VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal FROM ng), version)
+                 ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
+                 RETURNING *),
+             result AS (
+                 SELECT ng.id_resource_or_literal as id_named_graph, v.id_resource_or_literal as id_version, vng.id_resource_or_literal as id_versioned_named_graph
+                 FROM ng, v, vng
+             )
+            TABLE result;
+END;
+';
+
+
+CREATE OR REPLACE FUNCTION trg_fn_insert_metadata_vng()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS '
     DECLARE
+        v_id integer;
+        pred_spec integer;
+        pred_loc integer;
+        pred_type integer;
+        prov_entity integer;
     BEGIN
-        RETURN QUERY
-            WITH ng AS (INSERT INTO resource_or_literal
-                VALUES (DEFAULT, named_graph, NULL)
+        WITH ver AS (
+            SELECT message FROM version WHERE index_version = NEW.index_version
+        ), v AS (
+            INSERT INTO resource_or_literal
+                VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || (SELECT message FROM ver), NULL)
                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                RETURNING *),
-                 v AS (INSERT INTO resource_or_literal
-                     VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || filename, NULL)
-                     ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                     RETURNING *),
-                 vng AS (INSERT INTO resource_or_literal
-                     VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'' ||
-                                      encode(sha512((named_graph || filename)::bytea), ''hex''), NULL)
-                     ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                     RETURNING *),
-                 versioned AS (INSERT INTO versioned_named_graph
-                     VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal FROM ng), version)
-                     ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
-                     RETURNING *),
-                 metadata AS (INSERT INTO metadata (id_subject, id_predicate, id_object)
-                     VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
-                                                                        FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-version-of''),
-                             (SELECT id_resource_or_literal FROM ng)),
-                            ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
-                                                                        FROM resource_or_literal
-                                                                        WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-in-version''),
-                             (SELECT v.id_resource_or_literal FROM v))
-                     ON CONFLICT ON CONSTRAINT metadata_pkey
-                         DO UPDATE SET id_subject = EXCLUDED.id_subject
-                     RETURNING *
-                 ),
-                 result AS (
-                     SELECT ng.id_resource_or_literal as id_named_graph, v.id_resource_or_literal as id_version, vng.id_resource_or_literal as id_versioned_named_graph
-                     FROM ng, v, vng
-                 )
-                TABLE result;
+                RETURNING id_resource_or_literal
+        )
+        SELECT id_resource_or_literal INTO v_id FROM v;
+
+        SELECT id_resource_or_literal INTO pred_spec FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#specializationOf'';
+        SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#atLocation'';
+        SELECT id_resource_or_literal INTO pred_type FROM resource_or_literal WHERE name = ''http://www.w3.org/1999/02/22-rdf-syntax-ns#type'';
+        SELECT id_resource_or_literal INTO prov_entity FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#Entity'';
+
+        INSERT INTO metadata (id_subject, id_predicate, id_object)
+        VALUES
+            (NEW.id_versioned_named_graph, pred_spec, NEW.id_named_graph),
+            (NEW.id_versioned_named_graph, pred_loc, v_id),
+            (NEW.id_versioned_named_graph, pred_type, prov_entity)
+        ON CONFLICT ON CONSTRAINT metadata_pkey
+            DO UPDATE SET id_subject = EXCLUDED.id_subject;
+
+        RETURN NEW;
     END;
+';
+
+DO '
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = ''trg_insert_metadata_vng'') THEN
+        CREATE TRIGGER trg_insert_metadata_vng
+            AFTER INSERT ON versioned_named_graph
+            FOR EACH ROW
+        EXECUTE FUNCTION trg_fn_insert_metadata_vng();
+    END IF;
+END;
 ';
