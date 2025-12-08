@@ -52,6 +52,7 @@ public class QuadImportService implements IQuadImportService {
     ResourceOrLiteral metadataIsInVersion;
     ResourceOrLiteral metadataIsVersionOf;
     ResourceOrLiteral defaultGraphURI;
+    ResourceOrLiteral rdfTypeURI;
 
     IFlatModelQuadRepository flatModelQuadRepository;
     IFlatModelTripleRepository flatModelTripleRepository;
@@ -67,6 +68,9 @@ public class QuadImportService implements IQuadImportService {
     List<QuadValueType> quadValueTypes = new ArrayList<>();
     Set<String> namedGraphs = new HashSet<>();
     List<TripleValueType> tripleValueTypes = new ArrayList<>();
+
+    final String PROVO_PREFIX = "http://www.w3.org/ns/prov#";
+    final String RDF_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
@@ -91,9 +95,11 @@ public class QuadImportService implements IQuadImportService {
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
 
-        this.metadataIsInVersion = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
-        this.metadataIsVersionOf = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
+        this.metadataIsInVersion = rdfResourceRepository.save("http://www.w3.org/ns/prov#atLocation", null);
+        this.metadataIsVersionOf = rdfResourceRepository.save("http://www.w3.org/ns/prov#specializationOf", null);
+        this.metadataIsVersionOf = rdfResourceRepository.save(PROVO_PREFIX + "Entity", null);
         this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
+        this.rdfTypeURI = rdfResourceRepository.save(RDF_PREFIX + "type", null);
     }
 
     /**
@@ -195,9 +201,10 @@ public class QuadImportService implements IQuadImportService {
         rdfVersionedQuadRepository.deleteAll();
         rdfVersionedNamedGraphRepository.deleteAll();
         versionRepository.deleteAll();
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-in-version", null);
-        rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Version#is-version-of", null);
+        rdfResourceRepository.save(PROVO_PREFIX + "atLocation", null);
+        rdfResourceRepository.save(PROVO_PREFIX + "specializationOf", null);
         rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
+        rdfResourceRepository.save(RDF_PREFIX + "type", null);
     }
 
     /**

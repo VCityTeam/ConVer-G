@@ -6,6 +6,6 @@ SELECT ?graph ?p ?o WHERE {
     }
 
     GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
-         ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-version-of> 	?graph .
+         ?vg <http://www.w3.org/ns/prov#specializationOf> 	?graph .
     }
 }

@@ -6,5 +6,5 @@ SELECT ?graph ?p ?o WHERE {
         building:1 ?p ?o ;
             ?p2 ?o2 .
     }
-    ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-version-of> ?graph .
+    ?vg <http://www.w3.org/ns/prov#specializationOf> ?graph .
 }

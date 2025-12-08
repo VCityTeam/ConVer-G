@@ -125,21 +125,22 @@ BEGIN
                  RETURNING *),
              metadata AS (INSERT INTO metadata (id_subject, id_predicate, id_object)
                  VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
-                                                                    FROM resource_or_literal
-                                                                    WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-version-of''),
+                          FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#specializationOf''),
                          (SELECT id_resource_or_literal FROM ng)),
                         ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal
-                                                                    FROM resource_or_literal
-                                                                    WHERE name = ''https://github.com/VCityTeam/ConVer-G/Version#is-in-version''),
-                         (SELECT v.id_resource_or_literal FROM v))
+                          FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#atLocation''),
+                         (SELECT v.id_resource_or_literal FROM v)),
+                        ((SELECT id_resource_or_literal FROM vng),
+                         (SELECT FROM resource_or_literal WHERE name = ''http://www.w3.org/1999/02/22-rdf-syntax-ns#type''),
+                         (SELECT id_resource_or_literal FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#Entity''))
                  ON CONFLICT ON CONSTRAINT metadata_pkey
                      DO UPDATE SET id_subject = EXCLUDED.id_subject
                  RETURNING *
-             ),
+            ),
              result AS (
-                 SELECT ng.id_resource_or_literal as id_named_graph, v.id_resource_or_literal as id_version, vng.id_resource_or_literal as id_versioned_named_graph
-                 FROM ng, v, vng
-             )
+                SELECT ng.id_resource_or_literal as id_named_graph, v.id_resource_or_literal as id_version, vng.id_resource_or_literal as id_versioned_named_graph
+                FROM ng, v, vng
+            )
             TABLE result;
 END;
 ';

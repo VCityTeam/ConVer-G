@@ -9,6 +9,6 @@ SELECT ?version ?p1 ?o1 ?type WHERE {
     }
 
     GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
-         ?vg <https://github.com/VCityTeam/ConVer-G/Version#is-in-version> 	?version .
+         ?vg <http://www.w3.org/ns/prov#atLocation> 	?version .
     }
 }
