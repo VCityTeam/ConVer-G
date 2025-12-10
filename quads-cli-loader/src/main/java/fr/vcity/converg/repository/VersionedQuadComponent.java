@@ -1,10 +1,10 @@
 package fr.vcity.converg.repository;
 
-import fr.vcity.converg.connection.JdbcConnection;
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -14,12 +14,14 @@ import java.util.List;
 @Slf4j
 public class VersionedQuadComponent {
 
-    public VersionedQuadComponent() {
+    private final DataSource dataSource;
+
+    public VersionedQuadComponent(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public void flattenVersionedQuads() {
-        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
-        Connection connection = jdbcConnection.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
 
         String insertFlatQuadSQL = """
                 INSERT INTO versioned_quad_flat (id_subject, id_predicate, id_object, id_versioned_named_graph)
@@ -32,12 +34,16 @@ public class VersionedQuadComponent {
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("Error occurred in statement", e);
+            throw new RuntimeException("Failed to flatten versioned quads", e);
+        }
+        } catch (SQLException e) {
+            log.error("Error getting connection", e);
+            throw new RuntimeException("Failed to get database connection", e);
         }
     }
 
     public void saveQuads(List<QuadImportService.QuadValueType> quadValueTypes) {
-        JdbcConnection jdbcConnection = JdbcConnection.getInstance();
-        Connection connection = jdbcConnection.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
 
         String insertQuadValueSQL = """
                 INSERT INTO flat_model_quad (subject, subject_type, predicate, predicate_type, object, object_type, named_graph, version)
@@ -61,6 +67,11 @@ public class VersionedQuadComponent {
             ps.executeBatch();
         } catch (SQLException e) {
             log.error("Error occurred in statement", e);
+            throw new RuntimeException("Failed to save quads", e);
+        }
+        } catch (SQLException e) {
+            log.error("Error getting connection", e);
+            throw new RuntimeException("Failed to get database connection", e);
         }
     }
     

@@ -58,6 +58,10 @@ public class QuadImportController {
             return ResponseEntity
                     .badRequest()
                     .body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .internalServerError()
+                    .body(null);
         }
     }
 
@@ -77,6 +81,10 @@ public class QuadImportController {
         } catch (RiotException e) {
             return ResponseEntity
                     .badRequest()
+                    .body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .internalServerError()
                     .body(null);
         }
     }
@@ -107,6 +115,10 @@ public class QuadImportController {
         } catch (RiotException e) {
             return ResponseEntity
                     .badRequest()
+                    .body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .internalServerError()
                     .body(null);
         }
     }

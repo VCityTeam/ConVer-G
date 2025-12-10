@@ -124,6 +124,15 @@ public class RDFConverter {
                                 NodeFactory.createLiteral(getVersionLiteral(inputFileName), XSDDatatype.XSDstring)
                         )));
 
+        metadataDataset
+                .asDatasetGraph()
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
+                        Triple.create(
+                                NodeFactory.createURI(graphURI),
+                                NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                                NodeFactory.createURI(PROV_URL + "Entity")
+                        )));
+
         File file = new File(getTheoreticalFileName(outputFolder));
         if (!file.exists()) {
             try {
@@ -202,11 +211,15 @@ public class RDFConverter {
     /**
      * This function generates the theoretical file name
      *
-     * @param inputFolder The folder containing the input files
-     * @return The built theoretical
+     * @param outputFolder The folder containing the output files
+     * @return The built theoretical file name
      */
-    private String getTheoreticalFileName(String inputFolder) {
-        return getInputFileName(inputFolder, "theoretical_annotations" + TRIG_EXTENSION);
+    private String getTheoreticalFileName(String outputFolder) {
+        if (outputFolder.equals("classpath:")) {
+            String resourcePath = Objects.requireNonNull(getClass().getClassLoader().getResource("")).getPath();
+            return new File(resourcePath, "theoretical_annotations" + TRIG_EXTENSION).getPath();
+        }
+        return new File(outputFolder, "theoretical_annotations" + TRIG_EXTENSION).getPath();
     }
 
     /**
@@ -217,7 +230,11 @@ public class RDFConverter {
      * @return The built output file name
      */
     private String getOutputFileName(String outputFolder, String inputFile) {
-        return getInputFileName(outputFolder, inputFile) + TRIG_EXTENSION;
+        if (outputFolder.equals("classpath:")) {
+            String resourcePath = Objects.requireNonNull(getClass().getClassLoader().getResource("")).getPath();
+            return new File(resourcePath, inputFile + TRIG_EXTENSION).getPath();
+        }
+        return new File(outputFolder, inputFile + TRIG_EXTENSION).getPath();
     }
 
     /**

@@ -4,6 +4,7 @@ import org.postgresql.PGProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Objects;
 import java.util.Properties;
@@ -17,14 +18,21 @@ public class JdbcConnection {
     private static final Logger log = LoggerFactory.getLogger(JdbcConnection.class);
 
     private static JdbcConnection jdbcConnection;
+    private static DataSource dataSource;
     private Connection connection;
     private Statement statement;
-    private static final String CONNECTION_URL = System.getenv("DATASOURCE_URL") == null ?
-            "jdbc:postgresql://localhost:5432/converg" : System.getenv("DATASOURCE_URL");
-    private static final String CONNECTION_USERNAME = System.getenv("DATASOURCE_USERNAME") == null ?
-            "postgres" : System.getenv("DATASOURCE_USERNAME");
-    private static final String CONNECTION_PASSWORD = System.getenv("DATASOURCE_PASSWORD") == null ?
-            "password" : System.getenv("DATASOURCE_PASSWORD");
+    private static final String CONNECTION_URL = System.getenv("SPRING_DATASOURCE_URL") != null ? 
+            System.getenv("SPRING_DATASOURCE_URL") : 
+            (System.getenv("DATASOURCE_URL") != null ? System.getenv("DATASOURCE_URL") : 
+            "jdbc:postgresql://localhost:5432/converg");
+    private static final String CONNECTION_USERNAME = System.getenv("SPRING_DATASOURCE_USERNAME") != null ? 
+            System.getenv("SPRING_DATASOURCE_USERNAME") : 
+            (System.getenv("DATASOURCE_USERNAME") != null ? System.getenv("DATASOURCE_USERNAME") : 
+            "postgres");
+    private static final String CONNECTION_PASSWORD = System.getenv("SPRING_DATASOURCE_PASSWORD") != null ? 
+            System.getenv("SPRING_DATASOURCE_PASSWORD") : 
+            (System.getenv("DATASOURCE_PASSWORD") != null ? System.getenv("DATASOURCE_PASSWORD") : 
+            "password");
 
     /**
      * Constructor method in order to create db connection & statement
@@ -33,14 +41,19 @@ public class JdbcConnection {
      */
     private JdbcConnection() throws SQLException {
         try {
-            Properties connectionProperties = new Properties();
-            connectionProperties.setProperty(PGProperty.USER.getName(), CONNECTION_USERNAME);
-            connectionProperties.setProperty(PGProperty.PASSWORD.getName(), CONNECTION_PASSWORD);
-            connectionProperties.setProperty(PGProperty.CONNECT_TIMEOUT.getName(), "120");
+            if (dataSource != null) {
+                connection = dataSource.getConnection();
+                log.info("Connection established successfully with the database using DataSource");
+            } else {
+                Properties connectionProperties = new Properties();
+                connectionProperties.setProperty(PGProperty.USER.getName(), CONNECTION_USERNAME);
+                connectionProperties.setProperty(PGProperty.PASSWORD.getName(), CONNECTION_PASSWORD);
+                connectionProperties.setProperty(PGProperty.CONNECT_TIMEOUT.getName(), "120");
 
-            connection = DriverManager.getConnection(CONNECTION_URL, connectionProperties);
-            log.info("Connection established successfully with the database");
-            log.info("Connection URL: {}", CONNECTION_URL);
+                connection = DriverManager.getConnection(CONNECTION_URL, connectionProperties);
+                log.info("Connection established successfully with the database");
+                log.info("Connection URL: {}", CONNECTION_URL);
+            }
             statement = connection.createStatement();
         } catch (SQLException exception) {
             log.error(exception.getMessage());
@@ -49,6 +62,16 @@ public class JdbcConnection {
                 connection.close();
             }
         }
+    }
+
+    /**
+     * Set the DataSource to use for connections. Must be called before getInstance().
+     *
+     * @param ds the DataSource to use
+     */
+    public static void setDataSource(DataSource ds) {
+        dataSource = ds;
+        jdbcConnection = null; // Reset instance to use new DataSource
     }
 
     /**

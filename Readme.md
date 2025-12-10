@@ -409,7 +409,7 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 **Version 1 (buildings-2015.trig):**
 
 | Subject                       | Predicate | Object | Named Graph                               |
-|-------------------------------|-----------|--------|-------------------------------------------|
+| ----------------------------- | --------- | ------ | ----------------------------------------- |
 | http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon |
 | http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon |
 | http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        |
@@ -417,7 +417,7 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 **Version 2 (buildings-2018.trig):**
 
 | Subject                       | Predicate | Object | Named Graph                               |
-|-------------------------------|-----------|--------|-------------------------------------------|
+| ----------------------------- | --------- | ------ | ----------------------------------------- |
 | http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#IGN        |
 | http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon |
 | http://example.edu/Building#3 | height    | 15     | http://example.edu/Named-Graph#Grand-Lyon |
@@ -426,29 +426,29 @@ Let's assume that we have a dataset with 2 versions with the following quads:
 
 After some transformations, we have the following quads representing the theoretical model:
 
-| Subject                                                              | Predicate                                                   | Object                                                       | Named Graph                                                          | 
-|----------------------------------------------------------------------|-------------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------------|
-| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#2                                        | height                                                      | 9.1                                                          | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
-| http://example.edu/Building#1                                        | height                                                      | 11                                                           | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#Grand-Lyon                    |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | http://www.w3.org/ns/prov#atLocation | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#IGN                           |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | http://www.w3.org/ns/prov#atLocation | https://github.com/VCityTeam/ConVer-G/Version#buildings-2015 |                                                                      |
-| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#3                                        | height                                                      | 15                                                           | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
-| http://example.edu/Building#1                                        | height                                                      | 10.5                                                         | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#Grand-Lyon                    |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | http://www.w3.org/ns/prov#atLocation | https://github.com/VCityTeam/ConVer-G/Version#buildings-2018 |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#IGN                           |                                                                      |
-| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | http://www.w3.org/ns/prov#atLocation | https://github.com/VCityTeam/ConVer-G/Version#buildings-2018 |                                                                      |
+| Subject                                                              | Predicate                                  | Object                                    | Named Graph                                                          |
+| -------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------- |
+| http://example.edu/Building#1                                        | height                                     | 10.5                                      | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#2                                        | height                                     | 9.1                                       | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 |
+| http://example.edu/Building#1                                        | height                                     | 11                                        | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#Grand-Lyon |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-1 | http://www.w3.org/ns/prov#atLocation       | buildings-2015                            |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#IGN        |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-2 | http://www.w3.org/ns/prov#atLocation       | buildings-2015                            |                                                                      |
+| http://example.edu/Building#1                                        | height                                     | 10.5                                      | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#3                                        | height                                     | 15                                        | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 |
+| http://example.edu/Building#1                                        | height                                     | 10.5                                      | https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#Grand-Lyon |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | http://www.w3.org/ns/prov#atLocation       | buildings-2018                            |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | http://www.w3.org/ns/prov#specializationOf | http://example.edu/Named-Graph#IGN        |                                                                      |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-4 | http://www.w3.org/ns/prov#atLocation       | buildings-2018                            |                                                                      |
 
 ##### Implementation
 
 After the import inside the relational database, we have the following quads representing the implementation:
 
 | Subject                       | Predicate | Object | Named Graph                               | Validity |
-|-------------------------------|-----------|--------|-------------------------------------------|----------|
+| ----------------------------- | --------- | ------ | ----------------------------------------- | -------- |
 | http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#Grand-Lyon | 11       |
 | http://example.edu/Building#2 | height    | 9.1    | http://example.edu/Named-Graph#Grand-Lyon | 10       |
 | http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        | 10       |
