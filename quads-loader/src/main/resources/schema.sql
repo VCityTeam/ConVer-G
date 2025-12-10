@@ -1,23 +1,23 @@
-DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph;
-DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng;
-DROP FUNCTION IF EXISTS version_named_graph;
+DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph^;
+DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng^;
+DROP FUNCTION IF EXISTS version_named_graph^;
 
 CREATE TABLE IF NOT EXISTS resource_or_literal
 (
     id_resource_or_literal integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name                   text,
     type                   varchar(255)
-);
+)^;
 
 CREATE TABLE IF NOT EXISTS versioned_named_graph
 (
     id_versioned_named_graph integer PRIMARY KEY REFERENCES resource_or_literal (id_resource_or_literal),
     id_named_graph           integer REFERENCES resource_or_literal (id_resource_or_literal),
     index_version            integer
-);
+)^;
 
 
-CREATE UNIQUE INDEX IF NOT EXISTS resource_or_literal_idx ON resource_or_literal (sha512(name::bytea), type) NULLS NOT DISTINCT;
+CREATE UNIQUE INDEX IF NOT EXISTS resource_or_literal_idx ON resource_or_literal (sha512(name::bytea), type) NULLS NOT DISTINCT^;
 
 CREATE TABLE IF NOT EXISTS versioned_quad
 (
@@ -27,14 +27,14 @@ CREATE TABLE IF NOT EXISTS versioned_quad
     id_named_graph integer REFERENCES resource_or_literal (id_resource_or_literal),
     validity       bit varying,
     PRIMARY KEY (id_object, id_predicate, id_subject, id_named_graph)
-);
+)^;
 
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_predicate);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_predicate, id_object, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_predicate, id_subject, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_predicate, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_predicate);
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_p_o ON versioned_quad (id_named_graph, id_subject, id_predicate, id_object)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_s_o_p ON versioned_quad (id_named_graph, id_subject, id_object, id_predicate)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_o_s ON versioned_quad (id_named_graph, id_predicate, id_object, id_subject)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_p_s_o ON versioned_quad (id_named_graph, id_predicate, id_subject, id_object)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_p_s ON versioned_quad (id_named_graph, id_object, id_predicate, id_subject)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_ng_o_s_p ON versioned_quad (id_named_graph, id_object, id_subject, id_predicate)^;
 
 
 CREATE TABLE IF NOT EXISTS flat_model_quad
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS flat_model_quad
     object_type    varchar,
     named_graph    text,
     version        integer
-);
+)^;
 
 CREATE TABLE IF NOT EXISTS flat_model_triple
 (
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS flat_model_triple
     predicate_type varchar,
     object         text,
     object_type    varchar
-);
+)^;
 
 CREATE TABLE IF NOT EXISTS versioned_quad_flat
 (
@@ -68,14 +68,14 @@ CREATE TABLE IF NOT EXISTS versioned_quad_flat
     id_subject     integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_versioned_named_graph integer REFERENCES resource_or_literal (id_resource_or_literal),
     PRIMARY KEY (id_object, id_predicate, id_subject, id_versioned_named_graph)
-);
+)^;
 
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_p_o ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_predicate, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_o_p ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_object, id_predicate);
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_o_s ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_object, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_s_o ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_subject, id_object);
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_p_s ON versioned_quad_flat (id_versioned_named_graph, id_object, id_predicate, id_subject);
-CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_s_p ON versioned_quad_flat (id_versioned_named_graph, id_object, id_subject, id_predicate);
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_p_o ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_predicate, id_object)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_s_o_p ON versioned_quad_flat (id_versioned_named_graph, id_subject, id_object, id_predicate)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_o_s ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_object, id_subject)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_p_s_o ON versioned_quad_flat (id_versioned_named_graph, id_predicate, id_subject, id_object)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_p_s ON versioned_quad_flat (id_versioned_named_graph, id_object, id_predicate, id_subject)^;
+CREATE INDEX IF NOT EXISTS versioned_quad_flat_vng_o_s_p ON versioned_quad_flat (id_versioned_named_graph, id_object, id_subject, id_predicate)^;
 
 CREATE TABLE IF NOT EXISTS version
 (
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS version
     message                varchar(255),
     transaction_time_start timestamptz default current_timestamp,
     transaction_time_end   timestamptz default NULL
-);
+)^;
 
 CREATE TABLE IF NOT EXISTS metadata
 (
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS metadata
     id_predicate integer REFERENCES resource_or_literal (id_resource_or_literal),
     id_subject   integer REFERENCES resource_or_literal (id_resource_or_literal),
     PRIMARY KEY (id_object, id_predicate, id_subject)
-);
+)^;
 
 CREATE OR REPLACE FUNCTION version_named_graph(
     named_graph varchar,
@@ -127,7 +127,7 @@ BEGIN
         VALUES (vng_id, ng_id, version)
         ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph;
 END;
-$$;
+$$^;
 
 CREATE OR REPLACE FUNCTION trg_fn_insert_metadata_vng()
 RETURNS trigger
@@ -165,9 +165,9 @@ BEGIN
 
     RETURN NEW;
 END;
-$$;
+$$^;
 
 CREATE OR REPLACE TRIGGER trg_insert_metadata_vng
     AFTER INSERT ON versioned_named_graph
     FOR EACH ROW
-EXECUTE FUNCTION trg_fn_insert_metadata_vng();
+EXECUTE FUNCTION trg_fn_insert_metadata_vng()^;
