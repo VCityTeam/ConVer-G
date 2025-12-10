@@ -1,3 +1,7 @@
+DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph;
+DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng;
+DROP FUNCTION IF EXISTS version_named_graph;
+
 CREATE TABLE IF NOT EXISTS resource_or_literal
 (
     id_resource_or_literal integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
