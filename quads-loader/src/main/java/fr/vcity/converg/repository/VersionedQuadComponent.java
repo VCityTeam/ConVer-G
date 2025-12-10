@@ -88,6 +88,7 @@ public class VersionedQuadComponent {
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("Error occurred in statement", e);
+            throw new RuntimeException("Failed to flatten versioned quads", e);
         }
     }
 
@@ -117,9 +118,10 @@ public class VersionedQuadComponent {
             ps.executeBatch();
         } catch (SQLException e) {
             log.error("Error occurred in statement", e);
+            throw new RuntimeException("Failed to save quads", e);
         }
     }
-    
+
     public String removeAllSpecialCharacters(String input) {
         if (input == null) {
             return null;

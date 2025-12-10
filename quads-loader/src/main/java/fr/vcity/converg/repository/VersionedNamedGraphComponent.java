@@ -43,6 +43,7 @@ public class VersionedNamedGraphComponent {
                 ps.executeBatch();
             } catch (SQLException e) {
                 log.error("Error occurred in statement", e);
+                throw new RuntimeException("Failed to save versioned named graph", e);
             }
         }
     }
