@@ -1,6 +1,6 @@
 # SPARQL query to get the average rating of reviews per version
 PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?version (AVG(?rating) as ?avgrating) WHERE {
   GRAPH ?vg {
@@ -8,6 +8,6 @@ SELECT ?version (AVG(?rating) as ?avgrating) WHERE {
   			bsbm:rating3 ?rating .
   }
 
-  ?vg vers:is-in-version ?version .
+  ?vg prov:atLocation ?version .
 
 } GROUP BY ?version

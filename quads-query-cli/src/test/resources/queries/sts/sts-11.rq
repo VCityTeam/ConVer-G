@@ -1,11 +1,11 @@
 # Find the number of rating of reviews in each version
 PREFIX schema: <http://schema.org/>
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?version (AVG(?height) as ?avgheight) WHERE {
     GRAPH ?vg {
         ?s schema:height ?height .
     }
 
-  ?vg vers:is-in-version ?version .
+  ?vg prov:atLocation ?version .
 } GROUP BY ?version

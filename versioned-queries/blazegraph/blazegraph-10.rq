@@ -1,6 +1,6 @@
 # Find the number of rating of reviews in each graph
 PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?graph (COUNT(?rating) as ?countrating) WHERE {
   GRAPH ?vg {
@@ -9,6 +9,6 @@ SELECT ?graph (COUNT(?rating) as ?countrating) WHERE {
   }
 
   GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
-    ?vg vers:is-version-of ?graph .
+    ?vg prov:specializationOf ?graph .
   }
 } GROUP BY ?graph

@@ -1,8 +1,8 @@
 # Find the number of graph
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT (COUNT(?graph) as ?countgraph) WHERE {
   GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
-        ?vg vers:is-version-of ?graph .
+        ?vg prov:specializationOf ?graph .
   }
 }

@@ -144,7 +144,7 @@ java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_P
 
 #### Ontology
 
-![The graph versioning ontology](https://www.ldf.fi/service/rdf-grapher?rdf=%40prefix+vers%3A+%3Chttps%3A%2F%2Fgithub.com%2FVCityTeam%2FConVer-G%2F%3E+.%0D%0A%40prefix+rdf%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E+.%0D%0A%40prefix+rdfs%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E+.%0D%0A%40prefix+purl%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Felements%2F1.1%3E+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AResource+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Acomment%3E+%22A+versioned+graph+name%22+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Versioned+named+graph%22%40en+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9+versionn%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23is-in-version%3E+vers%3AVersion+.%0D%0A%3Cvers%3AVersion%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Acomment%3E+%22A+dataset+version%22+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40en+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23is-version-of%3E+vers%3ANamed-Graph+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Acomment%3E+%22A+graph+name%22+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Named+graph%22%40en+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioning%3E+%3Crdf%3Atype%3E+%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23Ontology%3E+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Atitle%3E+%22The+graph+versioning+vocabulary%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adate%3E+%222024-08-26%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adescription%3E+%22RDF+schema+of+the+graph+versioning+vocabulary+terms%22+.&from=ttl&to=png)
+![The graph versioning ontology](https://www.ldf.fi/service/rdf-grapher?rdf=%40prefix+vers%3A+%3Chttps%3A%2F%2Fgithub.com%2FVCityTeam%2FConVer-G%2F%3E+.%0D%0A%40prefix+rdf%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E+.%0D%0A%40prefix+rdfs%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E+.%0D%0A%40prefix+purl%3A+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Felements%2F1.1%3E+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AResource+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Acomment%3E+%22A+versioned+graph+name%22+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Versioned+named+graph%22%40en+.%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9+versionn%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23atLocation%3E+vers%3AVersion+.%0D%0A%3Cvers%3AVersion%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Acomment%3E+%22A+dataset+version%22+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40en+.%0D%0A%3Cvers%3AVersion%3E+%3Crdfs%3Alabel%3E+%22Version%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioned-Named-Graph%3E+%3Cvers%3AVersion%23specializationOf%3E+vers%3ANamed-Graph+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdf%3Atype%3E+rdfs%3AClass+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Acomment%3E+%22A+graph+name%22+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Named+graph%22%40en+.%0D%0A%3Cvers%3ANamed-Graph%3E+%3Crdfs%3Alabel%3E+%22Graphe+nomm%C3%A9%22%40fr+.%0D%0A%0D%0A%3Cvers%3AVersioning%3E+%3Crdf%3Atype%3E+%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23Ontology%3E+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Atitle%3E+%22The+graph+versioning+vocabulary%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adate%3E+%222024-08-26%22+.%0D%0A%3Cvers%3AVersioning%3E+%3Cpurl%3Adescription%3E+%22RDF+schema+of+the+graph+versioning+vocabulary+terms%22+.&from=ttl&to=png)
 
 #### Conceptual model
 
@@ -403,28 +403,7 @@ theoretical model and the implementation.
 
 We add a quad for each triple (the graph name).
 Its semantic is the link between the triple and the source of the data.
-The transformation has been made with the [annotate python program](quads-creator-old/annotate_graph.py).
-We used a virtual environment with pip 23.3.1 from Python 3.10.12.
-
-```shell
-# create a virtual environment
-python3 -m venv venv
-
-# activate the virtual environment
-source venv/bin/activate
-
-# install the dependencies
-pip install -r python/requirements.txt
-
-# run the program
-cd workflows
-/bin/bash workflow-bsbm.sh 2 7500 1000 10 > allout.txt 2>&1
-
-# in another terminal
-cd workflows
-tail -f allout.txt
-```
-
+The transformation has been made with the [annotate program](quads-creator).
 Let's assume that we have a dataset with 2 versions with the following quads:
 
 **Version 1 (buildings-2015.trig):**

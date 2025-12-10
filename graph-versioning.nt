@@ -2,20 +2,17 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix purl: <http://purl.org/dc/elements/1.1> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
-<vers:Versioned-Named-Graph> <rdf:type> rdfs:Resource .
+<vers:Versioned-Named-Graph> <rdf:type> prov:Entity .
 <vers:Versioned-Named-Graph> <rdfs:comment> "A versioned graph name" .
 <vers:Versioned-Named-Graph> <rdfs:label> "Versioned named graph"@en .
 <vers:Versioned-Named-Graph> <rdfs:label> "Graphe nommé versionné"@fr .
 
-<vers:Versioned-Named-Graph> <vers:Version#is-in-version> vers:Version .
-<vers:Version> <rdf:type> rdfs:Class .
-<vers:Version> <rdfs:comment> "A dataset version" .
-<vers:Version> <rdfs:label> "Version"@en .
-<vers:Version> <rdfs:label> "Version"@fr .
+<vers:Versioned-Named-Graph> <prov:atLocation> prov:Location .
 
-<vers:Versioned-Named-Graph> <vers:Version#is-version-of> vers:Named-Graph .
-<vers:Named-Graph> <rdf:type> rdfs:Class .
+<vers:Versioned-Named-Graph> <prov:specializationOf> vers:Named-Graph .
+<vers:Named-Graph> <rdf:type> prov:Entity .
 <vers:Named-Graph> <rdfs:comment> "A graph name" .
 <vers:Named-Graph> <rdfs:label> "Named graph"@en .
 <vers:Named-Graph> <rdfs:label> "Graphe nommé"@fr .

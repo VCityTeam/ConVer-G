@@ -1,7 +1,7 @@
 # Find the number of graphs in each version
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?version (COUNT(?graph) as ?countgraph) WHERE {
-    ?vg vers:is-in-version ?version ;
-        vers:is-version-of ?graph .
+    ?vg prov:atLocation ?version ;
+        prov:specializationOf ?graph .
 } GROUP BY ?version

@@ -1,8 +1,8 @@
 # Find the number of versions
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT (COUNT(?version) as ?countversion) WHERE {
   GRAPH <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
-        ?vg vers:is-in-version ?version .
+        ?vg prov:atLocation ?version .
   }
 }

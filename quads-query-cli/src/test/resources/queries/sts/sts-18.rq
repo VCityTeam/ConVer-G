@@ -1,8 +1,8 @@
 # Find the versions that are in the graph Test
-PREFIX vers: <https://github.com/VCityTeam/ConVer-G/Version#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX ng: <https://github.com/VCityTeam/ConVer-G/Named-Graph#>
 
 SELECT ?version WHERE {
-    ?vg vers:is-in-version ?version ;
-        vers:is-version-of ng:Test .
+    ?vg prov:atLocation ?version ;
+        prov:specializationOf ng:Test .
 }

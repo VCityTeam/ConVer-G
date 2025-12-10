@@ -53,6 +53,8 @@ class RDFConverterTest {
         String inputFile = "dataset-2.ttl";
         String resultFile = inputFile + ".trig";
 
+        String theoreticalAnnotationsFile = "theoretical_annotations.trig";
+
         RDFConverter rdfConverter = new RDFConverter("theoretical", "Test-2", "classpath:", inputFile, "classpath:");
         rdfConverter.convert();
 
@@ -68,6 +70,7 @@ class RDFConverterTest {
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(expectedFile)),
                 StandardCharsets.UTF_8))) {
             expectedContent = expectedReader.lines().collect(Collectors.joining("\n"));
+            System.out.println("expected:" + expectedContent);
         } catch (java.io.IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,10 +80,32 @@ class RDFConverterTest {
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resultFile)),
                 StandardCharsets.UTF_8))) {
             resultContent = resultReader.lines().collect(Collectors.joining("\n"));
+            System.out.println("result:" + resultContent);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+        assertEquals(expectedContent, resultContent);
+
+        String expectedAnnotationsContent;
+        try (BufferedReader expectedAnnotationsReader = new BufferedReader(new InputStreamReader(
+                Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("expected-" + theoreticalAnnotationsFile)),
+                StandardCharsets.UTF_8))) {
+            expectedAnnotationsContent = expectedAnnotationsReader.lines().collect(Collectors.joining("\n"));
+            System.out.println("expected:" + expectedAnnotationsContent);
         } catch (java.io.IOException e) {
             throw new RuntimeException(e);
         }
 
-        assertEquals(expectedContent, resultContent);
+        String theoreticalAnnotationsContent;
+        try (BufferedReader resultAnnotationsReader = new BufferedReader(new InputStreamReader(
+                Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(theoreticalAnnotationsFile)),
+                StandardCharsets.UTF_8))) {
+            theoreticalAnnotationsContent = resultAnnotationsReader.lines().collect(Collectors.joining("\n"));
+            System.out.println("result:" + theoreticalAnnotationsContent);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(expectedAnnotationsContent, theoreticalAnnotationsContent);
     }
 }

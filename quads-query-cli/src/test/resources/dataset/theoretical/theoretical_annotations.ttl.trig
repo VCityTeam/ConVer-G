@@ -1,18 +1,18 @@
 @prefix ng: <https://github.com/VCityTeam/ConVer-G/Named-Graph#> .
-@prefix v: <https://github.com/VCityTeam/ConVer-G/Version#> .
 @prefix vng: <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 ng:Metadata {
     vng:1fc86158fea772eeb48b5fe353bf7cf3661500b0ddcf8a6b11537fabaf524122a8dab5608562c301d1a28702c141ab353c00c489f08c61ad41fd6992852449ec
-        v:is-version-of ng:Test-2 ;
-        v:is-in-version  v:dataset-2.ttl.trig .
+        prov:specializationOf ng:Test-2 ;
+        prov:atLocation  "dataset-2.ttl.trig" .
     vng:300089537884cd5c01e7f1eba38652c0af8a8e4622eb53f985e9277d7210fabac168910450cf742b604790b958a187287407492b31238f3e7700f0d313188d3c
-        v:is-in-version  v:dataset-1.ttl.trig ;
-        v:is-version-of  ng:Test-2 .
+        prov:atLocation  "dataset-1.ttl.trig" ;
+        prov:specializationOf  ng:Test-2 .
     vng:8547d86b9ef85c0c7841eb21b56665bfc051707d073e2517f547eace661b3dadaf7cfadb7c04a7920cc5e46a4458722f880eb3db5255ce904ede9c36bc6ef599
-        v:is-version-of  ng:Test ;
-        v:is-in-version  v:dataset-2.ttl.trig .
+        prov:specializationOf  ng:Test ;
+        prov:atLocation  "dataset-2.ttl.trig" .
     vng:4d38b1d5a7a4e7d20c9ffc531ffccdb96ff5dce6b1cfd644229cc0f99a5145178d4d1ca69b349dd566c74317c2752e5aef164d8d4df1a6beffb391ddf80342e1
-        v:is-in-version  v:dataset-1.ttl.trig ;
-        v:is-version-of  ng:Test .
+        prov:atLocation  "dataset-1.ttl.trig" ;
+        prov:specializationOf  ng:Test .
 }

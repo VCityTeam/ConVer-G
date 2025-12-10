@@ -1,5 +1,6 @@
 package fr.vcity;
 
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
@@ -24,7 +25,7 @@ import java.util.Objects;
 public class RDFConverter {
     private static final Logger log = LoggerFactory.getLogger(RDFConverter.class);
     private static final String NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
-    private static final String VERSION_URL = "https://github.com/VCityTeam/ConVer-G/Version#";
+    private static final String PROV_URL = "http://www.w3.org/ns/prov#";
     private static final String VERSIONED_NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#";
     private static final String TRIG_EXTENSION = ".trig";
 
@@ -110,7 +111,7 @@ public class RDFConverter {
                 .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
                         Triple.create(
                                 NodeFactory.createURI(graphURI),
-                                NodeFactory.createURI(VERSION_URL + "is-version-of"),
+                                NodeFactory.createURI(PROV_URL + "specializationOf"),
                                 NodeFactory.createURI(getAnnotationURI(annotation))
                         )));
 
@@ -119,8 +120,8 @@ public class RDFConverter {
                 .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
                         Triple.create(
                                 NodeFactory.createURI(graphURI),
-                                NodeFactory.createURI(VERSION_URL + "is-in-version"),
-                                NodeFactory.createURI(getVersionURI(inputFileName))
+                                NodeFactory.createURI(PROV_URL + "atLocation"),
+                                NodeFactory.createLiteral(getVersionLiteral(inputFileName), XSDDatatype.XSDstring)
                         )));
 
         File file = new File(getTheoreticalFileName(outputFolder));
@@ -220,13 +221,13 @@ public class RDFConverter {
     }
 
     /**
-     * This function generates the version URI
+     * This function generates the version literal
      *
      * @param inputFileName The input file name
      * @return The version
      */
-    private String getVersionURI(String inputFileName) {
-        return VERSION_URL + inputFileName + TRIG_EXTENSION;
+    private String getVersionLiteral(String inputFileName) {
+        return inputFileName + TRIG_EXTENSION;
     }
 
     /**
