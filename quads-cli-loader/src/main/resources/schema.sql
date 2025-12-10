@@ -1,6 +1,6 @@
 DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph^;
 DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng^;
-DROP FUNCTION IF EXISTS version_named_graph^;
+DROP FUNCTION IF EXISTS version_named_graph(varchar, varchar, integer)^;
 
 CREATE TABLE IF NOT EXISTS resource_or_literal
 (

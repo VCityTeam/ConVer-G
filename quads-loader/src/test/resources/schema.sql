@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS version CASCADE^;
 DROP TABLE IF EXISTS metadata CASCADE^;
 DROP TABLE IF EXISTS flat_model_quad CASCADE^;
 DROP TABLE IF EXISTS flat_model_triple CASCADE^;
-DROP FUNCTION IF EXISTS version_named_graph^;
+DROP FUNCTION IF EXISTS version_named_graph(varchar, varchar, integer)^;
 DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng^;
 DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph^;
 
