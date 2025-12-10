@@ -169,13 +169,7 @@ BEGIN
 END;
 ';
 
-DO '
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = ''trg_insert_metadata_vng'') THEN
-        CREATE TRIGGER trg_insert_metadata_vng
-        AFTER INSERT ON versioned_named_graph
-        FOR EACH ROW
-        EXECUTE FUNCTION trg_fn_insert_metadata_vng();
-    END IF;
-END;
-';
+CREATE OR REPLACE TRIGGER trg_insert_metadata_vng
+    AFTER INSERT ON versioned_named_graph
+    FOR EACH ROW
+EXECUTE FUNCTION trg_fn_insert_metadata_vng();

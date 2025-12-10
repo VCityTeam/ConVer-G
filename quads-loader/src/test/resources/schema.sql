@@ -20,6 +20,8 @@ DROP TABLE IF EXISTS metadata CASCADE;
 DROP TABLE IF EXISTS flat_model_quad CASCADE;
 DROP TABLE IF EXISTS flat_model_triple CASCADE;
 DROP FUNCTION IF EXISTS version_named_graph;
+DROP FUNCTION IF EXISTS trg_fn_insert_metadata_vng;
+DROP TRIGGER IF EXISTS trg_insert_metadata_vng ON versioned_named_graph;
 
 CREATE TABLE IF NOT EXISTS resource_or_literal
 (
@@ -192,13 +194,7 @@ AS '
     END;
 ';
 
-DO '
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = ''trg_insert_metadata_vng'') THEN
-        CREATE TRIGGER trg_insert_metadata_vng
-            AFTER INSERT ON versioned_named_graph
-            FOR EACH ROW
-        EXECUTE FUNCTION trg_fn_insert_metadata_vng();
-    END IF;
-END;
-';
+CREATE OR REPLACE TRIGGER trg_insert_metadata_vng
+    AFTER INSERT ON versioned_named_graph
+    FOR EACH ROW
+EXECUTE FUNCTION trg_fn_insert_metadata_vng();
