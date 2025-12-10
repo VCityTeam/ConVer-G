@@ -94,5 +94,11 @@ jobs:
           distribution: 'temurin'
           architecture: x64
 
-      - name: Run integration tests
+      - name: Run integration tests (condensed)
         run: mvn verify
+
+      - name: Flatten the dataset
+        run: curl -X POST --location 'http://localhost:8080/import/flatten'
+
+      - name: Run integration tests (flattened)
+        run: mvn verify -Pflat

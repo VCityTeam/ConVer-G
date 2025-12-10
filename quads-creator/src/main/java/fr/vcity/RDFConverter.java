@@ -124,6 +124,15 @@ public class RDFConverter {
                                 NodeFactory.createLiteral(getVersionLiteral(inputFileName), XSDDatatype.XSDstring)
                         )));
 
+        metadataDataset
+                .asDatasetGraph()
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
+                        Triple.create(
+                                NodeFactory.createURI(graphURI),
+                                NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                                NodeFactory.createURI(PROV_URL + "Entity")
+                        )));
+
         File file = new File(getTheoreticalFileName(outputFolder));
         if (!file.exists()) {
             try {
