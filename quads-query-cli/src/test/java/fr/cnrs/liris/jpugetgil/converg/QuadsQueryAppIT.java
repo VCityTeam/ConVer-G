@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class QuadsQueryAppIT {
     private static final Logger log = LoggerFactory.getLogger(QuadsQueryAppIT.class);
 
+    @Tag("condensed")
     @ParameterizedTest
     @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNCardinality(String queryNumber) throws Exception {
@@ -45,6 +47,7 @@ class QuadsQueryAppIT {
         sendRequestAndCompareResultsCardinality(requestStS, requestBlazegraph);
     }
 
+    @Tag("condensed")
     @ParameterizedTest
     @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNContent(String queryNumber) throws Exception {
@@ -58,6 +61,7 @@ class QuadsQueryAppIT {
     }
 
 
+    @Tag("flat")
     @ParameterizedTest
     @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNCardinalityFlat(String queryNumber) throws Exception {
@@ -70,6 +74,7 @@ class QuadsQueryAppIT {
         sendRequestAndCompareResultsCardinality(requestStSFlat, requestBlazegraph);
     }
 
+    @Tag("flat")
     @ParameterizedTest
     @ValueSource(strings = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"})
     void querySPARQLNContentFlat(String queryNumber) throws Exception {

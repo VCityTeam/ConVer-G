@@ -113,7 +113,7 @@ BEGIN
         RETURNING id_resource_or_literal INTO ng_id;
 
     INSERT INTO resource_or_literal
-        VALUES (DEFAULT, filename, NULL)
+        VALUES (DEFAULT, filename, 'http://www.w3.org/2001/XMLSchema#string')
         ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
         RETURNING id_resource_or_literal INTO v_id;
 
@@ -144,7 +144,7 @@ BEGIN
         SELECT message FROM version WHERE index_version = NEW.index_version
     ), v AS (
         INSERT INTO resource_or_literal
-            VALUES (DEFAULT, (SELECT message FROM ver), NULL)
+            VALUES (DEFAULT, (SELECT message FROM ver), 'http://www.w3.org/2001/XMLSchema#string')
             ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
             RETURNING id_resource_or_literal
     )

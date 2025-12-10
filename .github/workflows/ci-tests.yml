@@ -98,7 +98,7 @@ jobs:
         run: mvn verify
 
       - name: Flatten the dataset
-        run: curl -X POST --location 'http://localhost:8080/import/flatten'
+        run: curl -X GET --location 'http://localhost:8080/import/flatten'
 
       - name: Run integration tests (flattened)
         run: mvn verify -Pflat
