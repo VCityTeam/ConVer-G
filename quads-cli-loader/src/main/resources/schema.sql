@@ -106,7 +106,7 @@ CREATE OR REPLACE FUNCTION version_named_graph(
             )
     LANGUAGE plpgsql
 AS
-'
+$$
 DECLARE
 BEGIN
     RETURN QUERY
@@ -115,12 +115,12 @@ BEGIN
             ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
             RETURNING *),
              v AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || filename, NULL)
+                 VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Version#' || filename, NULL)
                  ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
                  RETURNING *),
              vng AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#'' ||
-                                  encode(sha512((named_graph || filename)::bytea), ''hex''), NULL)
+                 VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#' ||
+                                  encode(sha512((named_graph || filename)::bytea), 'hex'), NULL)
                  ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
                  RETURNING *),
              versioned AS (INSERT INTO versioned_named_graph
@@ -133,12 +133,12 @@ BEGIN
             )
             TABLE result;
 END;
-';
+$$;
 
 CREATE OR REPLACE FUNCTION trg_fn_insert_metadata_vng()
     RETURNS trigger
     LANGUAGE plpgsql
-AS '
+AS $$
 DECLARE
     v_id integer;
     pred_spec integer;
@@ -150,16 +150,16 @@ BEGIN
         SELECT message FROM version WHERE index_version = NEW.index_version
     ), v AS (
         INSERT INTO resource_or_literal
-            VALUES (DEFAULT, ''https://github.com/VCityTeam/ConVer-G/Version#'' || (SELECT message FROM ver), NULL)
+            VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Version#' || (SELECT message FROM ver), NULL)
             ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
             RETURNING id_resource_or_literal
     )
     SELECT id_resource_or_literal INTO v_id FROM v;
 
-    SELECT id_resource_or_literal INTO pred_spec FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#specializationOf'';
-    SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#atLocation'';
-    SELECT id_resource_or_literal INTO pred_type FROM resource_or_literal WHERE name = ''http://www.w3.org/1999/02/22-rdf-syntax-ns#type'';
-    SELECT id_resource_or_literal INTO prov_entity FROM resource_or_literal WHERE name = ''http://www.w3.org/ns/prov#Entity'';
+    SELECT id_resource_or_literal INTO pred_spec FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#specializationOf';
+    SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#atLocation';
+    SELECT id_resource_or_literal INTO pred_type FROM resource_or_literal WHERE name = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+    SELECT id_resource_or_literal INTO prov_entity FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#Entity';
 
     INSERT INTO metadata (id_subject, id_predicate, id_object)
     VALUES
@@ -171,7 +171,7 @@ BEGIN
 
     RETURN NEW;
 END;
-';
+$$;
 
 CREATE OR REPLACE TRIGGER trg_insert_metadata_vng
     AFTER INSERT ON versioned_named_graph
