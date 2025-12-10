@@ -98,40 +98,34 @@ CREATE OR REPLACE FUNCTION version_named_graph(
     filename varchar,
     version integer
 )
-    RETURNS TABLE
-            (
-                id_named_graph         integer,
-                id_version             integer,
-                id_version_named_graph integer
-            )
+    RETURNS void
     LANGUAGE plpgsql
 AS
 $$
 DECLARE
+    ng_id integer;
+    v_id integer;
+    vng_id integer;
 BEGIN
-    RETURN QUERY
-        WITH ng AS (INSERT INTO resource_or_literal
-            VALUES (DEFAULT, named_graph, NULL)
-            ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-            RETURNING *),
-             v AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Version#' || filename, NULL)
-                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                 RETURNING *),
-             vng AS (INSERT INTO resource_or_literal
-                 VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#' ||
-                                  encode(sha512((named_graph || filename)::bytea), 'hex'), NULL)
-                 ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-                 RETURNING *),
-             versioned AS (INSERT INTO versioned_named_graph
-                 VALUES ((SELECT id_resource_or_literal FROM vng), (SELECT id_resource_or_literal FROM ng), version)
-                 ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph
-                 RETURNING *),
-             result AS (
-                SELECT ng.id_resource_or_literal as id_named_graph, v.id_resource_or_literal as id_version, vng.id_resource_or_literal as id_versioned_named_graph
-                FROM ng, v, vng
-            )
-            TABLE result;
+    INSERT INTO resource_or_literal
+        VALUES (DEFAULT, named_graph, NULL)
+        ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+        RETURNING id_resource_or_literal INTO ng_id;
+
+    INSERT INTO resource_or_literal
+        VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Version#' || filename, NULL)
+        ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+        RETURNING id_resource_or_literal INTO v_id;
+
+    INSERT INTO resource_or_literal
+        VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#' ||
+                        encode(sha512((named_graph || filename)::bytea), 'hex'), NULL)
+        ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
+        RETURNING id_resource_or_literal INTO vng_id;
+
+    INSERT INTO versioned_named_graph
+        VALUES (vng_id, ng_id, version)
+        ON CONFLICT (id_versioned_named_graph) DO UPDATE SET id_named_graph = EXCLUDED.id_named_graph;
 END;
 $$;
 

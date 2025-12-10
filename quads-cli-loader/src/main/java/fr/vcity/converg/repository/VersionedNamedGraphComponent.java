@@ -19,18 +19,7 @@ public class VersionedNamedGraphComponent {
         Connection connection = jdbcConnection.getConnection();
 
         for (List<String> partition : ListUtils.partition(namedGraphs, 100)) {
-            String insertNamedGraphSQL = """
-                    WITH a (
-                        named_graph,
-                        filename,
-                        version
-                    ) AS (""" + "VALUES (?,?,?)" + """
-                    )
-                    SELECT version_named_graph(
-                        a.named_graph,
-                        a.filename,
-                        a.version
-                    ) FROM a;""";
+            String insertNamedGraphSQL = "SELECT version_named_graph(?, ?, ?)";
             try {
                 PreparedStatement ps = connection.prepareStatement(insertNamedGraphSQL);
                 for (String namedGraph : partition) {
