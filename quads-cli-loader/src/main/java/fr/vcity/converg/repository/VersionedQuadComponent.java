@@ -2,6 +2,7 @@ package fr.vcity.converg.repository;
 
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -11,6 +12,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
+@DependsOnDatabaseInitialization
 @Slf4j
 public class VersionedQuadComponent {
 
