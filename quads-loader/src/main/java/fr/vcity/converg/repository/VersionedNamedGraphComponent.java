@@ -2,6 +2,7 @@ package fr.vcity.converg.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Component
+@DependsOnDatabaseInitialization
 public class VersionedNamedGraphComponent {
 
     private final DataSource dataSource;

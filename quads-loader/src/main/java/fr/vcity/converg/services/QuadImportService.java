@@ -133,8 +133,9 @@ public class QuadImportService implements IQuadImportService {
 
             log.info("Condensing quads to catalog");
             Long startCondensing = System.nanoTime();
-            rdfVersionedQuadRepository.condenseModel();
-            rdfVersionedQuadRepository.updateValidityVersionedQuad();
+            String newBitMask = "0".repeat(version.getIndexVersion() - 1) + "1";
+            rdfVersionedQuadRepository.condenseModel(newBitMask);
+            rdfVersionedQuadRepository.updateValidityVersionedQuad(version.getIndexVersion() - 1);
             Long endCondensing = System.nanoTime();
             log.info("[Measure] (Condensing): {} ns for file: {};", endCondensing - startCondensing, file.getOriginalFilename());
 
