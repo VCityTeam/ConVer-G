@@ -9,5 +9,5 @@ LABEL maintainer="vcity, jey.puget-gil@liris.cnrs.fr"
 LABEL authors="jey.puget-gil@liris.cnrs.fr"
 
 RUN mkdir /opt/app
-COPY --from=build-query /app/target/quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/app/quads-query.jar
+COPY --from=build-query /app/target/quads-query-1.0-SNAPSHOT.jar /opt/app/quads-query.jar
 CMD [ "java", "-jar", "/opt/app/quads-query.jar" ]
