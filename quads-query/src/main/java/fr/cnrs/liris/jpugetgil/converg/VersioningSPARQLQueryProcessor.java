@@ -4,7 +4,8 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.fuseki.servlets.HttpAction;
 import org.apache.jena.fuseki.servlets.SPARQLQueryProcessor;
 import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
+import org.apache.jena.sparql.exec.QueryExec;
+import org.apache.jena.sparql.exec.QueryExecAdapter;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,7 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
     }
 
     @Override
-    protected QueryExecution createQueryExecution(HttpAction action, Query query, DatasetGraph dataset) {
-        return new VersioningQueryExecution(query);
+    protected QueryExec createQueryExec(HttpAction action, Query query, DatasetGraph dataset) {
+        return QueryExecAdapter.adapt(new VersioningQueryExecution(query));
     }
 }

@@ -3,6 +3,7 @@ package fr.vcity.converg.repository;
 import fr.vcity.converg.dto.CompleteVersionedQuad;
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -15,6 +16,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
+@DependsOnDatabaseInitialization
 @Slf4j
 public class VersionedQuadComponent {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;

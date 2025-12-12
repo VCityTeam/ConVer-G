@@ -2,6 +2,7 @@ package fr.vcity.converg.repository;
 
 import fr.vcity.converg.services.QuadImportService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Component
+@DependsOnDatabaseInitialization
 public class MetadataComponent {
 
     private final DataSource dataSource;

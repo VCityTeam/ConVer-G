@@ -45,7 +45,7 @@ public class QuadImportController {
                     required = true,
                     content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "string", format = "binary"))
             )
-            @RequestParam("file") MultipartFile file
+            @RequestParam MultipartFile file
     ) {
         try {
             if (quadImporterEnabled) {
@@ -104,7 +104,7 @@ public class QuadImportController {
                     required = true,
                     content = @Content(mediaType = "multipart/form-data", schema = @Schema(type = "string", format = "binary"))
             )
-            @RequestParam("file") MultipartFile file
+            @RequestParam MultipartFile file
     ) {
         try {
             if (quadImporterEnabled) {
