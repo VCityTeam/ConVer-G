@@ -185,6 +185,7 @@ public class QuadImportService implements IQuadImportService {
 
             log.info("Saving triples to catalog");
             rdfResourceRepository.flatModelTriplesToCatalog();
+            metadataRepository.insertMetadataTriples();
             flatModelTripleRepository.deleteAll();
 
             Long end = System.nanoTime();
