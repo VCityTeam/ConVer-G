@@ -20,7 +20,6 @@ public class JdbcConnection {
     private static JdbcConnection jdbcConnection;
     private static DataSource dataSource;
     private Connection connection;
-    private Statement statement;
     private static final String CONNECTION_URL = System.getenv("SPRING_DATASOURCE_URL") != null ? 
             System.getenv("SPRING_DATASOURCE_URL") : 
             (System.getenv("DATASOURCE_URL") != null ? System.getenv("DATASOURCE_URL") : 
@@ -54,13 +53,8 @@ public class JdbcConnection {
                 log.info("Connection established successfully with the database");
                 log.info("Connection URL: {}", CONNECTION_URL);
             }
-            statement = connection.createStatement();
         } catch (SQLException exception) {
             log.error(exception.getMessage());
-        } finally {
-            if (connection != null && Objects.isNull(statement)) {
-                connection.close();
-            }
         }
     }
 
@@ -97,6 +91,8 @@ public class JdbcConnection {
      * @throws SQLException exception can be thrown during DB transaction
      */
     public ResultSet executeSQL(String sqlQuery) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.closeOnCompletion();
         return statement.executeQuery(sqlQuery);
     }
 }
