@@ -71,7 +71,7 @@ jobs:
             time=$((time+5))
             sleep 5
             if [ $time -gt 60 ]; then
-              echo "Blazegraph did not start in time"
+              echo "QuaDer did not start in time"
               exit 1
             fi
             sleep 1
