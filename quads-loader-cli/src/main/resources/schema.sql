@@ -113,7 +113,7 @@ BEGIN
         RETURNING id_resource_or_literal INTO ng_id;
 
     INSERT INTO resource_or_literal
-        VALUES (DEFAULT, filename, 'http://www.w3.org/2001/XMLSchema#string')
+        VALUES (DEFAULT, 'https://github.com/VCityTeam/ConVer-G/Version#' || filename, NULL)
         ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
         RETURNING id_resource_or_literal INTO v_id;
 
@@ -137,6 +137,7 @@ DECLARE
     v_id integer;
     pred_spec integer;
     pred_loc integer;
+    pred_atloc integer;
     pred_type integer;
     prov_entity integer;
 BEGIN
@@ -151,15 +152,18 @@ BEGIN
     SELECT id_resource_or_literal INTO v_id FROM v;
 
     SELECT id_resource_or_literal INTO pred_spec FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#specializationOf';
-    SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#atLocation';
+    SELECT id_resource_or_literal INTO pred_atloc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#atLocation';
+    SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#Location';
     SELECT id_resource_or_literal INTO pred_type FROM resource_or_literal WHERE name = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
     SELECT id_resource_or_literal INTO prov_entity FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#Entity';
 
     INSERT INTO metadata (id_subject, id_predicate, id_object)
     VALUES
         (NEW.id_versioned_named_graph, pred_spec, NEW.id_named_graph),
-        (NEW.id_versioned_named_graph, pred_loc, v_id),
-        (NEW.id_versioned_named_graph, pred_type, prov_entity)
+        (NEW.id_versioned_named_graph, pred_atloc, v_id),
+        (v_id, pred_type, pred_loc),
+        (NEW.id_versioned_named_graph, pred_type, prov_entity),
+        (NEW.id_named_graph, pred_type, prov_entity)
     ON CONFLICT ON CONSTRAINT metadata_pkey
         DO UPDATE SET id_subject = EXCLUDED.id_subject;
 

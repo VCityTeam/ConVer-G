@@ -52,6 +52,7 @@ public class QuadImportService implements IQuadImportService {
     }
 
     ResourceOrLiteral metadataIsInVersion;
+    ResourceOrLiteral metadataLocation;
     ResourceOrLiteral metadataIsVersionOf;
     ResourceOrLiteral defaultGraphURI;
     ResourceOrLiteral rdfTypeURI;
@@ -73,6 +74,7 @@ public class QuadImportService implements IQuadImportService {
 
     final String PROVO_PREFIX = "http://www.w3.org/ns/prov#";
     final String RDF_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    final String NAMED_GRAPH_PREFIX = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
 
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
@@ -98,9 +100,10 @@ public class QuadImportService implements IQuadImportService {
         this.versionRepository = versionRepository;
 
         this.metadataIsInVersion = rdfResourceRepository.save(PROVO_PREFIX + "atLocation", null);
+        this.metadataLocation = rdfResourceRepository.save(PROVO_PREFIX + "Location", null);
         this.metadataIsVersionOf = rdfResourceRepository.save(PROVO_PREFIX + "specializationOf", null);
         this.metadataIsVersionOf = rdfResourceRepository.save(PROVO_PREFIX + "Entity", null);
-        this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
+        this.defaultGraphURI = rdfResourceRepository.save(NAMED_GRAPH_PREFIX + "default-graph", null);
         this.rdfTypeURI = rdfResourceRepository.save(RDF_PREFIX + "type", null);
     }
 

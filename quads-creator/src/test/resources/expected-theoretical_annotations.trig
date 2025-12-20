@@ -1,6 +1,10 @@
 <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> {
+    <https://github.com/VCityTeam/ConVer-G/Version#dataset-2.ttl.trig>
+            a       <http://www.w3.org/ns/prov#Location> .
+    <https://github.com/VCityTeam/ConVer-G/Named-Graph#Test-2>
+            a       <http://www.w3.org/ns/prov#Entity> .
     <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#1fc86158fea772eeb48b5fe353bf7cf3661500b0ddcf8a6b11537fabaf524122a8dab5608562c301d1a28702c141ab353c00c489f08c61ad41fd6992852449ec>
             a       <http://www.w3.org/ns/prov#Entity>;
-            <http://www.w3.org/ns/prov#atLocation>  "dataset-2.ttl.trig";
+            <http://www.w3.org/ns/prov#atLocation>  <https://github.com/VCityTeam/ConVer-G/Version#dataset-2.ttl.trig>;
             <http://www.w3.org/ns/prov#specializationOf>  <https://github.com/VCityTeam/ConVer-G/Named-Graph#Test-2> .
 }
