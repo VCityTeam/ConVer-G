@@ -22,7 +22,7 @@
   <modules>
     <module>quads-creator</module>
     <module>quads-loader</module>
-    <module>quads-cli-loader</module>
+    <module>quads-loader-cli</module>
     <module>quads-query</module>
     <module>quads-query-cli</module>
     <module>quads-delta</module>
