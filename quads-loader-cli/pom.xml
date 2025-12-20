@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>fr.vcity</groupId>
-    <artifactId>quads-cli-loader</artifactId>
+    <artifactId>quads-loader-cli</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>quads-cli-loader</name>
+    <name>quads-loader-cli</name>
     <description>Quads CLI Loader is a command-line tool that allows to version RDF quads in a relational database</description>
     <url>https://github.com/VCityTeam/ConVer-G</url>
 

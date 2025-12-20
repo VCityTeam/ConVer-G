@@ -1,6 +1,5 @@
 package fr.vcity;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
@@ -27,6 +26,7 @@ public class RDFConverter {
     private static final String NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
     private static final String PROV_URL = "http://www.w3.org/ns/prov#";
     private static final String VERSIONED_NAME_GRAPH_URL = "https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#";
+    private static final String VERSION_URL = "https://github.com/VCityTeam/ConVer-G/Version#";
     private static final String TRIG_EXTENSION = ".trig";
 
     private final Dataset dataset;
@@ -119,9 +119,26 @@ public class RDFConverter {
                 .asDatasetGraph()
                 .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
                         Triple.create(
+                                NodeFactory.createURI(getAnnotationURI(annotation)),
+                                NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                                NodeFactory.createURI(PROV_URL + "Entity")
+                        )));
+        metadataDataset
+                .asDatasetGraph()
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
+                        Triple.create(
                                 NodeFactory.createURI(graphURI),
                                 NodeFactory.createURI(PROV_URL + "atLocation"),
-                                NodeFactory.createLiteral(getVersionLiteral(inputFileName), XSDDatatype.XSDstring)
+                                NodeFactory.createURI(getVersionURI(inputFileName))
+                        )));
+
+        metadataDataset
+                .asDatasetGraph()
+                .add(new Quad(NodeFactory.createURI(NAME_GRAPH_URL + "Metadata"),
+                        Triple.create(
+                                NodeFactory.createURI(getVersionURI(inputFileName)),
+                                NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                                NodeFactory.createURI(PROV_URL + "Location")
                         )));
 
         metadataDataset
@@ -243,8 +260,8 @@ public class RDFConverter {
      * @param inputFileName The input file name
      * @return The version
      */
-    private String getVersionLiteral(String inputFileName) {
-        return inputFileName + TRIG_EXTENSION;
+    private String getVersionURI(String inputFileName) {
+        return VERSION_URL + inputFileName + TRIG_EXTENSION;
     }
 
     /**
