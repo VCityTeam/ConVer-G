@@ -1,0 +1,41 @@
+{
+  "name": "versioned-rdf",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.dev-config.ts",
+    "build": "tsc -b && vite build --config vite.config.ts",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-sigma/core": "^5.0.6",
+    "@react-sigma/graph-search": "^5.0.6",
+    "@react-sigma/layout-forceatlas2": "^5.0.6",
+    "@reduxjs/toolkit": "^2.11.1",
+    "@sigma/edge-curve": "^3.1.0",
+    "@sigma/node-image": "^3.0.0",
+    "graphology": "^0.26.0",
+    "graphology-types": "^0.24.8",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
+    "seedrandom": "^3.0.5",
+    "sigma": "^3.0.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "eslint": "^9.29.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.2.0",
+    "prettier": "^3.6.2",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vite": "^7.0.0"
+  }
+}
