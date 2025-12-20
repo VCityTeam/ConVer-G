@@ -162,16 +162,7 @@ DECLARE
     pred_type integer;
     prov_entity integer;
 BEGIN
-    WITH ver AS (
-        SELECT message FROM version WHERE index_version = NEW.index_version
-    ), v AS (
-        INSERT INTO resource_or_literal
-            VALUES (DEFAULT, (SELECT message FROM ver), 'http://www.w3.org/2001/XMLSchema#string')
-            ON CONFLICT (sha512(name::bytea), type) DO UPDATE SET type = EXCLUDED.type
-            RETURNING id_resource_or_literal
-    )
-    SELECT id_resource_or_literal INTO v_id FROM v;
-
+    SELECT rl.id_resource_or_literal INTO v_id FROM resource_or_literal rl JOIN version v ON rl.name = v.message AND rl.type IS NULL WHERE v.index_version = NEW.index_version;
     SELECT id_resource_or_literal INTO pred_spec FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#specializationOf';
     SELECT id_resource_or_literal INTO pred_atloc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#atLocation';
     SELECT id_resource_or_literal INTO pred_loc FROM resource_or_literal WHERE name = 'http://www.w3.org/ns/prov#Location';

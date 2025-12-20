@@ -75,6 +75,7 @@ public class QuadImportService implements IQuadImportService {
     final String PROVO_PREFIX = "http://www.w3.org/ns/prov#";
     final String RDF_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     final String NAMED_GRAPH_PREFIX = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
+    final String VERSION_PREFIX = "https://github.com/VCityTeam/ConVer-G/Version#";
 
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
@@ -115,15 +116,16 @@ public class QuadImportService implements IQuadImportService {
     @Override
     public Integer importModel(MultipartFile file) throws RiotException {
         LocalDateTime startTransactionTime = LocalDateTime.now();
-        Version version = versionRepository.save(file.getOriginalFilename(), startTransactionTime);
+        String filename = file.getOriginalFilename();
+        Version version = versionRepository.save(VERSION_PREFIX + filename, startTransactionTime);
 
-        log.info("Current file: {}", file.getOriginalFilename());
+        log.info("Current file: {}", filename);
 
         try (InputStream inputStream = file.getInputStream()) {
             Long start = System.nanoTime();
 
             Long startBatching = System.nanoTime();
-            getQuadsStreamRDF(inputStream, file.getOriginalFilename(), version.getIndexVersion())
+            getQuadsStreamRDF(inputStream, filename, version.getIndexVersion())
                     .finish();
             Long endBatching = System.nanoTime();
             log.info("[Measure] (Batching): {} ns for file: {};", endBatching - startBatching, file.getOriginalFilename());

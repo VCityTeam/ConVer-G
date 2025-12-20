@@ -50,6 +50,7 @@ public class QuadImportService implements IQuadImportService {
     }
 
     ResourceOrLiteral metadataIsInVersion;
+    ResourceOrLiteral metadataLocation;
     ResourceOrLiteral metadataIsVersionOf;
     ResourceOrLiteral defaultGraphURI;
     ResourceOrLiteral rdfTypeURI;
@@ -71,6 +72,8 @@ public class QuadImportService implements IQuadImportService {
 
     final String PROVO_PREFIX = "http://www.w3.org/ns/prov#";
     final String RDF_PREFIX = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    final String NAMED_GRAPH_PREFIX = "https://github.com/VCityTeam/ConVer-G/Named-Graph#";
+    final String VERSION_PREFIX = "https://github.com/VCityTeam/ConVer-G/Version#";
 
     public QuadImportService(
             IFlatModelQuadRepository flatModelQuadRepository,
@@ -95,10 +98,11 @@ public class QuadImportService implements IQuadImportService {
         this.versionedQuadComponent = versionedQuadComponent;
         this.versionRepository = versionRepository;
 
-        this.metadataIsInVersion = rdfResourceRepository.save("http://www.w3.org/ns/prov#atLocation", null);
-        this.metadataIsVersionOf = rdfResourceRepository.save("http://www.w3.org/ns/prov#specializationOf", null);
+        this.metadataIsInVersion = rdfResourceRepository.save(PROVO_PREFIX + "atLocation", null);
+        this.metadataLocation = rdfResourceRepository.save(PROVO_PREFIX + "Location", null);
+        this.metadataIsVersionOf = rdfResourceRepository.save(PROVO_PREFIX + "specializationOf", null);
         this.metadataIsVersionOf = rdfResourceRepository.save(PROVO_PREFIX + "Entity", null);
-        this.defaultGraphURI = rdfResourceRepository.save("https://github.com/VCityTeam/ConVer-G/Named-Graph#default-graph", null);
+        this.defaultGraphURI = rdfResourceRepository.save(NAMED_GRAPH_PREFIX + "default-graph", null);
         this.rdfTypeURI = rdfResourceRepository.save(RDF_PREFIX + "type", null);
     }
 
@@ -110,15 +114,16 @@ public class QuadImportService implements IQuadImportService {
     @Override
     public Integer importModel(File file) throws RiotException {
         LocalDateTime startTransactionTime = LocalDateTime.now();
-        Version version = versionRepository.save(file.getName(), startTransactionTime);
+        String filename = file.getName();
+        Version version = versionRepository.save(VERSION_PREFIX + filename, startTransactionTime);
 
-        log.info("Current file: {}", file.getName());
+        log.info("Current file: {}", filename);
 
         try (FileInputStream inputStream = new FileInputStream(file)) {
             Long start = System.nanoTime();
 
             Long startBatching = System.nanoTime();
-            getQuadsStreamRDF(inputStream, file.getName(), version.getIndexVersion())
+            getQuadsStreamRDF(inputStream, filename, version.getIndexVersion())
                     .finish();
             Long endBatching = System.nanoTime();
             log.info("[Measure] (Batching): {} ns for file: {};", endBatching - startBatching, file.getName());
