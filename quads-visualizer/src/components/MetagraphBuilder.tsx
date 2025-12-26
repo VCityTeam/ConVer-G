@@ -5,7 +5,7 @@ import { applyMetagraphNodeColors, createEmptyMetagraphRelations, METAGRAPH_NODE
 import { NewNodeModal } from "./NewNodeModal";
 import { RelationInput } from "./RelationInput";
 import { useAppDispatch } from "../state/hooks";
-import { setExternalSelection, setTravelHoverSelection } from "../state/metagraphSlice";
+import { setExternalSelection, setSelectedMetagraphNodeType, setTravelHoverSelection, type MetagraphNodeType } from "../state/metagraphSlice";
 import { QueryService } from "../services/QueryService";
 
 type BuilderMode = "createLink" | "createNode" | "travel" | "download" | "save";
@@ -68,6 +68,33 @@ export const MetagraphBuilder: FC = () => {
     }
 
     return { linkedGraph, linkedVersion };
+  }, [sigma]);
+
+  const getNodeType = useCallback((nodeKey: string): MetagraphNodeType => {
+    const graph = sigma.getGraph();
+    if (!graph.hasNode(nodeKey)) {
+      return null;
+    }
+
+    const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+    const isVersionedNamedGraph = typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX);
+
+    if (isVersionedNamedGraph) {
+      return "vng";
+    }
+
+    // Check metagraphRelations to determine if it's a named graph or version
+    const relations = graph.getNodeAttribute(nodeKey, "metagraphRelations") as { specialization: boolean; location: boolean } | undefined;
+    
+    if (relations?.specialization) {
+      return "namedGraph";
+    }
+    
+    if (relations?.location) {
+      return "version";
+    }
+
+    return null;
   }, [sigma]);
 
   const handleTravelClick = useCallback((nodeKey: string) => {
@@ -154,6 +181,8 @@ export const MetagraphBuilder: FC = () => {
           return;
         }
 
+        const nodeType = getNodeType(event.node);
+        dispatch(setSelectedMetagraphNodeType(nodeType));
         handleTravelClick(event.node);
       },
       upNode: (event) => {
@@ -199,7 +228,7 @@ export const MetagraphBuilder: FC = () => {
         setPendingNodeCoord(coord);
       },
     });
-  }, [registerEvents, sigma, mode, dragSourceNode, handleTravelHover, handleTravelClick, handleTravelLeave]);
+  }, [registerEvents, sigma, mode, dragSourceNode, handleTravelHover, handleTravelClick, handleTravelLeave, getNodeType, dispatch]);
 
   useEffect(() => {
     const graph = sigma.getGraph();
@@ -252,7 +281,7 @@ export const MetagraphBuilder: FC = () => {
     graph.forEachEdge((_edge, attributes, source, target) => {
       const sourceNode = graph.getNodeAttributes(source);
       const targetNode = graph.getNodeAttributes(target);
-      
+
       const s = formatTerm(source, sourceNode.termType);
       const p = `<${attributes.label}>`;
       const o = formatTerm(target, targetNode.termType);
@@ -364,14 +393,14 @@ export const MetagraphBuilder: FC = () => {
       return;
     }
     let finalRelation = trimmedRelation;
-    
+
     if (finalRelation.startsWith("prov:")) {
       finalRelation = finalRelation.replace("prov:", "http://www.w3.org/ns/prov#");
     }
 
     if (sourceNode && targetNode && finalRelation) {
       const graph = sigma.getGraph();
-      
+
       graph.addEdge(sourceNode, targetNode, {
         label: finalRelation,
         relation: finalRelation,
@@ -429,10 +458,10 @@ export const MetagraphBuilder: FC = () => {
             <>
               <RelationInput value={relationValue} onChange={setRelationValue} disabled={!isCreateLinkMode} />
 
-              <div style={{display: "flex", gap: "5px"}}>
-                <button 
-                  onClick={handleAddEdge} 
-                  disabled={!canAddLink} 
+              <div style={{ display: "flex", gap: "5px" }}>
+                <button
+                  onClick={handleAddEdge}
+                  disabled={!canAddLink}
                   style={{ flex: 1, padding: "5px", cursor: canAddLink ? "pointer" : "not-allowed" }}
                 >
                   Add Link

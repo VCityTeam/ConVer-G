@@ -5,6 +5,7 @@ export type VersionedGraphState = {
   selectedVersion: string;
   selectedNode: string | null;
   focusNode: string | null;
+  mergedGraphsEnabled: boolean;
 };
 
 const initialState: VersionedGraphState = {
@@ -12,6 +13,7 @@ const initialState: VersionedGraphState = {
   selectedVersion: "",
   selectedNode: null,
   focusNode: null,
+  mergedGraphsEnabled: false,
 };
 
 const versionedGraphSlice = createSlice({
@@ -30,6 +32,9 @@ const versionedGraphSlice = createSlice({
     setFocusNode: (state, action: PayloadAction<string | null>) => {
       state.focusNode = action.payload;
     },
+    setMergedGraphsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.mergedGraphsEnabled = action.payload;
+    },
     resetVersionedGraphState: () => initialState,
   },
 });
@@ -39,6 +44,7 @@ export const {
   setSelectedVersion,
   setSelectedNode,
   setFocusNode,
+  setMergedGraphsEnabled,
   resetVersionedGraphState,
 } = versionedGraphSlice.actions;
 

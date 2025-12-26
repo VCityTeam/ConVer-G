@@ -48,7 +48,7 @@ const sortVersions = (versions: string[], bindings: RDFBinding[] | undefined, me
 
     // Build version dependencies: version -> [sourceVersion]
     const versionDeps = new Map<string, Set<string>>();
-    
+
     derivations.forEach((sources, derivedVg) => {
         const derivedVersion = vgToVersion.get(derivedVg);
         if (!derivedVersion) return;
@@ -107,12 +107,12 @@ export const buildDistinct = (bindings: RDFBinding[] | undefined, metagraph: Res
         metagraph
     ),
     Array.from(
-    new Set(
-        (bindings ?? []).map(
-            ({ graph }) => graph.value,
+        new Set(
+            (bindings ?? []).map(
+                ({ graph }) => graph.value,
+            ),
         ),
-    ),
-).sort()];
+    ).sort()];
 
 export const buildGroupByVersionedGraph = (bindings: RDFBinding[] | undefined) => (Object.groupBy(
     bindings ?? [],
@@ -198,7 +198,7 @@ export const computeGraphsDelta = (graph1: Graph, graph2: Graph): Graph => {
 
     // Create a new graph to store the differences, using the same options as the input graphs.
     // const diffGraph = new Graph(graph1.nullCopy());
-    const diffGraph = new Graph({multi: true, type: 'directed'});
+    const diffGraph = new Graph({ multi: true, type: 'directed' });
 
     graph1.forEachNode((node, attributes) => {
         diffGraph.addNode(node, { ...attributes, status: 'deleted', color: REMOVED_COLOR });
@@ -207,7 +207,7 @@ export const computeGraphsDelta = (graph1: Graph, graph2: Graph): Graph => {
     graph2.forEachNode((node, attributes) => {
         if (diffGraph.hasNode(node)) {
             // This node existed in graph1. It's an "unchanged" or "modified" node.
-            diffGraph.replaceNodeAttributes(node, {...attributes, status: 'unchanged', color: UNCHANGED_COLOR});
+            diffGraph.replaceNodeAttributes(node, { ...attributes, status: 'unchanged', color: UNCHANGED_COLOR });
         } else {
             // It's a new node. Add it with an 'added' status.
             diffGraph.addNode(node, { ...attributes, status: 'added', color: ADDED_COLOR });
@@ -224,7 +224,7 @@ export const computeGraphsDelta = (graph1: Graph, graph2: Graph): Graph => {
     graph2.forEachEdge((edge, attributes, source, target) => {
         if (diffGraph.hasEdge(edge)) {
             // We replace its attributes with those from graph2, which also removes the 'status'.
-            diffGraph.replaceEdgeAttributes(edge, {...attributes, status: 'unchanged', color: UNCHANGED_COLOR});
+            diffGraph.replaceEdgeAttributes(edge, { ...attributes, status: 'unchanged', color: UNCHANGED_COLOR });
         } else {
             // It's a new edge. Add it with an 'added' status.
             diffGraph.addEdgeWithKey(edge, source, target, { ...attributes, status: 'added', color: ADDED_COLOR });
@@ -232,4 +232,24 @@ export const computeGraphsDelta = (graph1: Graph, graph2: Graph): Graph => {
     });
 
     return diffGraph;
+}
+
+export const mergeGraphs = (graphs: AbstractGraph[]): Graph => {
+    const mergedGraph = new Graph({ multi: true, type: 'directed' });
+
+    graphs.forEach((graph) => {
+        graph.forEachNode((node, attributes) => {
+            if (!mergedGraph.hasNode(node)) {
+                mergedGraph.addNode(node, { ...attributes });
+            }
+        });
+
+        graph.forEachEdge((edge, attributes, source, target) => {
+            if (!mergedGraph.hasEdge(edge)) {
+                mergedGraph.addEdgeWithKey(edge, source, target, { ...attributes });
+            }
+        });
+    });
+
+    return mergedGraph;
 }

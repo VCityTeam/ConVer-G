@@ -18,16 +18,20 @@ export type CurrentView = {
   version: string;
 };
 
+export type MetagraphNodeType = "vng" | "namedGraph" | "version" | null;
+
 export type MetagraphState = {
   externalSelection: VersionedGraphExternalSelection | null;
   travelHoverSelection: TravelHoverSelection | null;
   currentView: CurrentView | null;
+  selectedMetagraphNodeType: MetagraphNodeType;
 };
 
 const initialState: MetagraphState = {
   externalSelection: null,
   travelHoverSelection: null,
   currentView: null,
+  selectedMetagraphNodeType: null,
 };
 
 const metagraphSlice = createSlice({
@@ -43,8 +47,11 @@ const metagraphSlice = createSlice({
     setCurrentView: (state, action: PayloadAction<CurrentView | null>) => {
       state.currentView = action.payload;
     },
+    setSelectedMetagraphNodeType: (state, action: PayloadAction<MetagraphNodeType>) => {
+      state.selectedMetagraphNodeType = action.payload;
+    },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView } = metagraphSlice.actions;
+export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

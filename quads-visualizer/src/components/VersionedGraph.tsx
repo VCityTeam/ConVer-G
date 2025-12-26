@@ -1,5 +1,6 @@
 import { type CSSProperties, type FC, useCallback, useEffect, useMemo } from "react";
 import Graph from "graphology";
+import type AbstractGraph from "graphology-types";
 import { GraphSearch, type GraphSearchOption } from "@react-sigma/graph-search";
 import {
   ControlsContainer,
@@ -13,12 +14,13 @@ import { setCurrentView } from "../state/metagraphSlice";
 import {
   resetVersionedGraphState,
   setFocusNode,
+  setMergedGraphsEnabled,
   setSelectedGraph,
   setSelectedNode,
   setSelectedVersion,
 } from "../state/versionedGraphSlice";
 import { type Response } from "../utils/responseSerializer.ts";
-import { computeGraphsDelta, useBuildVersionedGraph } from "../utils/versionedGraphBuilder.ts";
+import { computeGraphsDelta, mergeGraphs, useBuildVersionedGraph } from "../utils/versionedGraphBuilder.ts";
 import { FocusOnNode } from "./FocusOnNode.tsx";
 import { GraphInfoDisplay } from "./GraphInfoDisplay.tsx";
 import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
@@ -30,12 +32,49 @@ export const VersionedGraph: FC<{
 }> = ({ response, metagraph, style }) => {
   const { distinctVersion, distinctGraph, versionedGraphs } = useBuildVersionedGraph(response, metagraph);
   const dispatch = useAppDispatch();
-  const { selectedGraph, selectedVersion, selectedNode, focusNode } = useAppSelector(
+  const { selectedGraph, selectedVersion, selectedNode, focusNode, mergedGraphsEnabled } = useAppSelector(
     (state) => state.versionedGraph,
   );
   const externalSelection = useAppSelector((state) => state.metagraph.externalSelection);
   const travelHoverSelection = useAppSelector((state) => state.metagraph.travelHoverSelection);
+  const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
   const graph = versionedGraphs[selectedGraph]?.[selectedVersion];
+
+  // Show merged graphs option only when the selected metagraph node is not a VNG (i.e., it's a named graph or version)
+  const showMergedGraphsOption = selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version";
+
+  // Compute merged graph when mergedGraphsEnabled is true
+  const mergedGraph = useMemo(() => {
+    if (!mergedGraphsEnabled || !showMergedGraphsOption) {
+      return null;
+    }
+
+    const graphsToMerge: AbstractGraph[] = [];
+    
+    if (selectedMetagraphNodeType === "namedGraph" && selectedGraph) {
+      // Merge all versions for the selected named graph
+      distinctVersion.forEach((version) => {
+        const g = versionedGraphs[selectedGraph]?.[version];
+        if (g) {
+          graphsToMerge.push(g);
+        }
+      });
+    } else if (selectedMetagraphNodeType === "version" && selectedVersion) {
+      // Merge all named graphs for the selected version
+      distinctGraph.forEach((graphKey) => {
+        const g = versionedGraphs[graphKey]?.[selectedVersion];
+        if (g) {
+          graphsToMerge.push(g);
+        }
+      });
+    }
+
+    if (graphsToMerge.length === 0) {
+      return null;
+    }
+
+    return mergeGraphs(graphsToMerge);
+  }, [mergedGraphsEnabled, showMergedGraphsOption, selectedMetagraphNodeType, selectedGraph, selectedVersion, distinctVersion, distinctGraph, versionedGraphs]);
 
   const deltaGraph = useMemo(() => {
     if (!travelHoverSelection || !selectedGraph || !selectedVersion) {
@@ -54,7 +93,11 @@ export const VersionedGraph: FC<{
     return computeGraphsDelta(baseGraph, targetGraph);
   }, [travelHoverSelection, selectedGraph, selectedVersion, versionedGraphs]);
 
-  const displayedGraph = deltaGraph ?? graph;
+  const displayedGraph = mergedGraph ?? deltaGraph ?? graph;
+
+  const handleMergedGraphsToggle = useCallback(() => {
+    dispatch(setMergedGraphsEnabled(!mergedGraphsEnabled));
+  }, [dispatch, mergedGraphsEnabled]);
 
   useEffect(() => {
     if (!selectedGraph && distinctGraph.length > 0) {
@@ -186,6 +229,34 @@ export const VersionedGraph: FC<{
       <ControlsContainer position={"bottom-left"}>
         <GraphInfoDisplay graph={selectedGraph} version={selectedVersion} />
       </ControlsContainer>
+      {showMergedGraphsOption && (
+        <ControlsContainer position={"bottom-right"}>
+          <div
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              padding: "8px 12px",
+              borderRadius: "5px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            onClick={handleMergedGraphsToggle}
+          >
+            <input
+              type="checkbox"
+              checked={mergedGraphsEnabled}
+              onChange={handleMergedGraphsToggle}
+              style={{ cursor: "pointer" }}
+            />
+            <label style={{ margin: 0, cursor: "pointer", fontSize: "14px" }}>
+              Merged graphs
+            </label>
+          </div>
+        </ControlsContainer>
+      )}
     </SigmaContainer>
   );
 };
