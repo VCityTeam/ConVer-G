@@ -7,6 +7,8 @@ export const MetagraphHighlight = () => {
   const sigma = useSigma();
   const graph = sigma.getGraph();
   const currentView = useAppSelector((state) => state.metagraph.currentView);
+  const selectedMetagraphNode = useAppSelector((state) => state.metagraph.selectedMetagraphNode);
+  const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   const clearNodeReducer = () => {
@@ -27,6 +29,26 @@ export const MetagraphHighlight = () => {
   }, [sigma]);
 
   useEffect(() => {
+    // If a named graph or version is directly selected, highlight that node
+    if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
+      sigma.setSetting("nodeReducer", (node, data) => {
+        const base = { ...data };
+
+        if (node === selectedMetagraphNode) {
+          base.size = 12;
+          base.highlighted = true;
+          base.label = hoveredNode === node ? data.label : "";
+        }
+
+        return base;
+      });
+
+      return () => {
+        clearNodeReducer();
+      };
+    }
+
+    // Otherwise, find and highlight the VNG based on currentView
     if (!currentView) {
       clearNodeReducer();
       return;
@@ -78,7 +100,7 @@ export const MetagraphHighlight = () => {
     return () => {
       clearNodeReducer();
     };
-  }, [currentView, graph, sigma, hoveredNode]);
+  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType]);
 
   return null;
 };

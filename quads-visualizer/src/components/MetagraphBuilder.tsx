@@ -5,7 +5,7 @@ import { applyMetagraphNodeColors, createEmptyMetagraphRelations, METAGRAPH_NODE
 import { NewNodeModal } from "./NewNodeModal";
 import { RelationInput } from "./RelationInput";
 import { useAppDispatch } from "../state/hooks";
-import { setExternalSelection, setSelectedMetagraphNodeType, setTravelHoverSelection, type MetagraphNodeType } from "../state/metagraphSlice";
+import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setTravelHoverSelection, type MetagraphNodeType } from "../state/metagraphSlice";
 import { QueryService } from "../services/QueryService";
 
 type BuilderMode = "createLink" | "createNode" | "travel" | "download" | "save";
@@ -102,30 +102,64 @@ export const MetagraphBuilder: FC = () => {
       return;
     }
 
-    const target = resolveTravelTarget(nodeKey);
-    if (!target) {
-      travelHoverNodeRef.current = null;
-      return;
+    const nodeType = getNodeType(nodeKey);
+    
+    if (nodeType === "vng") {
+      const target = resolveTravelTarget(nodeKey);
+      if (!target) {
+        travelHoverNodeRef.current = null;
+        return;
+      }
+      travelHoverNodeRef.current = nodeKey;
+      emitTravelSelection({ graph: target.linkedGraph, version: target.linkedVersion });
+    } else if (nodeType === "namedGraph") {
+      const graph = sigma.getGraph();
+      const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+      travelHoverNodeRef.current = nodeKey;
+      emitTravelSelection({ graph: nodeLabel ?? nodeKey });
+    } else if (nodeType === "version") {
+      const graph = sigma.getGraph();
+      const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+      travelHoverNodeRef.current = nodeKey;
+      emitTravelSelection({ version: nodeLabel ?? nodeKey });
     }
-
-    travelHoverNodeRef.current = nodeKey;
-    emitTravelSelection({ graph: target.linkedGraph, version: target.linkedVersion });
-  }, [emitTravelSelection, resolveTravelTarget]);
+  }, [emitTravelSelection, resolveTravelTarget, getNodeType, sigma]);
 
   const handleTravelHover = useCallback((nodeKey: string) => {
-    const target = resolveTravelTarget(nodeKey);
-
-    if (!target) {
+    const nodeType = getNodeType(nodeKey);
+    
+    if (nodeType === "vng") {
+      const target = resolveTravelTarget(nodeKey);
+      if (!target) {
+        dispatch(setTravelHoverSelection(null));
+        return;
+      }
+      dispatch(setTravelHoverSelection({
+        updatedAt: Date.now(),
+        graph: target.linkedGraph,
+        version: target.linkedVersion,
+        nodeType: "vng",
+      }));
+    } else if (nodeType === "namedGraph") {
+      const graph = sigma.getGraph();
+      const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+      dispatch(setTravelHoverSelection({
+        updatedAt: Date.now(),
+        graph: nodeLabel ?? nodeKey,
+        nodeType: "namedGraph",
+      }));
+    } else if (nodeType === "version") {
+      const graph = sigma.getGraph();
+      const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+      dispatch(setTravelHoverSelection({
+        updatedAt: Date.now(),
+        version: nodeLabel ?? nodeKey,
+        nodeType: "version",
+      }));
+    } else {
       dispatch(setTravelHoverSelection(null));
-      return;
     }
-
-    dispatch(setTravelHoverSelection({
-      updatedAt: Date.now(),
-      graph: target.linkedGraph,
-      version: target.linkedVersion,
-    }));
-  }, [dispatch, resolveTravelTarget]);
+  }, [dispatch, resolveTravelTarget, getNodeType, sigma]);
 
   const handleTravelLeave = useCallback(() => {
     travelHoverNodeRef.current = null;
@@ -183,6 +217,7 @@ export const MetagraphBuilder: FC = () => {
 
         const nodeType = getNodeType(event.node);
         dispatch(setSelectedMetagraphNodeType(nodeType));
+        dispatch(setSelectedMetagraphNode(event.node));
         handleTravelClick(event.node);
       },
       upNode: (event) => {
@@ -254,7 +289,7 @@ export const MetagraphBuilder: FC = () => {
 
   useEffect(() => {
     const graph = sigma.getGraph();
-    applyMetagraphNodeColors(graph, mode === "createLink");
+    applyMetagraphNodeColors(graph, mode === "createLink" || mode === "travel");
   }, [mode, sigma]);
 
   useEffect(() => () => {

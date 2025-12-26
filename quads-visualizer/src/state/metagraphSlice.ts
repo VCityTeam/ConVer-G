@@ -10,6 +10,7 @@ export type VersionedGraphExternalSelection = {
 export type TravelHoverSelection = {
   graph?: string;
   version?: string;
+  nodeType: MetagraphNodeType;
   updatedAt: number;
 };
 
@@ -25,6 +26,7 @@ export type MetagraphState = {
   travelHoverSelection: TravelHoverSelection | null;
   currentView: CurrentView | null;
   selectedMetagraphNodeType: MetagraphNodeType;
+  selectedMetagraphNode: string | null;
 };
 
 const initialState: MetagraphState = {
@@ -32,6 +34,7 @@ const initialState: MetagraphState = {
   travelHoverSelection: null,
   currentView: null,
   selectedMetagraphNodeType: null,
+  selectedMetagraphNode: null,
 };
 
 const metagraphSlice = createSlice({
@@ -50,8 +53,11 @@ const metagraphSlice = createSlice({
     setSelectedMetagraphNodeType: (state, action: PayloadAction<MetagraphNodeType>) => {
       state.selectedMetagraphNodeType = action.payload;
     },
+    setSelectedMetagraphNode: (state, action: PayloadAction<string | null>) => {
+      state.selectedMetagraphNode = action.payload;
+    },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType } = metagraphSlice.actions;
+export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

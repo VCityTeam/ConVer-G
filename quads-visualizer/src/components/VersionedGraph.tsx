@@ -40,12 +40,93 @@ export const VersionedGraph: FC<{
   const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
   const graph = versionedGraphs[selectedGraph]?.[selectedVersion];
 
-  // Show merged graphs option only when the selected metagraph node is not a VNG (i.e., it's a named graph or version)
-  const showMergedGraphsOption = selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version";
+  // Show merged graphs option always (default disabled) - user can toggle to see merged view
+  const showMergedGraphsOption = true;
 
-  // Compute merged graph when mergedGraphsEnabled is true
+  // Compute hover graph based on hover node type
+  const hoverGraph = useMemo(() => {
+    if (!travelHoverSelection) {
+      return null;
+    }
+
+    const hoverNodeType = travelHoverSelection.nodeType;
+
+    // VNG hover: show diff between current view and hovered VNG
+    if (hoverNodeType === "vng") {
+      if (!selectedGraph || !selectedVersion) {
+        return null;
+      }
+      const baseGraph = versionedGraphs[selectedGraph]?.[selectedVersion] as Graph | undefined;
+      const hoverGraphKey = travelHoverSelection.graph ?? selectedGraph;
+      const hoverVersionKey = travelHoverSelection.version ?? selectedVersion;
+      const targetGraph = versionedGraphs[hoverGraphKey]?.[hoverVersionKey] as Graph | undefined;
+
+      if (!baseGraph || !targetGraph) {
+        return null;
+      }
+      return computeGraphsDelta(baseGraph, targetGraph);
+    }
+
+    // Named graph hover: show all VNGs linked to this named graph
+    if (hoverNodeType === "namedGraph" && travelHoverSelection.graph) {
+      const hoveredGraph = travelHoverSelection.graph;
+      const graphsToMerge: AbstractGraph[] = [];
+      
+      distinctVersion.forEach((version) => {
+        const g = versionedGraphs[hoveredGraph]?.[version];
+        if (g && g.order > 0) {
+          graphsToMerge.push(g);
+        }
+      });
+
+      if (graphsToMerge.length === 0) {
+        return null;
+      }
+
+      if (mergedGraphsEnabled) {
+        return mergeGraphs(graphsToMerge);
+      } else {
+        // For non-merged mode, return the first available graph as a preview
+        // The full separate view will be handled by the component structure
+        return mergeGraphs(graphsToMerge);
+      }
+    }
+
+    // Version hover: show all VNGs linked to this version
+    if (hoverNodeType === "version" && travelHoverSelection.version) {
+      const hoveredVersion = travelHoverSelection.version;
+      const graphsToMerge: AbstractGraph[] = [];
+      
+      distinctGraph.forEach((graphKey) => {
+        const g = versionedGraphs[graphKey]?.[hoveredVersion];
+        if (g && g.order > 0) {
+          graphsToMerge.push(g);
+        }
+      });
+
+      if (graphsToMerge.length === 0) {
+        return null;
+      }
+
+      if (mergedGraphsEnabled) {
+        return mergeGraphs(graphsToMerge);
+      } else {
+        // For non-merged mode, return merged as preview
+        return mergeGraphs(graphsToMerge);
+      }
+    }
+
+    return null;
+  }, [travelHoverSelection, selectedGraph, selectedVersion, versionedGraphs, distinctVersion, distinctGraph, mergedGraphsEnabled]);
+
+  // Compute merged graph for selected non-VNG node
   const mergedGraph = useMemo(() => {
-    if (!mergedGraphsEnabled || !showMergedGraphsOption) {
+    // Only compute merged graph when viewing a named graph or version (not VNG)
+    if (selectedMetagraphNodeType !== "namedGraph" && selectedMetagraphNodeType !== "version") {
+      return null;
+    }
+
+    if (!mergedGraphsEnabled) {
       return null;
     }
 
@@ -55,7 +136,7 @@ export const VersionedGraph: FC<{
       // Merge all versions for the selected named graph
       distinctVersion.forEach((version) => {
         const g = versionedGraphs[selectedGraph]?.[version];
-        if (g) {
+        if (g && g.order > 0) {
           graphsToMerge.push(g);
         }
       });
@@ -63,7 +144,7 @@ export const VersionedGraph: FC<{
       // Merge all named graphs for the selected version
       distinctGraph.forEach((graphKey) => {
         const g = versionedGraphs[graphKey]?.[selectedVersion];
-        if (g) {
+        if (g && g.order > 0) {
           graphsToMerge.push(g);
         }
       });
@@ -74,30 +155,71 @@ export const VersionedGraph: FC<{
     }
 
     return mergeGraphs(graphsToMerge);
-  }, [mergedGraphsEnabled, showMergedGraphsOption, selectedMetagraphNodeType, selectedGraph, selectedVersion, distinctVersion, distinctGraph, versionedGraphs]);
+  }, [mergedGraphsEnabled, selectedMetagraphNodeType, selectedGraph, selectedVersion, distinctVersion, distinctGraph, versionedGraphs]);
 
-  const deltaGraph = useMemo(() => {
-    if (!travelHoverSelection || !selectedGraph || !selectedVersion) {
+  // Get list of separate graphs when not in merged mode for non-VNG selection
+  const separateGraphs = useMemo(() => {
+    if (selectedMetagraphNodeType !== "namedGraph" && selectedMetagraphNodeType !== "version") {
       return null;
     }
 
-    const baseGraph = versionedGraphs[selectedGraph]?.[selectedVersion] as Graph | undefined;
-    const hoverGraphKey = travelHoverSelection.graph ?? selectedGraph;
-    const hoverVersionKey = travelHoverSelection.version ?? selectedVersion;
-    const targetGraph = versionedGraphs[hoverGraphKey]?.[hoverVersionKey] as Graph | undefined;
-
-    if (!baseGraph || !targetGraph) {
+    if (mergedGraphsEnabled) {
       return null;
     }
 
-    return computeGraphsDelta(baseGraph, targetGraph);
-  }, [travelHoverSelection, selectedGraph, selectedVersion, versionedGraphs]);
+    const graphs: Array<{ graph: string; version: string; data: AbstractGraph }> = [];
 
-  const displayedGraph = mergedGraph ?? deltaGraph ?? graph;
+    if (selectedMetagraphNodeType === "namedGraph" && selectedGraph) {
+      distinctVersion.forEach((version) => {
+        const g = versionedGraphs[selectedGraph]?.[version];
+        if (g && g.order > 0) {
+          graphs.push({ graph: selectedGraph, version, data: g });
+        }
+      });
+    } else if (selectedMetagraphNodeType === "version" && selectedVersion) {
+      distinctGraph.forEach((graphKey) => {
+        const g = versionedGraphs[graphKey]?.[selectedVersion];
+        if (g && g.order > 0) {
+          graphs.push({ graph: graphKey, version: selectedVersion, data: g });
+        }
+      });
+    }
+
+    return graphs.length > 0 ? graphs : null;
+  }, [selectedMetagraphNodeType, mergedGraphsEnabled, selectedGraph, selectedVersion, distinctVersion, distinctGraph, versionedGraphs]);
+
+  const displayedGraph = hoverGraph ?? mergedGraph ?? graph;
 
   const handleMergedGraphsToggle = useCallback(() => {
     dispatch(setMergedGraphsEnabled(!mergedGraphsEnabled));
   }, [dispatch, mergedGraphsEnabled]);
+
+  const mergedGraphsToggle = (
+    <div
+      style={{
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        padding: "8px 12px",
+        borderRadius: "5px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        cursor: "pointer",
+        userSelect: "none",
+      }}
+      onClick={handleMergedGraphsToggle}
+    >
+      <input
+        type="checkbox"
+        checked={mergedGraphsEnabled}
+        onChange={handleMergedGraphsToggle}
+        style={{ cursor: "pointer" }}
+      />
+      <label style={{ margin: 0, cursor: "pointer", fontSize: "14px" }}>
+        Merged graphs
+      </label>
+    </div>
+  );
 
   useEffect(() => {
     if (!selectedGraph && distinctGraph.length > 0) {
@@ -198,6 +320,48 @@ export const VersionedGraph: FC<{
     }
   }, [dispatch, externalSelection, distinctGraph, distinctVersion, selectedGraph, selectedVersion]);
 
+  // If we have separate graphs to display (non-merged mode with namedGraph or version selection)
+  if (separateGraphs && separateGraphs.length > 0) {
+    return (
+      <div style={{ ...style, display: "flex", flexDirection: "column", gap: "4px", overflow: "auto", position: "relative" }}>
+        {separateGraphs.map(({ graph: graphKey, version, data }) => (
+          <div 
+            key={`${graphKey}-${version}`} 
+            style={{ 
+              flex: 1, 
+              minHeight: "300px", 
+              position: "relative",
+              border: "1px solid #e0e0e0",
+              borderRadius: "4px",
+            }}
+          >
+            <SigmaContainer
+              settings={{
+                allowInvalidContainer: true,
+                defaultEdgeType: "arrow",
+                edgeProgramClasses: {
+                  curvedArrow: EdgeCurvedArrowProgram
+                },
+                renderEdgeLabels: true,
+                autoRescale: true,
+                autoCenter: true,
+              }}
+              style={{ height: "100%", width: "100%" }}
+              graph={data}
+            >
+              <ControlsContainer position={"bottom-left"}>
+                <GraphInfoDisplay graph={graphKey} version={version} />
+              </ControlsContainer>
+            </SigmaContainer>
+          </div>
+        ))}
+        <div style={{ position: "sticky", bottom: 8, alignSelf: "flex-end", zIndex: 10 }}>
+          {mergedGraphsToggle}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SigmaContainer
       settings={{
@@ -231,30 +395,7 @@ export const VersionedGraph: FC<{
       </ControlsContainer>
       {showMergedGraphsOption && (
         <ControlsContainer position={"bottom-right"}>
-          <div
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              padding: "8px 12px",
-              borderRadius: "5px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-            onClick={handleMergedGraphsToggle}
-          >
-            <input
-              type="checkbox"
-              checked={mergedGraphsEnabled}
-              onChange={handleMergedGraphsToggle}
-              style={{ cursor: "pointer" }}
-            />
-            <label style={{ margin: 0, cursor: "pointer", fontSize: "14px" }}>
-              Merged graphs
-            </label>
-          </div>
+          {mergedGraphsToggle}
         </ControlsContainer>
       )}
     </SigmaContainer>
