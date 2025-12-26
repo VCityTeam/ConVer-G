@@ -1,6 +1,6 @@
-# Quads-Vizualizer
+# Quads-visualizer
 
-**Quads-Vizualizer** is a lightweight React frontend for exploring the metagraph and the versioned RDF graphs produced by the ConVer-G suite.
+**Quads-visualizer** is a lightweight React frontend for exploring the metagraph and the versioned RDF graphs produced by the ConVer-G suite.
 It visualizes the history and structure of versions (the “metagraph”) and lets you inspect the RDF quads present in a selected snapshot, compare versions (deltas), and interactively explore node relationships.
 
 ## Features ✅

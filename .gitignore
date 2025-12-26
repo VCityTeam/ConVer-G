@@ -44,14 +44,14 @@ dataset/*
 
 
 ### Frontend ###
-quads-vizualizer/node_modules
-quads-vizualizer/dist
-quads-vizualizer/dist-ssr
-quads-vizualizer/*.local
-quads-vizualizer/logs
-quads-vizualizer/*.log
-quads-vizualizer/npm-debug.log*
-quads-vizualizer/yarn-debug.log*
-quads-vizualizer/yarn-error.log*
-quads-vizualizer/pnpm-debug.log*
-quads-vizualizer/lerna-debug.log*
+quads-visualizer/node_modules
+quads-visualizer/dist
+quads-visualizer/dist-ssr
+quads-visualizer/*.local
+quads-visualizer/logs
+quads-visualizer/*.log
+quads-visualizer/npm-debug.log*
+quads-visualizer/yarn-debug.log*
+quads-visualizer/yarn-error.log*
+quads-visualizer/pnpm-debug.log*
+quads-visualizer/lerna-debug.log*
