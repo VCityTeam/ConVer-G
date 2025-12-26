@@ -123,7 +123,13 @@ export const computeNodesPositions = (response: Response) => {
     const g = Graph.from(
         responseSerializer(response),
     );
-    FA2.assign(g, { iterations: 250 });
+    FA2.assign(g, {
+        iterations: 200, settings: {
+            strongGravityMode: true,
+            gravity: 0.25,
+            barnesHutOptimize: true,
+        }
+    });
     const nodesPositions = new Map<string, [number, number]>();
 
     g.forEachNode((node, attributes) => {
