@@ -2,7 +2,8 @@ import Graph from "graphology";
 import type AbstractGraph from "graphology-types";
 import { useMemo } from "react";
 import { responseSerializer, type Response } from "./responseSerializer";
-import { computeNodesPositions } from "./versionedGraphBuilder";
+import { computeNodesPositions } from "./graphUtils";
+import type { MetagraphNodeType } from "../state/metagraphSlice";
 
 export const VERSIONED_NODE_PREFIX = "https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#";
 
@@ -30,6 +31,11 @@ export const createEmptyMetagraphRelations = (): MetagraphRelationFlags => ({
 });
 
 const RELATION_ENTRIES = Object.entries(METAGRAPH_RELATION_SUFFIXES) as Array<[MetagraphRelationKey, string]>;
+
+export const METAGRAPH_RELATION_COLORS = {
+    edge: "#d3d3d3",
+    label: "#555555",
+} as const;
 
 export const applyMetagraphNodeColors = (graph: AbstractGraph, showHidden: boolean = false): void => {
     const relationTargets: Record<MetagraphRelationKey, Set<string>> = {
@@ -69,15 +75,84 @@ export const applyMetagraphNodeColors = (graph: AbstractGraph, showHidden: boole
                     ? METAGRAPH_NODE_COLORS.specialization
                     : METAGRAPH_NODE_COLORS.default;
 
+        if (label.startsWith(VERSIONED_NODE_PREFIX)) {
+            let namedGraph: string | undefined;
+            let version: string | undefined;
+
+            graph.forEachOutboundEdge(nodeKey, (_edgeKey, attributes, _source, target) => {
+                const edgeLabel = typeof attributes?.label === "string" ? attributes.label : "";
+                if (edgeLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization)) {
+                    namedGraph = (graph.getNodeAttribute(target, "label") as string) || target;
+                }
+                if (edgeLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.location)) {
+                    version = (graph.getNodeAttribute(target, "label") as string) || target;
+                }
+            });
+
+            if (namedGraph) graph.setNodeAttribute(nodeKey, "namedGraph", namedGraph);
+            if (version) graph.setNodeAttribute(nodeKey, "version", version);
+        }
+
         graph.setNodeAttribute(nodeKey, "color", color);
         graph.setNodeAttribute(nodeKey, "metagraphRelations", relations);
         graph.setNodeAttribute(nodeKey, "hidden", shouldHideNode);
     });
 };
 
+export const getMetagraphNodeType = (graph: AbstractGraph, nodeKey: string): MetagraphNodeType => {
+    if (!graph.hasNode(nodeKey)) return null;
+
+    const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+    if (typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX)) {
+        return "vng";
+    }
+
+    const relations = graph.getNodeAttribute(nodeKey, "metagraphRelations") as MetagraphRelationFlags | undefined;
+    if (relations?.specialization) return "namedGraph";
+    if (relations?.location) return "version";
+
+    return null;
+};
+
+export const resolveTravelTarget = (graph: AbstractGraph, nodeKey: string) => {
+    if (!graph.hasNode(nodeKey)) return null;
+
+    const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
+    const isVersionedNamedGraph = typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX);
+
+    if (!isVersionedNamedGraph) return null;
+
+    let linkedGraph: string | undefined;
+    let linkedVersion: string | undefined;
+
+    graph.forEachOutboundEdge(nodeKey, (_edgeKey, attributes, _source, target) => {
+        const relationLabel = typeof attributes?.label === "string" ? attributes.label : "";
+
+        if (!linkedGraph && relationLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization)) {
+            const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
+            linkedGraph = typeof candidate === "string" ? candidate : target;
+        }
+
+        if (!linkedVersion && relationLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.location)) {
+            const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
+            linkedVersion = typeof candidate === "string" ? candidate : target;
+        }
+    });
+
+    if (!linkedGraph && !linkedVersion) return null;
+
+    return { linkedGraph, linkedVersion };
+};
+
 export const useBuildMetagraph = (response: Response): AbstractGraph => useMemo(() => {
     const g = Graph.from(responseSerializer(response));
-    const { positions: nodesPositions } = computeNodesPositions(response);
+    const { positions: nodesPositions } = computeNodesPositions(response, {
+        iterations: 30, settings: {
+            barnesHutOptimize: true,
+            barnesHutTheta: 0.1,
+            gravity: 1.5
+        }
+    });
 
     g.forEachNode((node) => {
         const [x, y] = nodesPositions.get(node) ?? [Math.random(), Math.random()];

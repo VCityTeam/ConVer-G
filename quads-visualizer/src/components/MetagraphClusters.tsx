@@ -236,7 +236,7 @@ export const MetagraphClusters = () => {
       const label = typeof attributes?.label === "string" ? attributes.label : "";
       const isSpecialization = label.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization);
       const isLocation = label.endsWith(METAGRAPH_RELATION_SUFFIXES.location);
-      
+
       if (focusMode) {
         // In focus mode, only show specialization and location edges
         graph.setEdgeAttribute(edgeKey, "hidden", !(isSpecialization || isLocation));
@@ -254,7 +254,7 @@ export const MetagraphClusters = () => {
       const relations = attributes.metagraphRelations as { specialization?: boolean; location?: boolean } | undefined;
       const isNamedGraph = relations?.specialization === true;
       const isVersion = relations?.location === true;
-      
+
       if (focusMode) {
         // In focus mode, show VNGs, named graphs, and versions
         graph.setNodeAttribute(nodeKey, "hidden", !(isVNG || isNamedGraph || isVersion));
@@ -278,9 +278,10 @@ export const MetagraphClusters = () => {
       }}
     >
       <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a" }}>
-        Cluster metadata using <a href="https://www.w3.org/TR/prov-o/" target="_blank" rel="noopener noreferrer">PROV-O</a>
+        Cluster metadata using <a href="https://www.w3.org/TR/prov-o/" target="_blank"
+                                  rel="noopener noreferrer">PROV-O</a>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr", gap: "6px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr 1fr", gap: "6px" }}>
         <button
           type="button"
           onClick={() => setFocusMode((current) => !current)}
@@ -365,42 +366,42 @@ export const MetagraphClusters = () => {
           >
             {(
               Object.entries(stats)
-              .sort(([, aValue], [, bValue]) => bValue.count - aValue.count)
-              .map(([key, { count, color }]) => (
-                <div
-                  key={key}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "6px 8px",
-                    background: "white",
-                    borderRadius: "6px",
-                    border: "1px solid #e2e8f0",
-                    fontSize: "12px",
-                    color: "#0f172a",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        backgroundColor: color,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      title={key}
-                      style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                    >
+                .sort(([, aValue], [, bValue]) => bValue.count - aValue.count)
+                .map(([key, { count, color }]) => (
+                  <div
+                    key={key}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "6px 8px",
+                      background: "white",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                      fontSize: "12px",
+                      color: "#0f172a",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span
+                        title={key}
+                        style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      >
                       {key}
                     </span>
+                    </div>
+                    <span style={{ fontWeight: 700, marginLeft: "8px" }}>{count}</span>
                   </div>
-                  <span style={{ fontWeight: 700, marginLeft: "8px" }}>{count}</span>
-                </div>
-              ))
+                ))
             )}
           </div>
         )

@@ -1,7 +1,7 @@
 import { useSigma } from "@react-sigma/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "../state/hooks";
-import { METAGRAPH_RELATION_SUFFIXES } from "../utils/metagraphBuilder";
+import { getMetagraphNodeType, resolveTravelTarget } from "../utils/metagraphBuilder";
 
 export const MetagraphHighlight = () => {
   const sigma = useSigma();
@@ -11,9 +11,9 @@ export const MetagraphHighlight = () => {
   const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
-  const clearNodeReducer = () => {
-    sigma.setSetting("nodeReducer", (_node, data) => ({ ...data }));
-  };
+  const clearNodeReducer = useCallback(() => {
+    sigma.setSetting("nodeReducer", null);
+  }, [sigma]);
 
   useEffect(() => {
     const handleEnter = ({ node }: { node: string }) => setHoveredNode(node);
@@ -29,7 +29,6 @@ export const MetagraphHighlight = () => {
   }, [sigma]);
 
   useEffect(() => {
-    // If a named graph or version is directly selected, highlight that node
     if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
       sigma.setSetting("nodeReducer", (node, data) => {
         const base = { ...data };
@@ -48,7 +47,6 @@ export const MetagraphHighlight = () => {
       };
     }
 
-    // Otherwise, find and highlight the VNG based on currentView
     if (!currentView) {
       clearNodeReducer();
       return;
@@ -60,26 +58,14 @@ export const MetagraphHighlight = () => {
       clearNodeReducer();
       return;
     }
-    
+
     let versionedGraphNode: string | null = null;
 
-    if (graph.hasNode(selectedGraph)) {
-      const candidates = graph.inNeighbors(selectedGraph);
-      versionedGraphNode = candidates.find(candidate => {
-        const hasSpecialization = graph.someOutEdge(candidate, (_edge, attr, _source, target) => {
-          return target === selectedGraph && (attr.label as string).endsWith(METAGRAPH_RELATION_SUFFIXES.specialization);
-        });
-
-        if (!hasSpecialization) return false;
-        if (!graph.hasNode(selectedVersion)) return false;
-        
-        const hasLocation = graph.someOutEdge(candidate, (_edge, attr, _source, target) => {
-          return target === selectedVersion && (attr.label as string).endsWith(METAGRAPH_RELATION_SUFFIXES.location);
-        });
-
-        return hasLocation;
-      }) || null;
-    }
+    const vngNodes = graph.nodes().filter(node => getMetagraphNodeType(graph, node) === "vng");
+    versionedGraphNode = vngNodes.find(node => {
+      const target = resolveTravelTarget(graph, node);
+      return target?.linkedGraph === selectedGraph && target?.linkedVersion === selectedVersion;
+    }) || null;
 
     if (!versionedGraphNode) {
       clearNodeReducer();
@@ -100,7 +86,7 @@ export const MetagraphHighlight = () => {
     return () => {
       clearNodeReducer();
     };
-  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType]);
+  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer]);
 
   return null;
 };

@@ -1,40 +1,35 @@
-import { type CSSProperties, type FC } from "react";
-import {
-  type Response,
-} from "../utils/responseSerializer.ts";
+import { type CSSProperties, type FC, useCallback } from "react";
+import { type Response } from "../utils/responseSerializer.ts";
 import {
   ControlsContainer,
   FullScreenControl,
-  SigmaContainer,
 } from "@react-sigma/core";
-import "@react-sigma/core/lib/style.css";
 import "@react-sigma/graph-search/lib/style.css";
-import { useBuildMetagraph } from "../utils/metagraphBuilder.ts";
+import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraphBuilder.ts";
 import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
 import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
 import { MetagraphClusters } from "./MetagraphClusters.tsx";
-import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
+import type { Attributes } from "graphology-types";
+import { SigmaGraph } from "./common/SigmaGraph.tsx";
 
 export const Metagraph: FC<{
   response: Response;
   style?: CSSProperties;
 }> = ({ response, style }) => {
   const metagraph = useBuildMetagraph(response);
-  
+
+  const edgeReducer = useCallback((_edge: string, data: Attributes) => {
+    const res = { ...data };
+    res.color = METAGRAPH_RELATION_COLORS.edge;
+    res.labelColor = METAGRAPH_RELATION_COLORS.label;
+    return res;
+  }, []);
+
   return (
-    <SigmaContainer
-      settings={{
-        allowInvalidContainer: true,
-        defaultEdgeType: "arrow",
-        renderEdgeLabels: true,
-        autoRescale: true,
-        autoCenter: true,
-        edgeProgramClasses: {
-          curvedArrow: EdgeCurvedArrowProgram
-        },
-      }}
-      style={style}
+    <SigmaGraph
       graph={metagraph}
+      edgeReducer={edgeReducer}
+      style={style}
     >
       <MetagraphHighlight />
       <ControlsContainer position={"bottom-left"}>
@@ -46,6 +41,6 @@ export const Metagraph: FC<{
       <ControlsContainer position={"top-right"}>
         <MetagraphClusters />
       </ControlsContainer>
-    </SigmaContainer>
+    </SigmaGraph>
   );
 };

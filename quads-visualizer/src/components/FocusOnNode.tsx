@@ -5,14 +5,9 @@ export const FocusOnNode: FC<{ node: string | null; move?: boolean }> = ({
   node,
   move,
 }) => {
-  // Get sigma
   const sigma = useSigma();
-  // Get camera hook
   const { gotoNode } = useCamera();
 
-  /**
-   * When the selected item changes, highlighted the node and center the camera on it.
-   */
   useEffect(() => {
     if (!node) return;
 

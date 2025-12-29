@@ -1,11 +1,11 @@
 import { useRegisterEvents, useSigma } from "@react-sigma/core";
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseCoords, SigmaEventPayload } from "sigma/types";
-import { applyMetagraphNodeColors, createEmptyMetagraphRelations, METAGRAPH_NODE_COLORS, METAGRAPH_RELATION_SUFFIXES, VERSIONED_NODE_PREFIX } from "../utils/metagraphBuilder.ts";
+import { applyMetagraphNodeColors, createEmptyMetagraphRelations, getMetagraphNodeType, resolveTravelTarget, METAGRAPH_NODE_COLORS } from "../utils/metagraphBuilder.ts";
 import { NewNodeModal } from "./NewNodeModal";
 import { RelationInput } from "./RelationInput";
 import { useAppDispatch } from "../state/hooks";
-import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setTravelHoverSelection, type MetagraphNodeType } from "../state/metagraphSlice";
+import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setTravelHoverSelection } from "../state/metagraphSlice";
 import { QueryService } from "../services/QueryService";
 
 type BuilderMode = "createLink" | "createNode" | "travel" | "download" | "save";
@@ -33,79 +33,16 @@ export const MetagraphBuilder: FC = () => {
     }));
   }, [dispatch]);
 
-  const resolveTravelTarget = useCallback((nodeKey: string) => {
-    const graph = sigma.getGraph();
-    if (!graph.hasNode(nodeKey)) {
-      return null;
-    }
-
-    const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
-    const isVersionedNamedGraph = typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX);
-
-    if (!isVersionedNamedGraph) {
-      return null;
-    }
-
-    let linkedGraph: string | undefined;
-    let linkedVersion: string | undefined;
-
-    graph.forEachOutboundEdge(nodeKey, (_edgeKey, attributes, _source, target) => {
-      const relationLabel = typeof attributes?.label === "string" ? attributes.label : "";
-
-      if (!linkedGraph && relationLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization)) {
-        const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
-        linkedGraph = typeof candidate === "string" ? candidate : target;
-      }
-
-      if (!linkedVersion && relationLabel.endsWith(METAGRAPH_RELATION_SUFFIXES.location)) {
-        const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
-        linkedVersion = typeof candidate === "string" ? candidate : target;
-      }
-    });
-
-    if (!linkedGraph && !linkedVersion) {
-      return null;
-    }
-
-    return { linkedGraph, linkedVersion };
-  }, [sigma]);
-
-  const getNodeType = useCallback((nodeKey: string): MetagraphNodeType => {
-    const graph = sigma.getGraph();
-    if (!graph.hasNode(nodeKey)) {
-      return null;
-    }
-
-    const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
-    const isVersionedNamedGraph = typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX);
-
-    if (isVersionedNamedGraph) {
-      return "vng";
-    }
-
-    // Check metagraphRelations to determine if it's a named graph or version
-    const relations = graph.getNodeAttribute(nodeKey, "metagraphRelations") as { specialization: boolean; location: boolean } | undefined;
-    
-    if (relations?.specialization) {
-      return "namedGraph";
-    }
-    
-    if (relations?.location) {
-      return "version";
-    }
-
-    return null;
-  }, [sigma]);
 
   const handleTravelClick = useCallback((nodeKey: string) => {
     if (travelHoverNodeRef.current === nodeKey) {
       return;
     }
 
-    const nodeType = getNodeType(nodeKey);
+    const nodeType = getMetagraphNodeType(sigma.getGraph(), nodeKey);
     
     if (nodeType === "vng") {
-      const target = resolveTravelTarget(nodeKey);
+      const target = resolveTravelTarget(sigma.getGraph(), nodeKey);
       if (!target) {
         travelHoverNodeRef.current = null;
         return;
@@ -123,13 +60,13 @@ export const MetagraphBuilder: FC = () => {
       travelHoverNodeRef.current = nodeKey;
       emitTravelSelection({ version: nodeLabel ?? nodeKey });
     }
-  }, [emitTravelSelection, resolveTravelTarget, getNodeType, sigma]);
+  }, [emitTravelSelection, sigma]);
 
   const handleTravelHover = useCallback((nodeKey: string) => {
-    const nodeType = getNodeType(nodeKey);
+    const nodeType = getMetagraphNodeType(sigma.getGraph(), nodeKey);
     
     if (nodeType === "vng") {
-      const target = resolveTravelTarget(nodeKey);
+      const target = resolveTravelTarget(sigma.getGraph(), nodeKey);
       if (!target) {
         dispatch(setTravelHoverSelection(null));
         return;
@@ -159,7 +96,7 @@ export const MetagraphBuilder: FC = () => {
     } else {
       dispatch(setTravelHoverSelection(null));
     }
-  }, [dispatch, resolveTravelTarget, getNodeType, sigma]);
+  }, [dispatch, sigma]);
 
   const handleTravelLeave = useCallback(() => {
     travelHoverNodeRef.current = null;
@@ -215,7 +152,7 @@ export const MetagraphBuilder: FC = () => {
           return;
         }
 
-        const nodeType = getNodeType(event.node);
+        const nodeType = getMetagraphNodeType(sigma.getGraph(), event.node);
         dispatch(setSelectedMetagraphNodeType(nodeType));
         dispatch(setSelectedMetagraphNode(event.node));
         handleTravelClick(event.node);
@@ -263,7 +200,7 @@ export const MetagraphBuilder: FC = () => {
         setPendingNodeCoord(coord);
       },
     });
-  }, [registerEvents, sigma, mode, dragSourceNode, handleTravelHover, handleTravelClick, handleTravelLeave, getNodeType, dispatch]);
+  }, [registerEvents, sigma, mode, dragSourceNode, handleTravelHover, handleTravelClick, handleTravelLeave, dispatch]);
 
   useEffect(() => {
     const graph = sigma.getGraph();
