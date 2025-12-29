@@ -41,7 +41,7 @@ export const VersionedGraph: FC<{
   } = useVersionedGraphLogic(response, metagraph);
 
   const { focusNodes, selectedNodes } = useAppSelector((state) => state.versionedGraph);
-  const externalSelection = useAppSelector((state) => state.metagraph.externalSelection);
+  const { externalSelection, selectedMetagraphNodeType } = useAppSelector((state) => state.metagraph);
 
   useVersionedGraphNavigation(distinctGraph, distinctVersion, selectedGraph, selectedVersion);
 
@@ -125,7 +125,7 @@ export const VersionedGraph: FC<{
         <SigmaSearch />
       </ControlsContainer>
       {
-        !isMultiView ? (
+        selectedMetagraphNodeType === "vng" ? (
           <ControlsContainer position={"bottom-left"}>
             <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
           </ControlsContainer>
