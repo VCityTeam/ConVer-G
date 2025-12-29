@@ -240,3 +240,29 @@ export const mergeGraphs = (graphs: AbstractGraph[]): Graph => {
 
   return mergedGraph;
 }
+
+export const mergeGraphsSeparately = (graphs: Array<{ graph: string; version: string; data: AbstractGraph }>, yOffset: number = 500): Graph => {
+  const mergedGraph = new Graph({ multi: true, type: 'directed' });
+
+  graphs.forEach((item, index) => {
+    const { graph: graphKey, version, data } = item;
+    const prefix = `${graphKey}:::${version}:::`;
+
+    data.forEachNode((node, attributes) => {
+      const newNodeId = `${prefix}${node}`;
+      mergedGraph.addNode(newNodeId, {
+        ...attributes,
+        y: (attributes.y || 0) + index * yOffset,
+      });
+    });
+
+    data.forEachEdge((edge, attributes, source, target) => {
+      const newEdgeId = `${prefix}${edge}`;
+      const newSourceId = `${prefix}${source}`;
+      const newTargetId = `${prefix}${target}`;
+      mergedGraph.addEdgeWithKey(newEdgeId, newSourceId, newTargetId, { ...attributes });
+    });
+  });
+
+  return mergedGraph;
+}

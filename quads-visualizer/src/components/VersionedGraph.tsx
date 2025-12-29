@@ -14,13 +14,29 @@ import {
   setSelectedVersion,
 } from "../state/versionedGraphSlice";
 import { type Response } from "../utils/responseSerializer.ts";
-import { FocusOnNode } from "./FocusOnNode.tsx";
+import { FocusOnNodes } from "./FocusOnNode.tsx";
 import { GraphInfoDisplay } from "./GraphInfoDisplay.tsx";
 import { SigmaGraph } from "./common/SigmaGraph.tsx";
+import { GraphLabels } from "./common/GraphLabels.tsx";
 import { useVersionedGraphLogic } from "../hooks/useVersionedGraphLogic.ts";
 import { useVersionedGraphNavigation } from "../hooks/useVersionedGraphNavigation.ts";
 import { useSigmaSearch } from "../hooks/useSigmaSearch.ts";
 import { MergedGraphsToggle } from "./MergedGraphsToggle.tsx";
+import { useMemo } from "react";
+import { mergeGraphsSeparately } from "../utils/versionedGraphBuilder.ts";
+
+const SigmaSearch: FC = () => {
+  const { selectedNodes, onFocus, onChange, postSearchResult } = useSigmaSearch();
+  return (
+    <GraphSearch
+      type="nodes"
+      value={selectedNodes.length > 0 ? { type: "nodes", id: selectedNodes[0] } : null}
+      onFocus={onFocus}
+      onChange={onChange}
+      postSearchResult={postSearchResult}
+    />
+  );
+};
 
 export const VersionedGraph: FC<{
   response: Response;
@@ -38,11 +54,10 @@ export const VersionedGraph: FC<{
     separateGraphs,
   } = useVersionedGraphLogic(response, metagraph);
 
-  const { focusNode } = useAppSelector((state) => state.versionedGraph);
+  const { focusNodes, selectedNodes } = useAppSelector((state) => state.versionedGraph);
   const externalSelection = useAppSelector((state) => state.metagraph.externalSelection);
 
   useVersionedGraphNavigation(distinctGraph, distinctVersion, selectedGraph, selectedVersion);
-  const { selectedNode, onFocus, onChange, postSearchResult } = useSigmaSearch();
 
   useEffect(() => {
     if (!selectedGraph && distinctGraph.length > 0) {
@@ -93,62 +108,41 @@ export const VersionedGraph: FC<{
     return res;
   }, []);
 
-  if (separateGraphs && separateGraphs.length > 0) {
-    return (
-      <div style={{ ...style, display: "flex", flexDirection: "column", gap: "4px", overflow: "auto", position: "relative" }}>
-        {separateGraphs.map(({ graph: graphKey, version, data }) => (
-          <div 
-            key={`${graphKey}-${version}`} 
-            style={{ 
-              flex: 1, 
-              minHeight: "300px", 
-              position: "relative",
-              border: "1px solid #e0e0e0",
-              borderRadius: "4px",
-            }}
-          >
-            <SigmaGraph
-              graph={data}
-              edgeReducer={edgeReducer}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <ControlsContainer position={"bottom-left"}>
-                <GraphInfoDisplay graph={graphKey} version={version} />
-              </ControlsContainer>
-            </SigmaGraph>
-          </div>
-        ))}
-        <div style={{ position: "sticky", bottom: 8, alignSelf: "flex-end", zIndex: 10 }}>
-          <MergedGraphsToggle enabled={mergedGraphsEnabled} />
-        </div>
-      </div>
-    );
-  }
+  const Y_OFFSET = 75;
+
+  const multiViewGraph = useMemo(() => {
+    if (separateGraphs && separateGraphs.length > 0) {
+      return mergeGraphsSeparately(separateGraphs, Y_OFFSET);
+    }
+    return null;
+  }, [separateGraphs]);
+
+  const isMultiView = separateGraphs && separateGraphs.length > 0 && multiViewGraph;
+  const graphToDisplay = isMultiView ? multiViewGraph : displayedGraph;
 
   return (
     <SigmaGraph
-      graph={displayedGraph}
+      graph={graphToDisplay}
       edgeReducer={edgeReducer}
-      style={style}
+      style={isMultiView ? undefined : style}
     >
-      <FocusOnNode node={focusNode ?? selectedNode} move={!focusNode} />
+      {
+        isMultiView ? (
+          <GraphLabels separateGraphs={separateGraphs} yOffset={Y_OFFSET} />
+        ) : null
+      }
+      <FocusOnNodes nodes={focusNodes.length > 0 ? focusNodes : selectedNodes} move={focusNodes.length === 0}/>
       <ControlsContainer position={"top-right"}>
-        <FullScreenControl />
+        <FullScreenControl/>
       </ControlsContainer>
       <ControlsContainer position={"top-left"}>
-        <GraphSearch
-          type="nodes"
-          value={selectedNode ? { type: "nodes", id: selectedNode } : null}
-          onFocus={onFocus}
-          onChange={onChange}
-          postSearchResult={postSearchResult}
-        />
+        <SigmaSearch />
       </ControlsContainer>
       <ControlsContainer position={"bottom-left"}>
-        <GraphInfoDisplay graph={selectedGraph} version={selectedVersion} />
+        <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
       </ControlsContainer>
       <ControlsContainer position={"bottom-right"}>
-        <MergedGraphsToggle enabled={mergedGraphsEnabled} />
+        <MergedGraphsToggle enabled={mergedGraphsEnabled}/>
       </ControlsContainer>
     </SigmaGraph>
   );
