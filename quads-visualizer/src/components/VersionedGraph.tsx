@@ -1,6 +1,5 @@
 import { type CSSProperties, type FC, useEffect, useCallback } from "react";
 import type { Attributes } from "graphology-types";
-import { GraphSearch } from "@react-sigma/graph-search";
 import {
   ControlsContainer,
   FullScreenControl,
@@ -20,23 +19,10 @@ import { SigmaGraph } from "./common/SigmaGraph.tsx";
 import { GraphLabels } from "./common/GraphLabels.tsx";
 import { useVersionedGraphLogic } from "../hooks/useVersionedGraphLogic.ts";
 import { useVersionedGraphNavigation } from "../hooks/useVersionedGraphNavigation.ts";
-import { useSigmaSearch } from "../hooks/useSigmaSearch.ts";
 import { MergedGraphsToggle } from "./MergedGraphsToggle.tsx";
 import { useMemo } from "react";
 import { mergeGraphsSeparately } from "../utils/versionedGraphBuilder.ts";
-
-const SigmaSearch: FC = () => {
-  const { selectedNodes, onFocus, onChange, postSearchResult } = useSigmaSearch();
-  return (
-    <GraphSearch
-      type="nodes"
-      value={selectedNodes.length > 0 ? { type: "nodes", id: selectedNodes[0] } : null}
-      onFocus={onFocus}
-      onChange={onChange}
-      postSearchResult={postSearchResult}
-    />
-  );
-};
+import { SigmaSearch } from "./common/SigmaSearch.tsx";
 
 export const VersionedGraph: FC<{
   response: Response;
@@ -124,7 +110,7 @@ export const VersionedGraph: FC<{
     <SigmaGraph
       graph={graphToDisplay}
       edgeReducer={edgeReducer}
-      style={isMultiView ? undefined : style}
+      style={style}
     >
       {
         isMultiView ? (
@@ -138,9 +124,13 @@ export const VersionedGraph: FC<{
       <ControlsContainer position={"top-left"}>
         <SigmaSearch />
       </ControlsContainer>
-      <ControlsContainer position={"bottom-left"}>
-        <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
-      </ControlsContainer>
+      {
+        !isMultiView ? (
+          <ControlsContainer position={"bottom-left"}>
+            <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
+          </ControlsContainer>
+        ) : null
+      }
       <ControlsContainer position={"bottom-right"}>
         <MergedGraphsToggle enabled={mergedGraphsEnabled}/>
       </ControlsContainer>
