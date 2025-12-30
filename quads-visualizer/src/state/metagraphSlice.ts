@@ -19,7 +19,7 @@ export type CurrentView = {
   version: string;
 };
 
-export type MetagraphNodeType = "vng" | "namedGraph" | "version" | null;
+export type MetagraphNodeType = "vng" | "namedGraph" | "version";
 
 export type MetagraphState = {
   externalSelection: VersionedGraphExternalSelection | null;
@@ -33,7 +33,7 @@ const initialState: MetagraphState = {
   externalSelection: null,
   travelHoverSelection: null,
   currentView: null,
-  selectedMetagraphNodeType: null,
+  selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
 };
 

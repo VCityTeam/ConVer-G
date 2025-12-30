@@ -124,15 +124,14 @@ export const VersionedGraph: FC<{
       <ControlsContainer position={"top-left"}>
         <SigmaSearch />
       </ControlsContainer>
+      <ControlsContainer position={"bottom-left"}>
       {
         selectedMetagraphNodeType === "vng" ? (
-          <ControlsContainer position={"bottom-left"}>
-            <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
-          </ControlsContainer>
-        ) : null
+          <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
+        ) : (
+          <MergedGraphsToggle enabled={mergedGraphsEnabled}/>
+        )
       }
-      <ControlsContainer position={"bottom-right"}>
-        <MergedGraphsToggle enabled={mergedGraphsEnabled}/>
       </ControlsContainer>
     </SigmaGraph>
   );

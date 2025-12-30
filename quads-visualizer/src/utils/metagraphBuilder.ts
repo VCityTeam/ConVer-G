@@ -100,8 +100,6 @@ export const applyMetagraphNodeColors = (graph: AbstractGraph, showHidden: boole
 };
 
 export const getMetagraphNodeType = (graph: AbstractGraph, nodeKey: string): MetagraphNodeType => {
-    if (!graph.hasNode(nodeKey)) return null;
-
     const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
     if (typeof nodeLabel === "string" && nodeLabel.startsWith(VERSIONED_NODE_PREFIX)) {
         return "vng";
@@ -111,7 +109,7 @@ export const getMetagraphNodeType = (graph: AbstractGraph, nodeKey: string): Met
     if (relations?.specialization) return "namedGraph";
     if (relations?.location) return "version";
 
-    return null;
+    return "vng";
 };
 
 export const resolveTravelTarget = (graph: AbstractGraph, nodeKey: string) => {
