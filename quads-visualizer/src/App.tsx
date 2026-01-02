@@ -3,6 +3,8 @@ import { VersionedGraph } from "./components/VersionedGraph.tsx";
 import { type Response } from "./utils/responseSerializer.ts";
 import { Metagraph } from "./components/Metagraph.tsx";
 import { QueryService } from "./services/QueryService.ts";
+import { SparqlQuery } from "./components/SparqlQuery.tsx";
+import "./App.css";
 
 export const App: FC = () => {
   const [metagraph, setMetagraph] = useState<Response | null>(null);
@@ -42,6 +44,7 @@ export const App: FC = () => {
       <div className="graph-panel">
         {data ? <VersionedGraph response={data} metagraph={metagraph} style={{ height: "100%" }} /> : "Loading..."}
       </div>
+      <SparqlQuery />
     </div>
   );
 };

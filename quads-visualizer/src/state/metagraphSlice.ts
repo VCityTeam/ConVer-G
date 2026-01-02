@@ -27,6 +27,7 @@ export type MetagraphState = {
   currentView: CurrentView | null;
   selectedMetagraphNodeType: MetagraphNodeType;
   selectedMetagraphNode: string | null;
+  highlightedMetagraphNode: string | null;
 };
 
 const initialState: MetagraphState = {
@@ -35,6 +36,7 @@ const initialState: MetagraphState = {
   currentView: null,
   selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
+  highlightedMetagraphNode: null,
 };
 
 const metagraphSlice = createSlice({
@@ -52,12 +54,17 @@ const metagraphSlice = createSlice({
     },
     setSelectedMetagraphNodeType: (state, action: PayloadAction<MetagraphNodeType>) => {
       state.selectedMetagraphNodeType = action.payload;
+      state.highlightedMetagraphNode = null;
     },
     setSelectedMetagraphNode: (state, action: PayloadAction<string | null>) => {
       state.selectedMetagraphNode = action.payload;
+      state.highlightedMetagraphNode = null;
+    },
+    setHighlightedMetagraphNode: (state, action: PayloadAction<string | null>) => {
+      state.highlightedMetagraphNode = action.payload;
     },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode } = metagraphSlice.actions;
+export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setHighlightedMetagraphNode } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

@@ -16,6 +16,8 @@
     "@reduxjs/toolkit": "^2.11.1",
     "@sigma/edge-curve": "^3.1.0",
     "@sigma/node-image": "^3.0.0",
+    "@triply/yasgui": "^4.2.28",
+    "distinct-colors": "^3.0.0",
     "graphology": "^0.26.0",
     "graphology-types": "^0.24.8",
     "react": "^19.1.0",

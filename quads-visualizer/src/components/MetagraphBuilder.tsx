@@ -21,7 +21,7 @@ export const MetagraphBuilder: FC = () => {
   const [nodeNameError, setNodeNameError] = useState<string | null>(null);
   const [mode, setMode] = useState<BuilderMode>();
   const [dragSourceNode, setDragSourceNode] = useState<string | null>(null);
-  const highlightedNodesRef = useRef<string[]>([]);
+  const selectedNodesRef = useRef<string[]>([]);
   const dragCompletionRef = useRef(false);
   const travelHoverNodeRef = useRef<string | null>(null);
 
@@ -204,24 +204,24 @@ export const MetagraphBuilder: FC = () => {
 
   useEffect(() => {
     const graph = sigma.getGraph();
-    const nodesToHighlight = mode === "createLink"
+    const nodesToSelect = mode === "createLink"
       ? [sourceNode, targetNode].filter((node): node is string => Boolean(node))
       : [];
-    const previousNodes = highlightedNodesRef.current;
+    const previousNodes = selectedNodesRef.current;
 
     previousNodes.forEach((node) => {
-      if (!nodesToHighlight.includes(node) && graph.hasNode(node)) {
+      if (!nodesToSelect.includes(node) && graph.hasNode(node)) {
         graph.setNodeAttribute(node, "highlighted", false);
       }
     });
 
-    nodesToHighlight.forEach((node) => {
+    nodesToSelect.forEach((node) => {
       if (!previousNodes.includes(node) && graph.hasNode(node)) {
         graph.setNodeAttribute(node, "highlighted", true);
       }
     });
 
-    highlightedNodesRef.current = nodesToHighlight;
+    selectedNodesRef.current = nodesToSelect;
   }, [sigma, mode, sourceNode, targetNode]);
 
   useEffect(() => {
@@ -231,12 +231,12 @@ export const MetagraphBuilder: FC = () => {
 
   useEffect(() => () => {
     const graph = sigma.getGraph();
-    highlightedNodesRef.current.forEach((node) => {
+    selectedNodesRef.current.forEach((node) => {
       if (graph.hasNode(node)) {
         graph.setNodeAttribute(node, "highlighted", false);
       }
     });
-    highlightedNodesRef.current = [];
+    selectedNodesRef.current = [];
   }, [sigma]);
 
   const generateTTL = () => {
