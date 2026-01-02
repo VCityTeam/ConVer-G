@@ -8,6 +8,7 @@ and [VCity project](https://projet.liris.cnrs.fr/vcity/).
 The aim of this POC is to query a set of city version and extract associated knowledge.
 
 > This system has a demonstration and its code source is [available on GitHub](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution).
+> An experiment on knowledge evolution with weather forecasting data is also available [on GitHub](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md).
 
 ## Motivations
 
