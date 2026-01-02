@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type FC, useState } from "react";
+import { createPortal } from 'react-dom';
 import Yasgui from "@triply/yasgui";
 import "@triply/yasgui/build/yasgui.min.css";
 import { QueryService } from "../services/QueryService";
@@ -203,7 +204,7 @@ export const SparqlQuery: FC = () => {
       >
         <img src={sparqlIcon} alt="SPARQL Query" style={{ height: "24px", display: "block" }} />
       </button>
-      {isOpened && (
+      {isOpened && createPortal(
         <div className="sparql-query-overlay">
           <div className="sparql-query-container">
             <div className="sparql-query-header">
@@ -212,7 +213,7 @@ export const SparqlQuery: FC = () => {
             </div>
             <div ref={yasguiRef}/>
           </div>
-        </div>
+        </div>, document.body
       )}
     </>
   );

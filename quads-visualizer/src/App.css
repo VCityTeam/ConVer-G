@@ -51,7 +51,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  /* Sigma Controls z-index is 100 */
+  z-index: 101;
 }
 
 .sparql-query-container {
