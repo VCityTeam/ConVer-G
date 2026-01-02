@@ -5,6 +5,7 @@ import { QueryService } from "../services/QueryService";
 import { store } from "../state/store";
 import { setHighlightedMetagraphNode } from "../state/metagraphSlice";
 import { setFocusNodes } from "../state/versionedGraphSlice";
+import sparqlIcon from "../assets/sparql.png";
 
 export const SparqlQuery: FC = () => {
   const yasguiRef = useRef<HTMLDivElement>(null);
@@ -191,8 +192,16 @@ export const SparqlQuery: FC = () => {
 
   return (
     <>
-      <button className="sparql-button" onClick={() => setIsOpened(true)}>
-        SPARQL Query
+      <button
+        onClick={() => setIsOpened(true)}
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          pointerEvents: "auto",
+          border: "none",
+          cursor: "pointer"
+        }}
+      >
+        <img src={sparqlIcon} alt="SPARQL Query" style={{ height: "24px", display: "block" }} />
       </button>
       {isOpened && (
         <div className="sparql-query-overlay">
