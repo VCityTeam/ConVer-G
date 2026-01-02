@@ -1,5 +1,6 @@
 import { useSigma } from "@react-sigma/core";
 import { useCallback, useEffect, useRef, useState } from "react";
+import distinctColors from "distinct-colors";
 import { METAGRAPH_RELATION_SUFFIXES, VERSIONED_NODE_PREFIX } from "../utils/metagraphBuilder.ts";
 
 type ClusterMode = "none" | "specialization" | "location";
@@ -8,18 +9,17 @@ type ClusterStats = Record<string, { count: number; color: string }>;
 
 type Point = { x: number; y: number };
 
-const CLUSTER_COLORS = [
-  "#1f77b4",
-  "#ff7f0e",
-  "#2ca02c",
-  "#d62728",
-  "#9467bd",
-  "#8c564b",
-  "#e377c2",
-  "#7f7f7f",
-  "#bcbd22",
-  "#17becf",
-];
+const generateClusterColors = (count: number): string[] => {
+  if (count <= 0) return [];
+  const palette = distinctColors({
+    count,
+    chromaMin: 40,
+    chromaMax: 90,
+    lightMin: 35,
+    lightMax: 70,
+  });
+  return palette.map((color) => color.hex());
+};
 
 const UNASSIGNED_KEY = "Unassigned";
 
@@ -152,11 +152,11 @@ export const MetagraphClusters = () => {
   }, [getVersionedNodes, graph]);
 
   const repositionNodes = useCallback(
-    (clusters: Map<string, string[]>, centers: Record<string, Point>) => {
+    (clusters: Map<string, string[]>, centers: Record<string, Point>, colors: string[]) => {
       const clusterEntries = Array.from(clusters.entries());
 
       clusterEntries.forEach(([clusterKey, nodes], index) => {
-        const clusterColor = CLUSTER_COLORS[index % CLUSTER_COLORS.length];
+        const clusterColor = colors[index % colors.length];
         const center = centers[clusterKey] ?? { x: 0, y: 0 };
         const ring = Math.max(nodes.length, 1);
 
@@ -198,7 +198,9 @@ export const MetagraphClusters = () => {
         computeBounds(),
       );
 
-      repositionNodes(clusters, clusterCenters);
+      const clusterColors = generateClusterColors(clusters.size);
+
+      repositionNodes(clusters, clusterCenters, clusterColors);
 
       setStats(
         Object.fromEntries(
@@ -206,7 +208,7 @@ export const MetagraphClusters = () => {
             key,
             {
               count: value.length,
-              color: CLUSTER_COLORS[index % CLUSTER_COLORS.length],
+              color: clusterColors[index % clusterColors.length],
             },
           ]),
         ),

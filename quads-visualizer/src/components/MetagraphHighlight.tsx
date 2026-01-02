@@ -1,19 +1,47 @@
-import { useSigma } from "@react-sigma/core";
+import { useCamera, useSigma } from "@react-sigma/core";
 import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "../state/hooks";
 import { getMetagraphNodeType, resolveTravelTarget } from "../utils/metagraphBuilder";
 
+interface NodeHighlightOptions {
+  targetNode: string;
+  size?: number;
+  highlighted?: boolean;
+  selected?: boolean;
+}
+
 export const MetagraphHighlight = () => {
   const sigma = useSigma();
+  const { gotoNode } = useCamera();
   const graph = sigma.getGraph();
   const currentView = useAppSelector((state) => state.metagraph.currentView);
   const selectedMetagraphNode = useAppSelector((state) => state.metagraph.selectedMetagraphNode);
   const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
+  const highlightedMetagraphNode = useAppSelector((state) => state.metagraph.highlightedMetagraphNode);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   const clearNodeReducer = useCallback(() => {
     sigma.setSetting("nodeReducer", null);
   }, [sigma]);
+
+  const applyNodeReducer = useCallback((options: NodeHighlightOptions) => {
+    const { targetNode, size = 12, highlighted, selected } = options;
+
+    sigma.setSetting("nodeReducer", (node, data) => {
+      const base = { ...data };
+
+      if (node === targetNode) {
+        base.size = size;
+        if (highlighted !== undefined) base.highlighted = highlighted;
+        if (selected !== undefined) base.selected = selected;
+        base.label = hoveredNode === node ? data.label : "";
+      }
+
+      return base;
+    });
+
+    return clearNodeReducer;
+  }, [sigma, hoveredNode, clearNodeReducer]);
 
   useEffect(() => {
     const handleEnter = ({ node }: { node: string }) => setHoveredNode(node);
@@ -29,22 +57,20 @@ export const MetagraphHighlight = () => {
   }, [sigma]);
 
   useEffect(() => {
-    if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
-      sigma.setSetting("nodeReducer", (node, data) => {
-        const base = { ...data };
-
-        if (node === selectedMetagraphNode) {
-          base.size = 12;
-          base.highlighted = true;
-          base.label = hoveredNode === node ? data.label : "";
-        }
-
-        return base;
+    if (highlightedMetagraphNode) {
+      return applyNodeReducer({
+        targetNode: highlightedMetagraphNode,
+        size: 12,
+        highlighted: true,
       });
+    }
 
-      return () => {
-        clearNodeReducer();
-      };
+    if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
+      return applyNodeReducer({
+        targetNode: selectedMetagraphNode,
+        size: 12,
+        selected: true,
+      });
     }
 
     if (!currentView) {
@@ -59,10 +85,8 @@ export const MetagraphHighlight = () => {
       return;
     }
 
-    let versionedGraphNode: string | null = null;
-
     const vngNodes = graph.nodes().filter(node => getMetagraphNodeType(graph, node) === "vng");
-    versionedGraphNode = vngNodes.find(node => {
+    const versionedGraphNode = vngNodes.find(node => {
       const target = resolveTravelTarget(graph, node);
       return target?.linkedGraph === selectedGraph && target?.linkedVersion === selectedVersion;
     }) || null;
@@ -72,21 +96,11 @@ export const MetagraphHighlight = () => {
       return;
     }
 
-    sigma.setSetting("nodeReducer", (node, data) => {
-      const base = { ...data };
-
-      if (node === versionedGraphNode) {
-        base.size = 10;
-        base.label = hoveredNode === node ? data.label : "";
-      }
-
-      return base;
+    return applyNodeReducer({
+      targetNode: versionedGraphNode,
+      size: 10,
     });
-
-    return () => {
-      clearNodeReducer();
-    };
-  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer]);
+  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, highlightedMetagraphNode, gotoNode, applyNodeReducer]);
 
   return null;
 };

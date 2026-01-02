@@ -40,3 +40,130 @@ body {
     flex-direction: column;
   }
 }
+
+.sparql-query-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.sparql-query-container {
+  background: white;
+  width: 75%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.sparql-query-container > div:last-child {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.sparql-query-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sparql-query-header h3 {
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.sparql-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.sparql-button:hover {
+  background-color: #0056b3;
+}
+
+.cell-buttons {
+  display: flex;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.cell-buttons button {
+  padding: 1px 4px;
+  font-size: 10px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.cell-buttons button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Force YASR table to handle overflow */
+.sparql-query-container .yasr table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* YASGUI layout for proper scrolling */
+.sparql-query-container .yasgui {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sparql-query-container .yasgui .tabPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sparql-query-container .yasgui .yasqe {
+  flex-shrink: 0;
+}
+
+.sparql-query-container .yasgui .yasr {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sparql-query-container .yasr .yasr_results {
+  max-height: 100%;
+  overflow: auto;
+}
+
+.sparql-query-container .yasr td {
+  max-width: 300px;
+}
+

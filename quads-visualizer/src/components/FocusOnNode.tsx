@@ -11,7 +11,11 @@ export const FocusOnNodes: FC<{ nodes: string[]; move?: boolean }> = ({
   useEffect(() => {
     if (nodes.length === 0) return;
 
-    nodes.forEach(node => sigma.getGraph().setNodeAttribute(node, "highlighted", true));
+    nodes.forEach(node => {
+      if (sigma.getGraph().hasNode(node)) {
+        sigma.getGraph().setNodeAttribute(node, "highlighted", true);
+      }
+    });
     if (move) gotoNode(nodes[0]);
 
     return () => {

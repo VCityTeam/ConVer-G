@@ -1,7 +1,7 @@
 import { type Response } from "../utils/responseSerializer";
 
 export class QueryService {
-  private static readonly QUERY_ENDPOINT = (window as any).env?.VITE_QUERY_ENDPOINT || import.meta.env.VITE_QUERY_ENDPOINT || "http://localhost:5173/rdf/query";
+  public static readonly QUERY_ENDPOINT = (window as any).env?.VITE_QUERY_ENDPOINT || import.meta.env.VITE_QUERY_ENDPOINT || "http://localhost:5173/rdf/query";
   private static readonly LOADER_ENDPOINT = (window as any).env?.VITE_LOADER_ENDPOINT || import.meta.env.VITE_LOADER_ENDPOINT || "http://localhost:5173/import/metadata";
 
   static async executeQuery(query: string): Promise<Response> {
