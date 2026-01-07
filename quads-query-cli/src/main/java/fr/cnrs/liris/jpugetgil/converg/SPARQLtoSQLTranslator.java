@@ -155,6 +155,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     null,
                     context
             );
+            case OpDatasetNames opDatasetNames -> new DatasetNamesSQLOperator(
+                    opDatasetNames,
+                    context
+            ).buildSQLQuery();
             case OpAssign opAssign -> throw new ARQNotImplemented("TODO: OpAssign not implemented");
             case OpLateral opLateral -> throw new ARQNotImplemented("TODO: OpLateral not implemented");
             case OpTopN opTopN -> throw new ARQNotImplemented("TODO: OpTopN not implemented");
