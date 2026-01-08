@@ -144,13 +144,7 @@ export const resolveTravelTarget = (graph: AbstractGraph, nodeKey: string) => {
 
 export const useBuildMetagraph = (response: Response): AbstractGraph => useMemo(() => {
     const g = Graph.from(responseSerializer(response));
-    const { positions: nodesPositions } = computeNodesPositions(response, {
-        iterations: 30, settings: {
-            barnesHutOptimize: true,
-            barnesHutTheta: 0.1,
-            gravity: 1.5
-        }
-    });
+    const { positions: nodesPositions } = computeNodesPositions(response, { iterations: 100});
 
     g.forEachNode((node) => {
         const [x, y] = nodesPositions.get(node) ?? [Math.random(), Math.random()];
