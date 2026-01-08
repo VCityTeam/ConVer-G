@@ -6,8 +6,10 @@ import { QueryService } from "../services/QueryService";
 import { store } from "../state/store";
 import { setFocusNodes } from "../state/versionedGraphSlice";
 import sparqlIcon from "../assets/sparql.png";
+import { useSigmaSPARQLSearch } from "../hooks/useSigmaSPARQLSearch";
 
 export const SparqlQuery: FC = () => {
+  const { isValueInGraph, getFocusNodes } = useSigmaSPARQLSearch();
   const yasguiRef = useRef<HTMLDivElement>(null);
   const yasguiInstance = useRef<Yasgui | null>(null);
   const [isOpened, setIsOpened] = useState(false);
@@ -96,15 +98,20 @@ export const SparqlQuery: FC = () => {
               const btnContainer = document.createElement("div");
               btnContainer.className = "cell-buttons";
 
-              const versionedBtn = document.createElement("button");
-              versionedBtn.innerText = "V";
-              versionedBtn.title = "Find in Versioned Graph";
-              versionedBtn.onclick = (e) => {
-                e.stopPropagation();
-                store.dispatch(setFocusNodes([handleTermValue(cellValue)]));
-              };
+              const termValue = handleTermValue(cellValue);
+              
+              // Only show the "V" button if the value exists in the current sigma graph
+              if (isValueInGraph(termValue)) {
+                const versionedBtn = document.createElement("button");
+                versionedBtn.innerText = "🔎";
+                versionedBtn.title = "Display in Versioned Graph";
+                versionedBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  store.dispatch(setFocusNodes(getFocusNodes(termValue)));
+                };
 
-              btnContainer.appendChild(versionedBtn);
+                btnContainer.appendChild(versionedBtn);
+              }
 
               const contentWrapper = cell.querySelector("div");
               if (contentWrapper) {
