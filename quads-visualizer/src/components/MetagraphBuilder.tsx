@@ -104,6 +104,7 @@ export const MetagraphBuilder: FC = () => {
   }, [dispatch]);
 
   const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const [showEditMenu, setShowEditMenu] = useState(false);
 
   const saveOptions = useMemo(() => (
     [
@@ -112,10 +113,15 @@ export const MetagraphBuilder: FC = () => {
     ]
   ), []);
 
+  const editOptions = useMemo(() => (
+    [
+      { id: "createLink" as const, label: "🪢 New Link", helper: "Drag-and-drop nodes to link" },
+      { id: "createNode" as const, label: "⭕ New Node", helper: "Click canvas to create a new node" },
+    ]
+  ), []);
+
   const modeOptions = useMemo(() => (
     [
-      { id: "createLink" as const, label: "🪢", helper: "Drag-and-drop nodes to link" },
-      { id: "createNode" as const, label: "⭕", helper: "Click canvas to create a new node" },
       { id: "travel" as const, label: "🏃‍♀️‍➡️", helper: "Change versioned graph" }
     ]
   ), []);
@@ -415,6 +421,7 @@ export const MetagraphBuilder: FC = () => {
               style={{ position: "relative", display: "inline-block", flex: 1 }}
               onMouseEnter={() => setShowSaveMenu(true)}
               onMouseLeave={() => setShowSaveMenu(false)}
+              onClick={() => setShowSaveMenu(!showSaveMenu)}
             >
               <button
                 type="button"
@@ -462,9 +469,74 @@ export const MetagraphBuilder: FC = () => {
                         backgroundColor: "transparent",
                         textAlign: "left",
                         whiteSpace: "nowrap",
+                        zIndex: 2,
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div
+              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              onMouseEnter={() => setShowEditMenu(true)}
+              onMouseLeave={() => setShowEditMenu(false)}
+              onClick={() => setShowEditMenu(!showEditMenu)}
+            >
+              <button
+                type="button"
+                title="Edit options"
+                style={{
+                  width: "100%",
+                  padding: "5px",
+                  cursor: "pointer",
+                  border: (mode === "createLink" || mode === "createNode") ? "2px solid #0077ff" : "1px solid #ccc",
+                  backgroundColor: (mode === "createLink" || mode === "createNode") ? "#e8f2ff" : "#f7f7f7",
+                  borderRadius: "4px",
+                  fontWeight: (mode === "createLink" || mode === "createNode") ? "bold" : "normal",
+                }}
+              >
+                Edit
+              </button>
+              {showEditMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    zIndex: 100,
+                    minWidth: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {editOptions.map(({ id, label, helper }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        handleModeChange(id);
+                        setShowEditMenu(false);
+                      }}
+                      title={helper}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        border: "none",
+                        backgroundColor: id === mode ? "#e8f2ff" : "transparent",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                        fontWeight: id === mode ? "bold" : "normal",
+                      }}
+                      onMouseEnter={(e) => { if (id !== mode) e.currentTarget.style.backgroundColor = "#f0f0f0"; }}
+                      onMouseLeave={(e) => { if (id !== mode) e.currentTarget.style.backgroundColor = "transparent"; }}
                     >
                       {label}
                     </button>
