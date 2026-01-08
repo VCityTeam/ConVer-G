@@ -70,7 +70,11 @@ public class DatasetNamesSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildFrom() {
-        return ("versioned_named_graph t JOIN versioned_quad vq ON t.id_named_graph = vq.id_named_graph AND get_bit(vq.validity, t.index_version - 1) = 1");
+        if (context.condensedMode()) {
+            return ("versioned_named_graph t JOIN versioned_quad vq ON t.id_named_graph = vq.id_named_graph AND get_bit(vq.validity, t.index_version - 1) = 1");
+        } else {
+            return ("versioned_named_graph t JOIN versioned_quad_flat vq ON t.id_versioned_named_graph = vq.id_versioned_named_graph");
+        }
     }
 
     /**
