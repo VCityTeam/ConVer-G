@@ -103,10 +103,17 @@ export const MetagraphBuilder: FC = () => {
     dispatch(setTravelHoverSelection(null));
   }, [dispatch]);
 
+  const [showSaveMenu, setShowSaveMenu] = useState(false);
+
+  const saveOptions = useMemo(() => (
+    [
+      { id: "download" as const, label: "💾 Locally", helper: "Download the graph as TTL" },
+      { id: "save" as const, label: "📤 Online", helper: "Upload the metagraph to ConVer-G" },
+    ]
+  ), []);
+
   const modeOptions = useMemo(() => (
     [
-      { id: "download" as const, label: "💾", helper: "Download the graph as TTL" },
-      { id: "save" as const, label: "📤", helper: "Upload the metagraph to ConVer-G" },
       { id: "createLink" as const, label: "🪢", helper: "Drag-and-drop nodes to link" },
       { id: "createNode" as const, label: "⭕", helper: "Click canvas to create a new node" },
       { id: "travel" as const, label: "🏃‍♀️‍➡️", helper: "Change versioned graph" }
@@ -404,6 +411,67 @@ export const MetagraphBuilder: FC = () => {
       <div style={{ backgroundColor: "white", padding: "10px", display: "flex", flexDirection: "column", gap: "5px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <div className="metagraph-builder-buttons">
+            <div
+              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              onMouseEnter={() => setShowSaveMenu(true)}
+              onMouseLeave={() => setShowSaveMenu(false)}
+            >
+              <button
+                type="button"
+                title="Save options"
+                style={{
+                  width: "100%",
+                  padding: "5px",
+                  cursor: "pointer",
+                  border: "1px solid #ccc",
+                  backgroundColor: "#f7f7f7",
+                  borderRadius: "4px",
+                }}
+              >
+                Save
+              </button>
+              {showSaveMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    zIndex: 100,
+                    minWidth: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {saveOptions.map(({ id, label, helper }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        handleModeChange(id);
+                        setShowSaveMenu(false);
+                      }}
+                      title={helper}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {modeOptions.map(({ id, label, helper }) => (
               <button
                 key={id}
