@@ -1,0 +1,6 @@
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+SELECT * WHERE {
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#unknown> {}
+  ?sub prov:atLocation ?obj .
+}

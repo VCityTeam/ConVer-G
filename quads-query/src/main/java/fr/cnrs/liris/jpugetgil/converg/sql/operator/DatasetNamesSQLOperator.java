@@ -59,9 +59,9 @@ public class DatasetNamesSQLOperator extends SQLOperator {
     @Override
     protected String buildSelect() {
         if (this.graph.isVariable()) {
-            return "t.id_versioned_named_graph as v$" + this.graph.getName();
+            return "vq.id_subject, vq.id_predicate, vq.id_object, t.id_versioned_named_graph as v$" + this.graph.getName();
         } else {
-            return "1"; // accepts when the graph is not a variable and the versioned named graph exists
+            return "vq.id_subject, vq.id_predicate, vq.id_object, t.id_versioned_named_graph";
         }
     }
 
@@ -70,7 +70,7 @@ public class DatasetNamesSQLOperator extends SQLOperator {
      */
     @Override
     protected String buildFrom() {
-        return ("versioned_named_graph t");
+        return ("versioned_named_graph t JOIN versioned_quad vq ON t.id_named_graph = vq.id_named_graph AND get_bit(vq.validity, t.index_version - 1) = 1");
     }
 
     /**
