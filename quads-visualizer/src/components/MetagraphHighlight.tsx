@@ -17,7 +17,6 @@ export const MetagraphHighlight = () => {
   const currentView = useAppSelector((state) => state.metagraph.currentView);
   const selectedMetagraphNode = useAppSelector((state) => state.metagraph.selectedMetagraphNode);
   const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
-  const highlightedMetagraphNode = useAppSelector((state) => state.metagraph.highlightedMetagraphNode);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   const clearNodeReducer = useCallback(() => {
@@ -57,14 +56,6 @@ export const MetagraphHighlight = () => {
   }, [sigma]);
 
   useEffect(() => {
-    if (highlightedMetagraphNode) {
-      return applyNodeReducer({
-        targetNode: highlightedMetagraphNode,
-        size: 12,
-        highlighted: true,
-      });
-    }
-
     if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
       return applyNodeReducer({
         targetNode: selectedMetagraphNode,
@@ -100,7 +91,7 @@ export const MetagraphHighlight = () => {
       targetNode: versionedGraphNode,
       size: 10,
     });
-  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, highlightedMetagraphNode, gotoNode, applyNodeReducer]);
+  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, gotoNode, applyNodeReducer]);
 
   return null;
 };
