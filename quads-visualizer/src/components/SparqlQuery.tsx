@@ -4,11 +4,12 @@ import Yasgui from "@triply/yasgui";
 import "@triply/yasgui/build/yasgui.min.css";
 import { QueryService } from "../services/QueryService";
 import { store } from "../state/store";
-import { setHighlightedMetagraphNode } from "../state/metagraphSlice";
 import { setFocusNodes } from "../state/versionedGraphSlice";
 import sparqlIcon from "../assets/sparql.png";
+import { useSigmaSPARQLSearch } from "../hooks/useSigmaSPARQLSearch";
 
 export const SparqlQuery: FC = () => {
+  const { isValueInGraph, getFocusNodes } = useSigmaSPARQLSearch();
   const yasguiRef = useRef<HTMLDivElement>(null);
   const yasguiInstance = useRef<Yasgui | null>(null);
   const [isOpened, setIsOpened] = useState(false);
@@ -97,24 +98,20 @@ export const SparqlQuery: FC = () => {
               const btnContainer = document.createElement("div");
               btnContainer.className = "cell-buttons";
 
-              const metagraphBtn = document.createElement("button");
-              metagraphBtn.innerText = "M";
-              metagraphBtn.title = "Find in metagraph";
-              metagraphBtn.onclick = (e) => {
-                e.stopPropagation();
-                store.dispatch(setHighlightedMetagraphNode(handleTermValue(cellValue)));
-              };
+              const termValue = handleTermValue(cellValue);
+              
+              // Only show the "V" button if the value exists in the current sigma graph
+              if (isValueInGraph(termValue)) {
+                const versionedBtn = document.createElement("button");
+                versionedBtn.innerText = "🔎";
+                versionedBtn.title = "Display in Versioned Graph";
+                versionedBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  store.dispatch(setFocusNodes(getFocusNodes(termValue)));
+                };
 
-              const versionedBtn = document.createElement("button");
-              versionedBtn.innerText = "V";
-              versionedBtn.title = "Find in Versioned Graph";
-              versionedBtn.onclick = (e) => {
-                e.stopPropagation();
-                store.dispatch(setFocusNodes([handleTermValue(cellValue)]));
-              };
-
-              btnContainer.appendChild(metagraphBtn);
-              btnContainer.appendChild(versionedBtn);
+                btnContainer.appendChild(versionedBtn);
+              }
 
               const contentWrapper = cell.querySelector("div");
               if (contentWrapper) {

@@ -51,7 +51,7 @@ const getNode = (
       x: Math.random(),
       color: "#6c3e81",
       y: Math.random(),
-      size: 5,
+      size: 4,
     },
   };
 };
@@ -111,7 +111,7 @@ export const responseSerializer = (response: Response): SerializedGraph => {
       target: binding.object.value,
       attributes: {
         label: binding.predicate.value,
-        size: 4,
+        size: 2,
         type: count > 0 ? "curvedArrow" : "arrow",
       },
     });

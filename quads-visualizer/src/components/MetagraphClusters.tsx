@@ -122,7 +122,7 @@ export const MetagraphClusters = () => {
     [],
   );
 
-  const computeBounds = useCallback((): { center: Point; radius: number } => {
+  const computeBounds = useCallback((clusterCount: number = 1): { center: Point; radius: number } => {
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
@@ -144,7 +144,10 @@ export const MetagraphClusters = () => {
 
     const width = Math.max(maxX - minX, 1);
     const height = Math.max(maxY - minY, 1);
-    const radius = Math.max(width, height) * 0.65 + 40;
+    // Scale radius based on cluster count: more clusters need larger radius to avoid overlap
+    const baseRadius = Math.max(width, height) * 0.65 + 40;
+    const clusterScaleFactor = clusterCount > 4 ? 1 + (clusterCount - 4) * 0.15 : 1;
+    const radius = baseRadius * clusterScaleFactor;
     return {
       center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
       radius,
@@ -195,7 +198,7 @@ export const MetagraphClusters = () => {
 
       const clusterCenters = computeClusterCenters(
         Array.from(clusters.keys()),
-        computeBounds(),
+        computeBounds(clusters.size),
       );
 
       const clusterColors = generateClusterColors(clusters.size);
