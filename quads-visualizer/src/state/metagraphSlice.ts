@@ -27,6 +27,8 @@ export type MetagraphState = {
   currentView: CurrentView | null;
   selectedMetagraphNodeType: MetagraphNodeType;
   selectedMetagraphNode: string | null;
+  showClusters: boolean;
+  focusMode: boolean;
 };
 
 const initialState: MetagraphState = {
@@ -35,6 +37,8 @@ const initialState: MetagraphState = {
   currentView: null,
   selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
+  showClusters: false,
+  focusMode: false,
 };
 
 const metagraphSlice = createSlice({
@@ -56,8 +60,14 @@ const metagraphSlice = createSlice({
     setSelectedMetagraphNode: (state, action: PayloadAction<string | null>) => {
       state.selectedMetagraphNode = action.payload;
     },
+    setShowClusters: (state, action: PayloadAction<boolean>) => {
+      state.showClusters = action.payload;
+    },
+    setFocusMode: (state, action: PayloadAction<boolean>) => {
+      state.focusMode = action.payload;
+    },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode } = metagraphSlice.actions;
+export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

@@ -27,7 +27,6 @@ export const MetagraphClusters = () => {
   const sigma = useSigma();
   const graph = sigma.getGraph();
   const [mode, setMode] = useState<ClusterMode>("none");
-  const [focusMode, setFocusMode] = useState(false);
   const [stats, setStats] = useState<ClusterStats>({});
   const originalPositionsRef = useRef(new Map<string, Point>());
   const originalColorsRef = useRef(new Map<string, string>());
@@ -226,7 +225,6 @@ export const MetagraphClusters = () => {
       originalColorsRef.current.clear();
       originalPositionsRef.current.clear();
       setMode("none");
-      setFocusMode(false);
       setStats({});
     }
   }, [graph]);
@@ -234,41 +232,6 @@ export const MetagraphClusters = () => {
   useEffect(() => {
     applyClustering(mode);
   }, [applyClustering, mode]);
-
-  // Focus mode: hide edges that are not specializationOf or atLocation (i.e., hide derivation edges)
-  useEffect(() => {
-    graph.forEachEdge((edgeKey, attributes) => {
-      const label = typeof attributes?.label === "string" ? attributes.label : "";
-      const isSpecialization = label.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization);
-      const isLocation = label.endsWith(METAGRAPH_RELATION_SUFFIXES.location);
-
-      if (focusMode) {
-        // In focus mode, only show specialization and location edges
-        graph.setEdgeAttribute(edgeKey, "hidden", !(isSpecialization || isLocation));
-      } else {
-        // When not in focus mode, restore visibility based on original state
-        // Specialization and location edges are normally hidden
-        graph.setEdgeAttribute(edgeKey, "hidden", isSpecialization || isLocation);
-      }
-    });
-
-    // Hide/show nodes that are not VNGs, named graphs, or versions
-    graph.forEachNode((nodeKey, attributes) => {
-      const label = typeof attributes?.label === "string" ? attributes.label : "";
-      const isVNG = label.startsWith(VERSIONED_NODE_PREFIX);
-      const relations = attributes.metagraphRelations as { specialization?: boolean; location?: boolean } | undefined;
-      const isNamedGraph = relations?.specialization === true;
-      const isVersion = relations?.location === true;
-
-      if (focusMode) {
-        // In focus mode, show VNGs, named graphs, and versions
-        graph.setNodeAttribute(nodeKey, "hidden", !(isVNG || isNamedGraph || isVersion));
-      } else {
-        // When not in focus mode, hide named graphs and versions (restore default)
-        graph.setNodeAttribute(nodeKey, "hidden", isNamedGraph || isVersion);
-      }
-    });
-  }, [focusMode, graph]);
 
   return (
     <div
@@ -284,24 +247,9 @@ export const MetagraphClusters = () => {
     >
       <div style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a" }}>
         Cluster metadata using <a href="https://www.w3.org/TR/prov-o/" target="_blank"
-                                  rel="noopener noreferrer">PROV-O</a>
+          rel="noopener noreferrer">PROV-O</a>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr 1fr", gap: "6px" }}>
-        <button
-          type="button"
-          onClick={() => setFocusMode((current) => !current)}
-          title={focusMode ? "Focus mode ON" : "Focus mode OFF"}
-          style={{
-            padding: "6px 8px",
-            borderRadius: "6px",
-            border: focusMode ? "2px solid #059669" : "1px solid #cbd5e1",
-            background: focusMode ? "#d1fae5" : "#f8fafc",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          {focusMode ? "🎯" : "👁️"}
-        </button>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
         <button
           type="button"
           onClick={() => setMode((current) => (current === "specialization" ? "none" : "specialization"))}
@@ -401,8 +349,8 @@ export const MetagraphClusters = () => {
                         title={key}
                         style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                       >
-                      {key}
-                    </span>
+                        {key}
+                      </span>
                     </div>
                     <span style={{ fontWeight: 700, marginLeft: "8px" }}>{count}</span>
                   </div>

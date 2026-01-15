@@ -23,6 +23,7 @@ import { MergedGraphsToggle } from "./MergedGraphsToggle.tsx";
 import { useMemo } from "react";
 import { mergeGraphsSeparately } from "../utils/versionedGraphBuilder.ts";
 import { SigmaSearch } from "./common/SigmaSearch.tsx";
+import { GridLayoutControls } from "./GridLayoutControls.tsx";
 
 export const VersionedGraph: FC<{
   response: Response;
@@ -40,7 +41,7 @@ export const VersionedGraph: FC<{
     separateGraphs,
   } = useVersionedGraphLogic(response, metagraph);
 
-  const { focusNodes, selectedNodes } = useAppSelector((state) => state.versionedGraph);
+  const { focusNodes, selectedNodes, gridColumns, gridGap } = useAppSelector((state) => state.versionedGraph);
   const { externalSelection, selectedMetagraphNodeType } = useAppSelector((state) => state.metagraph);
 
   useVersionedGraphNavigation(distinctGraph, distinctVersion, selectedGraph, selectedVersion);
@@ -94,14 +95,19 @@ export const VersionedGraph: FC<{
     return res;
   }, []);
 
-  const Y_OFFSET = 75;
+  const Y_OFFSET = gridGap;
+  const X_OFFSET = 300;
 
   const multiViewGraph = useMemo(() => {
     if (separateGraphs && separateGraphs.length > 0) {
-      return mergeGraphsSeparately(separateGraphs, Y_OFFSET);
+      return mergeGraphsSeparately(separateGraphs, {
+        columns: gridColumns,
+        xOffset: X_OFFSET,
+        yOffset: Y_OFFSET,
+      });
     }
     return null;
-  }, [separateGraphs]);
+  }, [separateGraphs, gridColumns, Y_OFFSET]);
 
   const isMultiView = separateGraphs && separateGraphs.length > 0 && multiViewGraph;
   const graphToDisplay = isMultiView ? multiViewGraph : displayedGraph;
@@ -114,24 +120,34 @@ export const VersionedGraph: FC<{
     >
       {
         isMultiView ? (
-          <GraphLabels separateGraphs={separateGraphs} yOffset={Y_OFFSET} />
+          <GraphLabels
+            separateGraphs={separateGraphs}
+            columns={gridColumns}
+            xOffset={X_OFFSET}
+            yOffset={Y_OFFSET}
+          />
         ) : null
       }
-      <FocusOnNodes nodes={focusNodes.length > 0 ? focusNodes : selectedNodes} move={focusNodes.length === 0}/>
-      <ControlsContainer position={"top-right"}>
-        <FullScreenControl/>
+      <FocusOnNodes nodes={focusNodes.length > 0 ? focusNodes : selectedNodes} move={focusNodes.length === 0} />
+      <ControlsContainer position={"bottom-right"}>
+        <FullScreenControl />
       </ControlsContainer>
       <ControlsContainer position={"top-left"}>
         <SigmaSearch />
       </ControlsContainer>
+      {isMultiView && (
+        <ControlsContainer position={"top-right"}>
+          <GridLayoutControls />
+        </ControlsContainer>
+      )}
       <ControlsContainer position={"bottom-left"}>
-      {
-        selectedMetagraphNodeType === "vng" ? (
-          <GraphInfoDisplay graph={selectedGraph} version={selectedVersion}/>
-        ) : (
-          <MergedGraphsToggle enabled={mergedGraphsEnabled}/>
-        )
-      }
+        {
+          selectedMetagraphNodeType === "vng" ? (
+            <GraphInfoDisplay graph={selectedGraph} version={selectedVersion} />
+          ) : (
+            <MergedGraphsToggle enabled={mergedGraphsEnabled} />
+          )
+        }
       </ControlsContainer>
     </SigmaGraph>
   );
