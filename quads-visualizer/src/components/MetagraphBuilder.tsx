@@ -111,8 +111,8 @@ export const MetagraphBuilder: FC = () => {
 
   const saveOptions = useMemo(() => (
     [
-      { id: "download" as const, label: "💾 Locally", helper: "Download the graph as TTL" },
-      { id: "save" as const, label: "📤 Online", helper: "Upload the metagraph to ConVer-G" },
+      { id: "download" as const, label: "💾 Download", helper: "Download the graph as TTL" },
+      { id: "save" as const, label: "📤 Save Online", helper: "Upload the metagraph to ConVer-G" },
     ]
   ), []);
 
@@ -135,6 +135,65 @@ export const MetagraphBuilder: FC = () => {
       { id: "focusMode" as const, label: "Focus Mode", helper: "Show only cluster-related edges and nodes", checked: focusMode },
     ]
   ), [showClusters, focusMode]);
+
+  // Shared dropdown styles
+  const dropdownContainerStyle: React.CSSProperties = {
+    position: "relative",
+    display: "inline-block",
+    flex: 1,
+  };
+
+  const dropdownButtonStyle = (isActive: boolean = false): React.CSSProperties => ({
+    width: "100%",
+    padding: "6px 10px",
+    cursor: "pointer",
+    border: isActive ? "2px solid #0077ff" : "1px solid #d1d5db",
+    backgroundColor: isActive ? "#e8f2ff" : "#fafafa",
+    borderRadius: "6px",
+    fontWeight: isActive ? 600 : 500,
+    fontSize: "13px",
+    color: "#374151",
+    transition: "all 0.15s ease",
+  });
+
+  const dropdownMenuStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    backgroundColor: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: "4px",
+    zIndex: 100,
+    minWidth: "100%",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  };
+
+  const dropdownItemStyle = (isActive: boolean = false): React.CSSProperties => ({
+    padding: "8px 14px",
+    cursor: "pointer",
+    border: "none",
+    backgroundColor: isActive ? "#e8f2ff" : "transparent",
+    textAlign: "left",
+    whiteSpace: "nowrap",
+    fontWeight: isActive ? 600 : 400,
+    fontSize: "13px",
+    color: "#374151",
+    transition: "background-color 0.1s ease",
+  });
+
+  const handleItemHover = (e: React.MouseEvent<HTMLButtonElement>, isActive: boolean = false) => {
+    if (!isActive) {
+      e.currentTarget.style.backgroundColor = "#f3f4f6";
+    }
+  };
+
+  const handleItemLeave = (e: React.MouseEvent<HTMLButtonElement>, isActive: boolean = false) => {
+    if (!isActive) {
+      e.currentTarget.style.backgroundColor = "transparent";
+    }
+  };
 
   useEffect(() => {
     return registerEvents({
@@ -427,42 +486,22 @@ export const MetagraphBuilder: FC = () => {
       <div style={{ backgroundColor: "white", padding: "10px", display: "flex", flexDirection: "column", gap: "5px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <div className="metagraph-builder-buttons">
+            {/* File dropdown */}
             <div
-              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              style={dropdownContainerStyle}
               onMouseEnter={() => setShowSaveMenu(true)}
               onMouseLeave={() => setShowSaveMenu(false)}
               onClick={() => setShowSaveMenu(!showSaveMenu)}
             >
               <button
                 type="button"
-                title="Save options"
-                style={{
-                  width: "100%",
-                  padding: "5px",
-                  cursor: "pointer",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#f7f7f7",
-                  borderRadius: "4px",
-                }}
+                title="File options"
+                style={dropdownButtonStyle(false)}
               >
-                Save
+                File
               </button>
               {showSaveMenu && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    backgroundColor: "white",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    zIndex: 100,
-                    minWidth: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
+                <div style={dropdownMenuStyle}>
                   {saveOptions.map(({ id, label, helper }) => (
                     <button
                       key={id}
@@ -472,17 +511,9 @@ export const MetagraphBuilder: FC = () => {
                         setShowSaveMenu(false);
                       }}
                       title={helper}
-                      style={{
-                        padding: "8px 12px",
-                        cursor: "pointer",
-                        border: "none",
-                        backgroundColor: "transparent",
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        zIndex: 2,
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      style={dropdownItemStyle(false)}
+                      onMouseEnter={(e) => handleItemHover(e, false)}
+                      onMouseLeave={(e) => handleItemLeave(e, false)}
                     >
                       {label}
                     </button>
@@ -490,8 +521,10 @@ export const MetagraphBuilder: FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Edit dropdown */}
             <div
-              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              style={dropdownContainerStyle}
               onMouseEnter={() => setShowEditMenu(true)}
               onMouseLeave={() => setShowEditMenu(false)}
               onClick={() => setShowEditMenu(!showEditMenu)}
@@ -499,97 +532,51 @@ export const MetagraphBuilder: FC = () => {
               <button
                 type="button"
                 title="Edit options"
-                style={{
-                  width: "100%",
-                  padding: "5px",
-                  cursor: "pointer",
-                  border: (mode === "createLink" || mode === "createNode") ? "2px solid #0077ff" : "1px solid #ccc",
-                  backgroundColor: (mode === "createLink" || mode === "createNode") ? "#e8f2ff" : "#f7f7f7",
-                  borderRadius: "4px",
-                  fontWeight: (mode === "createLink" || mode === "createNode") ? "bold" : "normal",
-                }}
+                style={dropdownButtonStyle(mode === "createLink" || mode === "createNode")}
               >
                 Edit
               </button>
               {showEditMenu && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    backgroundColor: "white",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    zIndex: 100,
-                    minWidth: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  {editOptions.map(({ id, label, helper }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        handleModeChange(id);
-                        setShowEditMenu(false);
-                      }}
-                      title={helper}
-                      style={{
-                        padding: "8px 12px",
-                        cursor: "pointer",
-                        border: "none",
-                        backgroundColor: id === mode ? "#e8f2ff" : "transparent",
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        fontWeight: id === mode ? "bold" : "normal",
-                      }}
-                      onMouseEnter={(e) => { if (id !== mode) e.currentTarget.style.backgroundColor = "#f0f0f0"; }}
-                      onMouseLeave={(e) => { if (id !== mode) e.currentTarget.style.backgroundColor = "transparent"; }}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <div style={dropdownMenuStyle}>
+                  {editOptions.map(({ id, label, helper }) => {
+                    const isActive = id === mode;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => {
+                          handleModeChange(id);
+                          setShowEditMenu(false);
+                        }}
+                        title={helper}
+                        style={dropdownItemStyle(isActive)}
+                        onMouseEnter={(e) => handleItemHover(e, isActive)}
+                        onMouseLeave={(e) => handleItemLeave(e, isActive)}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
+
+            {/* View dropdown */}
             <div
-              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              style={dropdownContainerStyle}
               onMouseEnter={() => setShowDisplayMenu(true)}
               onMouseLeave={() => setShowDisplayMenu(false)}
               onClick={() => setShowDisplayMenu(!showDisplayMenu)}
             >
               <button
                 type="button"
-                title="Display options"
-                style={{
-                  width: "100%",
-                  padding: "5px",
-                  cursor: "pointer",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#f7f7f7",
-                  borderRadius: "4px",
-                }}
+                title="View options"
+                style={dropdownButtonStyle(false)}
               >
                 View
               </button>
               {showDisplayMenu && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    backgroundColor: "white",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    zIndex: 100,
-                    minWidth: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
+                <div style={dropdownMenuStyle}>
                   {viewOptions.map(({ id, label, helper, checked }) => (
                     <button
                       key={id}
@@ -603,16 +590,9 @@ export const MetagraphBuilder: FC = () => {
                         setShowDisplayMenu(false);
                       }}
                       title={helper}
-                      style={{
-                        padding: "8px 12px",
-                        cursor: "pointer",
-                        border: "none",
-                        backgroundColor: "transparent",
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      style={dropdownItemStyle(false)}
+                      onMouseEnter={(e) => handleItemHover(e, false)}
+                      onMouseLeave={(e) => handleItemLeave(e, false)}
                     >
                       {checked ? `☑️ ${label}` : `⬜ ${label}`}
                     </button>
@@ -620,25 +600,22 @@ export const MetagraphBuilder: FC = () => {
                 </div>
               )}
             </div>
-            {modeOptions.map(({ id, label, helper }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => handleModeChange(id)}
-                title={helper}
-                style={{
-                  flex: 1,
-                  padding: "5px",
-                  cursor: "pointer",
-                  border: id === mode ? "2px solid #0077ff" : "1px solid #ccc",
-                  backgroundColor: id === mode ? "#e8f2ff" : "#f7f7f7",
-                  borderRadius: "4px",
-                  fontWeight: id === mode ? "bold" : "normal",
-                }}
-              >
-                {label}
-              </button>
-            ))}
+
+            {/* Mode buttons */}
+            {modeOptions.map(({ id, label, helper }) => {
+              const isActive = id === mode;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => handleModeChange(id)}
+                  title={helper}
+                  style={dropdownButtonStyle(isActive)}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
         {
