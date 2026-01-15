@@ -241,18 +241,27 @@ export const mergeGraphs = (graphs: AbstractGraph[]): Graph => {
   return mergedGraph;
 }
 
-export const mergeGraphsSeparately = (graphs: Array<{ graph: string; version: string; data: AbstractGraph }>, yOffset: number = 500): Graph => {
+export const mergeGraphsSeparately = (
+  graphs: Array<{ graph: string; version: string; data: AbstractGraph }>,
+  options: { columns?: number; xOffset?: number; yOffset?: number } = {}
+): Graph => {
+  const { columns = 1, xOffset = 300, yOffset = 75 } = options;
   const mergedGraph = new Graph({ multi: true, type: 'directed' });
 
   graphs.forEach((item, index) => {
     const { graph: graphKey, version, data } = item;
     const prefix = `${graphKey}:::${version}:::`;
 
+    // Calculate grid position
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+
     data.forEachNode((node, attributes) => {
       const newNodeId = `${prefix}${node}`;
       mergedGraph.addNode(newNodeId, {
         ...attributes,
-        y: (attributes.y || 0) + index * yOffset,
+        x: (attributes.x || 0) + col * xOffset,
+        y: (attributes.y || 0) + row * yOffset,
       });
     });
 

@@ -4,10 +4,17 @@ import type { AbstractGraph } from "graphology-types";
 
 export interface GraphLabelsProps {
   separateGraphs: Array<{ graph: string; version: string; data: AbstractGraph }>;
+  columns?: number;
+  xOffset?: number;
   yOffset?: number;
 }
 
-export const GraphLabels: FC<GraphLabelsProps> = ({ separateGraphs, yOffset = 500 }) => {
+export const GraphLabels: FC<GraphLabelsProps> = ({
+  separateGraphs,
+  columns = 1,
+  xOffset = 300,
+  yOffset = 75
+}) => {
   const sigma = useSigma();
   const [labels, setLabels] = useState<Array<{ id: string; label: string; x: number; y: number }>>([]);
 
@@ -17,15 +24,18 @@ export const GraphLabels: FC<GraphLabelsProps> = ({ separateGraphs, yOffset = 50
       const allSameVersion = separateGraphs.every((v) => v.version === separateGraphs[0]?.version);
 
       const newLabels = separateGraphs.map(({ graph, version, data }, index) => {
+        // Calculate grid position
+        const col = index % columns;
+        const row = Math.floor(index / columns);
+
         // We need to find the bounding box or center of this specific graph's nodes
-        // mergeGraphsSeparately uses index * yOffset (default 500) to offset YZ
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
         let count = 0;
 
         data.forEachNode((_, attr) => {
-          const x = attr.x || 0;
-          const y = (attr.y || 0) + index * yOffset;
+          const x = (attr.x || 0) + col * xOffset;
+          const y = (attr.y || 0) + row * yOffset;
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
@@ -64,7 +74,7 @@ export const GraphLabels: FC<GraphLabelsProps> = ({ separateGraphs, yOffset = 50
     return () => {
       sigma.off("afterRender", updateLabels);
     };
-  }, [sigma, separateGraphs, yOffset]);
+  }, [sigma, separateGraphs, columns, xOffset, yOffset]);
 
   return (
     <div
