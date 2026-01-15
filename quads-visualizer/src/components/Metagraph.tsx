@@ -1,4 +1,5 @@
 import { type CSSProperties, type FC, useCallback } from "react";
+import { useAppSelector } from "../state/hooks";
 import { type Response } from "../utils/responseSerializer.ts";
 import {
   ControlsContainer,
@@ -17,6 +18,7 @@ export const Metagraph: FC<{
   style?: CSSProperties;
 }> = ({ response, style }) => {
   const metagraph = useBuildMetagraph(response);
+  const showClusters = useAppSelector((state) => state.metagraph.showClusters);
 
   const edgeReducer = useCallback((_edge: string, data: Attributes) => {
     const res = { ...data };
@@ -38,9 +40,11 @@ export const Metagraph: FC<{
       <ControlsContainer position={"top-left"}>
         <MetagraphBuilder />
       </ControlsContainer>
-      <ControlsContainer position={"top-right"}>
-        <MetagraphClusters />
-      </ControlsContainer>
+      {showClusters && (
+        <ControlsContainer position={"top-right"}>
+          <MetagraphClusters />
+        </ControlsContainer>
+      )}
     </SigmaGraph>
   );
 };

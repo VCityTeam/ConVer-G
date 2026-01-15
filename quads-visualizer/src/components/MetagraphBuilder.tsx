@@ -4,8 +4,8 @@ import type { MouseCoords, SigmaEventPayload } from "sigma/types";
 import { applyMetagraphNodeColors, createEmptyMetagraphRelations, getMetagraphNodeType, resolveTravelTarget, METAGRAPH_NODE_COLORS } from "../utils/metagraphBuilder.ts";
 import { NewNodeModal } from "./NewNodeModal";
 import { RelationInput } from "./RelationInput";
-import { useAppDispatch } from "../state/hooks";
-import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setTravelHoverSelection } from "../state/metagraphSlice";
+import { useAppDispatch, useAppSelector } from "../state/hooks";
+import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setShowClusters, setTravelHoverSelection } from "../state/metagraphSlice";
 import { QueryService } from "../services/QueryService";
 
 type BuilderMode = "createLink" | "createNode" | "travel" | "download" | "save";
@@ -40,7 +40,7 @@ export const MetagraphBuilder: FC = () => {
     }
 
     const nodeType = getMetagraphNodeType(sigma.getGraph(), nodeKey);
-    
+
     if (nodeType === "vng") {
       const target = resolveTravelTarget(sigma.getGraph(), nodeKey);
       if (!target) {
@@ -64,7 +64,7 @@ export const MetagraphBuilder: FC = () => {
 
   const handleTravelHover = useCallback((nodeKey: string) => {
     const nodeType = getMetagraphNodeType(sigma.getGraph(), nodeKey);
-    
+
     if (nodeType === "vng") {
       const target = resolveTravelTarget(sigma.getGraph(), nodeKey);
       if (!target) {
@@ -105,6 +105,8 @@ export const MetagraphBuilder: FC = () => {
 
   const [showSaveMenu, setShowSaveMenu] = useState(false);
   const [showEditMenu, setShowEditMenu] = useState(false);
+  const [showDisplayMenu, setShowDisplayMenu] = useState(false);
+  const showClusters = useAppSelector((state) => state.metagraph.showClusters);
 
   const saveOptions = useMemo(() => (
     [
@@ -541,6 +543,65 @@ export const MetagraphBuilder: FC = () => {
                       {label}
                     </button>
                   ))}
+                </div>
+              )}
+            </div>
+            <div
+              style={{ position: "relative", display: "inline-block", flex: 1 }}
+              onMouseEnter={() => setShowDisplayMenu(true)}
+              onMouseLeave={() => setShowDisplayMenu(false)}
+              onClick={() => setShowDisplayMenu(!showDisplayMenu)}
+            >
+              <button
+                type="button"
+                title="Display options"
+                style={{
+                  width: "100%",
+                  padding: "5px",
+                  cursor: "pointer",
+                  border: "1px solid #ccc",
+                  backgroundColor: "#f7f7f7",
+                  borderRadius: "4px",
+                }}
+              >
+                View
+              </button>
+              {showDisplayMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    backgroundColor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    zIndex: 100,
+                    minWidth: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      dispatch(setShowClusters(!showClusters));
+                      setShowDisplayMenu(false);
+                    }}
+                    title={showClusters ? "Hide cluster visualization" : "Show cluster visualization"}
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      border: "none",
+                      backgroundColor: "transparent",
+                      textAlign: "left",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                  >
+                    {showClusters ? "☑️ Show Clusters" : "⬜ Show Clusters"}
+                  </button>
                 </div>
               )}
             </div>
