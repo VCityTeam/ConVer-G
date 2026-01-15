@@ -10,6 +10,7 @@ import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraph
 import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
 import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
 import { MetagraphClusters } from "./MetagraphClusters.tsx";
+import { MetagraphFocusMode } from "./MetagraphFocusMode.tsx";
 import type { Attributes } from "graphology-types";
 import { SigmaGraph } from "./common/SigmaGraph.tsx";
 
@@ -34,6 +35,7 @@ export const Metagraph: FC<{
       style={style}
     >
       <MetagraphHighlight />
+      <MetagraphFocusMode />
       <ControlsContainer position={"bottom-left"}>
         <FullScreenControl />
       </ControlsContainer>

@@ -5,7 +5,7 @@ import { applyMetagraphNodeColors, createEmptyMetagraphRelations, getMetagraphNo
 import { NewNodeModal } from "./NewNodeModal";
 import { RelationInput } from "./RelationInput";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { setExternalSelection, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setShowClusters, setTravelHoverSelection } from "../state/metagraphSlice";
+import { setExternalSelection, setFocusMode, setSelectedMetagraphNode, setSelectedMetagraphNodeType, setShowClusters, setTravelHoverSelection } from "../state/metagraphSlice";
 import { QueryService } from "../services/QueryService";
 
 type BuilderMode = "createLink" | "createNode" | "travel" | "download" | "save";
@@ -107,6 +107,7 @@ export const MetagraphBuilder: FC = () => {
   const [showEditMenu, setShowEditMenu] = useState(false);
   const [showDisplayMenu, setShowDisplayMenu] = useState(false);
   const showClusters = useAppSelector((state) => state.metagraph.showClusters);
+  const focusMode = useAppSelector((state) => state.metagraph.focusMode);
 
   const saveOptions = useMemo(() => (
     [
@@ -127,6 +128,13 @@ export const MetagraphBuilder: FC = () => {
       { id: "travel" as const, label: "🏃‍♀️‍➡️", helper: "Change versioned graph" }
     ]
   ), []);
+
+  const viewOptions = useMemo(() => (
+    [
+      { id: "showClusters" as const, label: "Show Clusters", helper: "Toggle cluster panel visibility", checked: showClusters },
+      { id: "focusMode" as const, label: "Focus Mode", helper: "Show only cluster-related edges and nodes", checked: focusMode },
+    ]
+  ), [showClusters, focusMode]);
 
   useEffect(() => {
     return registerEvents({
@@ -582,26 +590,33 @@ export const MetagraphBuilder: FC = () => {
                     flexDirection: "column",
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      dispatch(setShowClusters(!showClusters));
-                      setShowDisplayMenu(false);
-                    }}
-                    title={showClusters ? "Hide cluster visualization" : "Show cluster visualization"}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      border: "none",
-                      backgroundColor: "transparent",
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    {showClusters ? "☑️ Show Clusters" : "⬜ Show Clusters"}
-                  </button>
+                  {viewOptions.map(({ id, label, helper, checked }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        if (id === "showClusters") {
+                          dispatch(setShowClusters(!checked));
+                        } else if (id === "focusMode") {
+                          dispatch(setFocusMode(!checked));
+                        }
+                        setShowDisplayMenu(false);
+                      }}
+                      title={helper}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      {checked ? `☑️ ${label}` : `⬜ ${label}`}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
