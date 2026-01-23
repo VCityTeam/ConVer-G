@@ -1,5 +1,9 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+export type ClusterMode = "none" | "specialization" | "location";
+
+export type ClusterStats = Record<string, { count: number; color: string }>;
+
 export type VersionedGraphExternalSelection = {
   origin: "travel";
   graph?: string;
@@ -29,6 +33,8 @@ export type MetagraphState = {
   selectedMetagraphNode: string | null;
   showClusters: boolean;
   focusMode: boolean;
+  clusterMode: ClusterMode;
+  clusterStats: ClusterStats;
 };
 
 const initialState: MetagraphState = {
@@ -37,8 +43,10 @@ const initialState: MetagraphState = {
   currentView: null,
   selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
-  showClusters: false,
+  showClusters: true,
   focusMode: false,
+  clusterMode: "location",
+  clusterStats: {},
 };
 
 const metagraphSlice = createSlice({
@@ -66,8 +74,14 @@ const metagraphSlice = createSlice({
     setFocusMode: (state, action: PayloadAction<boolean>) => {
       state.focusMode = action.payload;
     },
+    setClusterMode: (state, action: PayloadAction<ClusterMode>) => {
+      state.clusterMode = action.payload;
+    },
+    setClusterStats: (state, action: PayloadAction<ClusterStats>) => {
+      state.clusterStats = action.payload;
+    },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode } = metagraphSlice.actions;
+export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

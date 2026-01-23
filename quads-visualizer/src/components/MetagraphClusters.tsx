@@ -1,11 +1,9 @@
 import { useSigma } from "@react-sigma/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import distinctColors from "distinct-colors";
 import { METAGRAPH_RELATION_SUFFIXES, VERSIONED_NODE_PREFIX } from "../utils/metagraphBuilder.ts";
-
-type ClusterMode = "none" | "specialization" | "location";
-
-type ClusterStats = Record<string, { count: number; color: string }>;
+import { useAppDispatch, useAppSelector } from "../state/hooks.ts";
+import { setClusterMode, setClusterStats, type ClusterMode } from "../state/metagraphSlice.ts";
 
 type Point = { x: number; y: number };
 
@@ -26,40 +24,34 @@ const UNASSIGNED_KEY = "Unassigned";
 export const MetagraphClusters = () => {
   const sigma = useSigma();
   const graph = sigma.getGraph();
-  const [mode, setMode] = useState<ClusterMode>("none");
-  const [stats, setStats] = useState<ClusterStats>({});
+  const dispatch = useAppDispatch();
+  const mode = useAppSelector((state) => state.metagraph.clusterMode);
+  const stats = useAppSelector((state) => state.metagraph.clusterStats);
   const originalPositionsRef = useRef(new Map<string, Point>());
   const originalColorsRef = useRef(new Map<string, string>());
-  const previousGraphRef = useRef(graph);
 
-  const getVersionedNodes = useCallback(
-    (): string[] =>
-      graph
-        .nodes()
-        .filter((node) => {
-          const isHidden = graph.getNodeAttribute(node, "hidden") === true;
-          const label = graph.getNodeAttribute(node, "label") as string | undefined;
-          return !isHidden && typeof label === "string" && label.startsWith(VERSIONED_NODE_PREFIX);
-        }),
-    [graph],
-  );
+  const getVersionedNodes = useCallback((): string[] =>
+    graph
+      .nodes()
+      .filter((node) => {
+        const isHidden = graph.getNodeAttribute(node, "hidden") === true;
+        const label = graph.getNodeAttribute(node, "label") as string | undefined;
+        return !isHidden && typeof label === "string" && label.startsWith(VERSIONED_NODE_PREFIX);
+      }), [graph]);
 
-  const rememberBaselines = useCallback(
-    (nodes: string[]) => {
-      nodes.forEach((node) => {
-        if (!originalPositionsRef.current.has(node)) {
-          originalPositionsRef.current.set(node, {
-            x: graph.getNodeAttribute(node, "x"),
-            y: graph.getNodeAttribute(node, "y"),
-          });
-        }
-        if (!originalColorsRef.current.has(node)) {
-          originalColorsRef.current.set(node, graph.getNodeAttribute(node, "color"));
-        }
-      });
-    },
-    [graph],
-  );
+  const rememberBaselines = useCallback((nodes: string[]) => {
+    nodes.forEach((node) => {
+      if (!originalPositionsRef.current.has(node)) {
+        originalPositionsRef.current.set(node, {
+          x: graph.getNodeAttribute(node, "x"),
+          y: graph.getNodeAttribute(node, "y"),
+        });
+      }
+      if (!originalColorsRef.current.has(node)) {
+        originalColorsRef.current.set(node, graph.getNodeAttribute(node, "color"));
+      }
+    });
+  }, [graph]);
 
   const restoreBaseline = useCallback(() => {
     getVersionedNodes().forEach((node) => {
@@ -73,53 +65,48 @@ export const MetagraphClusters = () => {
         graph.setNodeAttribute(node, "color", baseColor);
       }
     });
-    setStats({});
-  }, [getVersionedNodes, graph]);
 
-  const getClusterKey = useCallback(
-    (node: string, selectedMode: ClusterMode): string => {
-      if (selectedMode === "none") return UNASSIGNED_KEY;
+    dispatch(setClusterStats({}));
+  }, [dispatch, getVersionedNodes, graph]);
 
-      let found: string | null = null;
-      graph.forEachOutboundEdge(node, (_edgeKey, attributes, _source, target) => {
-        const label = typeof attributes?.label === "string" ? attributes.label : "";
+  const getClusterKey = useCallback((node: string, selectedMode: ClusterMode): string => {
+    if (selectedMode === "none") return UNASSIGNED_KEY;
 
-        if (!found && selectedMode === "specialization" && label.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization)) {
-          const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
-          found = candidate ?? target;
-        }
+    let found: string | null = null;
+    graph.forEachOutboundEdge(node, (_edgeKey, attributes, _source, target) => {
+      const label = typeof attributes?.label === "string" ? attributes.label : "";
 
-        if (!found && selectedMode === "location" && label.endsWith(METAGRAPH_RELATION_SUFFIXES.location)) {
-          const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
-          found = candidate ?? target;
-        }
-      });
+      if (!found && selectedMode === "specialization" && label.endsWith(METAGRAPH_RELATION_SUFFIXES.specialization)) {
+        const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
+        found = candidate ?? target;
+      }
 
-      return found ?? UNASSIGNED_KEY;
-    },
-    [graph],
-  );
+      if (!found && selectedMode === "location" && label.endsWith(METAGRAPH_RELATION_SUFFIXES.location)) {
+        const candidate = graph.getNodeAttribute(target, "label") as string | undefined;
+        found = candidate ?? target;
+      }
+    });
 
-  const computeClusterCenters = useCallback(
-    (groups: string[], bounds: { center: Point; radius: number }): Record<string, Point> => {
-      if (groups.length === 0) return {};
-      const centers: Record<string, Point> = {};
+    return found ?? UNASSIGNED_KEY;
+  }, [graph]);
 
-      const radius = Math.max(bounds.radius, 1);
-      const angleStep = (2 * Math.PI) / Math.max(groups.length, 1);
+  const computeClusterCenters = useCallback((groups: string[], bounds: { center: Point; radius: number }): Record<string, Point> => {
+    if (groups.length === 0) return {};
+    const centers: Record<string, Point> = {};
 
-      groups.forEach((group, index) => {
-        const angle = angleStep * index;
-        centers[group] = {
-          x: bounds.center.x + Math.cos(angle) * radius,
-          y: bounds.center.y + Math.sin(angle) * radius,
-        };
-      });
+    const radius = Math.max(bounds.radius, 1);
+    const angleStep = (2 * Math.PI) / Math.max(groups.length, 1);
 
-      return centers;
-    },
-    [],
-  );
+    groups.forEach((group, index) => {
+      const angle = angleStep * index;
+      centers[group] = {
+        x: bounds.center.x + Math.cos(angle) * radius,
+        y: bounds.center.y + Math.sin(angle) * radius,
+      };
+    });
+
+    return centers;
+  }, []);
 
   const computeBounds = useCallback((clusterCount: number = 1): { center: Point; radius: number } => {
     let minX = Number.POSITIVE_INFINITY;
@@ -153,81 +140,65 @@ export const MetagraphClusters = () => {
     };
   }, [getVersionedNodes, graph]);
 
-  const repositionNodes = useCallback(
-    (clusters: Map<string, string[]>, centers: Record<string, Point>, colors: string[]) => {
-      const clusterEntries = Array.from(clusters.entries());
+  const repositionNodes = useCallback((clusters: Map<string, string[]>, centers: Record<string, Point>, colors: string[]) => {
+    const clusterEntries = Array.from(clusters.entries());
 
-      clusterEntries.forEach(([clusterKey, nodes], index) => {
-        const clusterColor = colors[index % colors.length];
-        const center = centers[clusterKey] ?? { x: 0, y: 0 };
-        const ring = Math.max(nodes.length, 1);
+    clusterEntries.forEach(([clusterKey, nodes], index) => {
+      const clusterColor = colors[index % colors.length];
+      const center = centers[clusterKey] ?? { x: 0, y: 0 };
+      const ring = Math.max(nodes.length, 1);
 
-        nodes.forEach((node, nodeIndex) => {
-          const angle = (2 * Math.PI * nodeIndex) / ring;
-          const distance = 14 + (nodeIndex % 5) * 4;
-          graph.setNodeAttribute(node, "x", center.x + Math.cos(angle) * distance);
-          graph.setNodeAttribute(node, "y", center.y + Math.sin(angle) * distance);
-          graph.setNodeAttribute(node, "color", clusterColor);
-        });
+      nodes.forEach((node, nodeIndex) => {
+        const angle = (2 * Math.PI * nodeIndex) / ring;
+        const distance = 14 + (nodeIndex % 5) * 4;
+        graph.setNodeAttribute(node, "x", center.x + Math.cos(angle) * distance);
+        graph.setNodeAttribute(node, "y", center.y + Math.sin(angle) * distance);
+        graph.setNodeAttribute(node, "color", clusterColor);
       });
-    },
-    [graph],
-  );
-
-  const applyClustering = useCallback(
-    (selectedMode: ClusterMode) => {
-      const versionedNodes = getVersionedNodes();
-
-      rememberBaselines(versionedNodes);
-
-      if (selectedMode === "none" || versionedNodes.length === 0) {
-        restoreBaseline();
-        return;
-      }
-
-      const clusters = new Map<string, string[]>();
-
-      versionedNodes.forEach((node) => {
-        const clusterKey = getClusterKey(node, selectedMode);
-        if (!clusters.has(clusterKey)) {
-          clusters.set(clusterKey, []);
-        }
-        clusters.get(clusterKey)!.push(node);
-      });
-
-      const clusterCenters = computeClusterCenters(
-        Array.from(clusters.keys()),
-        computeBounds(clusters.size),
-      );
-
-      const clusterColors = generateClusterColors(clusters.size);
-
-      repositionNodes(clusters, clusterCenters, clusterColors);
-
-      setStats(
-        Object.fromEntries(
-          Array.from(clusters.entries()).map(([key, value], index) => [
-            key,
-            {
-              count: value.length,
-              color: clusterColors[index % clusterColors.length],
-            },
-          ]),
-        ),
-      );
-    },
-    [computeBounds, computeClusterCenters, getClusterKey, getVersionedNodes, rememberBaselines, repositionNodes, restoreBaseline],
-  );
-
-  useEffect(() => {
-    if (previousGraphRef.current !== graph) {
-      previousGraphRef.current = graph;
-      originalColorsRef.current.clear();
-      originalPositionsRef.current.clear();
-      setMode("none");
-      setStats({});
-    }
+    });
   }, [graph]);
+
+  const applyClustering = useCallback((selectedMode: ClusterMode) => {
+    const versionedNodes = getVersionedNodes();
+
+    rememberBaselines(versionedNodes);
+
+    if (selectedMode === "none" || versionedNodes.length === 0) {
+      restoreBaseline();
+      return;
+    }
+
+    const clusters = new Map<string, string[]>();
+
+    versionedNodes.forEach((node) => {
+      const clusterKey = getClusterKey(node, selectedMode);
+      if (!clusters.has(clusterKey)) {
+        clusters.set(clusterKey, []);
+      }
+      clusters.get(clusterKey)!.push(node);
+    });
+
+    const clusterCenters = computeClusterCenters(
+      Array.from(clusters.keys()),
+      computeBounds(clusters.size),
+    );
+
+    const clusterColors = generateClusterColors(clusters.size);
+
+    repositionNodes(clusters, clusterCenters, clusterColors);
+
+    dispatch(setClusterStats(
+      Object.fromEntries(
+        Array.from(clusters.entries()).map(([key, value], index) => [
+          key,
+          {
+            count: value.length,
+            color: clusterColors[index % clusterColors.length],
+          },
+        ]),
+      ),
+    ));
+  }, [computeBounds, computeClusterCenters, dispatch, getClusterKey, getVersionedNodes, rememberBaselines, repositionNodes, restoreBaseline]);
 
   useEffect(() => {
     applyClustering(mode);
@@ -252,7 +223,7 @@ export const MetagraphClusters = () => {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
         <button
           type="button"
-          onClick={() => setMode((current) => (current === "specialization" ? "none" : "specialization"))}
+          onClick={() => dispatch(setClusterMode(mode === "specialization" ? "none" : "specialization"))}
           style={{
             padding: "6px 8px",
             borderRadius: "6px",
@@ -266,7 +237,7 @@ export const MetagraphClusters = () => {
         </button>
         <button
           type="button"
-          onClick={() => setMode((current) => (current === "location" ? "none" : "location"))}
+          onClick={() => dispatch(setClusterMode(mode === "location" ? "none" : "location"))}
           style={{
             padding: "6px 8px",
             borderRadius: "6px",
