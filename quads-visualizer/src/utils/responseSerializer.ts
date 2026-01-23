@@ -1,3 +1,4 @@
+import { DEFAULT_EDGE_CURVATURE } from "@sigma/edge-curve";
 import type { SerializedGraph, SerializedNode } from "graphology-types";
 
 export type RDFTerm = {
@@ -113,6 +114,7 @@ export const responseSerializer = (response: Response): SerializedGraph => {
         label: binding.predicate.value,
         size: 2,
         type: count > 0 ? "curvedArrow" : "arrow",
+        curvature: DEFAULT_EDGE_CURVATURE + (3 * DEFAULT_EDGE_CURVATURE * count) / (edgeCounts.get(pairKey) || 1),
       },
     });
   });

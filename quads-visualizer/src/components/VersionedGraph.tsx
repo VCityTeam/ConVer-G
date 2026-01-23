@@ -13,7 +13,7 @@ import {
   setSelectedVersion,
 } from "../state/versionedGraphSlice";
 import { type Response } from "../utils/responseSerializer.ts";
-import { FocusOnNodes } from "./FocusOnNode.tsx";
+import { FocusOnNodesAndEdges } from "./FocusOnNodeAndEdges.tsx";
 import { GraphInfoDisplay } from "./GraphInfoDisplay.tsx";
 import { SigmaGraph } from "./common/SigmaGraph.tsx";
 import { GraphLabels } from "./common/GraphLabels.tsx";
@@ -41,7 +41,7 @@ export const VersionedGraph: FC<{
     separateGraphs,
   } = useVersionedGraphLogic(response, metagraph);
 
-  const { focusNodes, selectedNodes, gridColumns, gridGap } = useAppSelector((state) => state.versionedGraph);
+  const { focusNodes, focusEdges, selectedNodes, selectedEdges, gridColumns, gridGap } = useAppSelector((state) => state.versionedGraph);
   const { externalSelection, selectedMetagraphNodeType } = useAppSelector((state) => state.metagraph);
 
   useVersionedGraphNavigation(distinctGraph, distinctVersion, selectedGraph, selectedVersion);
@@ -128,7 +128,11 @@ export const VersionedGraph: FC<{
           />
         ) : null
       }
-      <FocusOnNodes nodes={focusNodes.length > 0 ? focusNodes : selectedNodes} move={focusNodes.length === 0} />
+      <FocusOnNodesAndEdges
+        nodes={focusNodes.length > 0 ? focusNodes : selectedNodes}
+        edges={focusEdges.length > 0 ? focusEdges : selectedEdges}
+        move={focusNodes.length === 0}
+      />
       <ControlsContainer position={"bottom-right"}>
         <FullScreenControl />
       </ControlsContainer>
