@@ -9,8 +9,8 @@ import "@react-sigma/graph-search/lib/style.css";
 import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraphBuilder.ts";
 import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
 import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
-import { MetagraphClusters } from "./MetagraphClusters.tsx";
-import { MetagraphFocusMode } from "./MetagraphFocusMode.tsx";
+import { MetagraphClustersUI } from "./MetagraphClusters.tsx";
+import { MetagraphEffectsCoordinator } from "./MetagraphEffectsCoordinator.tsx";
 import type { Attributes } from "graphology-types";
 import { SigmaGraph } from "./common/SigmaGraph.tsx";
 
@@ -35,7 +35,7 @@ export const Metagraph: FC<{
       style={style}
     >
       <MetagraphHighlight />
-      <MetagraphFocusMode />
+      <MetagraphEffectsCoordinator />
       <ControlsContainer position={"bottom-left"}>
         <FullScreenControl />
       </ControlsContainer>
@@ -44,7 +44,7 @@ export const Metagraph: FC<{
       </ControlsContainer>
       {showClusters && (
         <ControlsContainer position={"top-right"}>
-          <MetagraphClusters />
+          <MetagraphClustersUI />
         </ControlsContainer>
       )}
     </SigmaGraph>
