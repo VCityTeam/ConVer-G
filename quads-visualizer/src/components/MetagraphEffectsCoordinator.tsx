@@ -3,6 +3,7 @@ import { useSigma } from "@react-sigma/core";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setClusterStats, type ClusterMode, type ClusterStats } from "../state/metagraphSlice";
 import { METAGRAPH_RELATION_SUFFIXES, VERSIONED_NODE_PREFIX } from "../utils/metagraphBuilder";
+import { CLUSTER_LAYOUT } from "../utils/constants";
 import distinctColors from "distinct-colors";
 
 type Point = { x: number; y: number };
@@ -165,8 +166,8 @@ export const MetagraphEffectsCoordinator = () => {
 
     const width = Math.max(maxX - minX, 1);
     const height = Math.max(maxY - minY, 1);
-    const baseRadius = Math.max(width, height) * 0.65 + 40;
-    const clusterScaleFactor = clusterCount > 4 ? 1 + (clusterCount - 4) * 0.15 : 1;
+    const baseRadius = Math.max(width, height) * CLUSTER_LAYOUT.BASE_RADIUS_SCALE + CLUSTER_LAYOUT.BASE_RADIUS_PAD;
+    const clusterScaleFactor = clusterCount > CLUSTER_LAYOUT.SCALE_THRESHOLD ? 1 + (clusterCount - CLUSTER_LAYOUT.SCALE_THRESHOLD) * CLUSTER_LAYOUT.SCALE_FACTOR : 1;
     const radius = baseRadius * clusterScaleFactor;
     
     return {
@@ -228,7 +229,7 @@ export const MetagraphEffectsCoordinator = () => {
 
       nodes.forEach((node, nodeIndex) => {
         const angle = (2 * Math.PI * nodeIndex) / ring;
-        const distance = 14 + (nodeIndex % 5) * 4;
+        const distance = CLUSTER_LAYOUT.NODE_BASE_DISTANCE + (nodeIndex % CLUSTER_LAYOUT.NODE_DISTANCE_RING) * CLUSTER_LAYOUT.NODE_DISTANCE_STEP;
         graph.setNodeAttribute(node, "x", center.x + Math.cos(angle) * distance);
         graph.setNodeAttribute(node, "y", center.y + Math.sin(angle) * distance);
         graph.setNodeAttribute(node, "color", clusterColor);

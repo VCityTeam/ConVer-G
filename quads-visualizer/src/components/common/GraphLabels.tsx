@@ -1,6 +1,7 @@
 import { type FC, useEffect, useState } from "react";
 import { useSigma } from "@react-sigma/core";
 import type { AbstractGraph } from "graphology-types";
+import { GRID_LAYOUT } from "../../utils/constants";
 
 export interface GraphLabelsProps {
   separateGraphs: Array<{ graph: string; version: string; data: AbstractGraph }>;
@@ -12,8 +13,8 @@ export interface GraphLabelsProps {
 export const GraphLabels: FC<GraphLabelsProps> = ({
   separateGraphs,
   columns = 1,
-  xOffset = 300,
-  yOffset = 75
+  xOffset = GRID_LAYOUT.X_OFFSET,
+  yOffset = GRID_LAYOUT.LABEL_Y_OFFSET
 }) => {
   const sigma = useSigma();
   const [labels, setLabels] = useState<Array<{ id: string; label: string; x: number; y: number }>>([]);

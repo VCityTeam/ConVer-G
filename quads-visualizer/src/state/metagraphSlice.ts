@@ -4,13 +4,6 @@ export type ClusterMode = "none" | "specialization" | "location";
 
 export type ClusterStats = Record<string, { count: number; color: string }>;
 
-export type VersionedGraphExternalSelection = {
-  origin: "travel";
-  graph?: string;
-  version?: string;
-  updatedAt: number;
-};
-
 export type TravelHoverSelection = {
   graph?: string;
   version?: string;
@@ -26,7 +19,6 @@ export type CurrentView = {
 export type MetagraphNodeType = "vng" | "namedGraph" | "version";
 
 export type MetagraphState = {
-  externalSelection: VersionedGraphExternalSelection | null;
   travelHoverSelection: TravelHoverSelection | null;
   currentView: CurrentView | null;
   selectedMetagraphNodeType: MetagraphNodeType;
@@ -38,7 +30,6 @@ export type MetagraphState = {
 };
 
 const initialState: MetagraphState = {
-  externalSelection: null,
   travelHoverSelection: null,
   currentView: null,
   selectedMetagraphNodeType: "vng",
@@ -53,9 +44,6 @@ const metagraphSlice = createSlice({
   name: "metagraph",
   initialState,
   reducers: {
-    setExternalSelection: (state, action: PayloadAction<VersionedGraphExternalSelection | null>) => {
-      state.externalSelection = action.payload;
-    },
     setTravelHoverSelection: (state, action: PayloadAction<TravelHoverSelection | null>) => {
       state.travelHoverSelection = action.payload;
     },
@@ -83,5 +71,5 @@ const metagraphSlice = createSlice({
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
+export const { setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

@@ -2,6 +2,7 @@ import { useCamera, useSigma } from "@react-sigma/core";
 import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "../state/hooks";
 import { getMetagraphNodeType, resolveTravelTarget } from "../utils/metagraphBuilder";
+import { NODE_SIZES } from "../utils/constants";
 
 interface NodeHighlightOptions {
   targetNode: string;
@@ -24,7 +25,7 @@ export const MetagraphHighlight = () => {
   }, [sigma]);
 
   const applyNodeReducer = useCallback((options: NodeHighlightOptions) => {
-    const { targetNode, size = 12, highlighted, selected } = options;
+    const { targetNode, size = NODE_SIZES.HIGHLIGHTED, highlighted, selected } = options;
 
     sigma.setSetting("nodeReducer", (node, data) => {
       const base = { ...data };
@@ -59,7 +60,7 @@ export const MetagraphHighlight = () => {
     if (selectedMetagraphNode && (selectedMetagraphNodeType === "namedGraph" || selectedMetagraphNodeType === "version")) {
       return applyNodeReducer({
         targetNode: selectedMetagraphNode,
-        size: 12,
+        size: NODE_SIZES.HIGHLIGHTED,
         selected: true,
       });
     }
@@ -89,7 +90,7 @@ export const MetagraphHighlight = () => {
 
     return applyNodeReducer({
       targetNode: versionedGraphNode,
-      size: 10,
+      size: NODE_SIZES.DEFAULT,
     });
   }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, gotoNode, applyNodeReducer]);
 

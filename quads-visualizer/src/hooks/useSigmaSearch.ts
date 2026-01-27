@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { setFocusNodes, setSelectedNodes, setFocusEdges, setSelectedEdges } from "../state/versionedGraphSlice";
+import { setHighlightedNodes, setHighlightedEdges, clearHighlights } from "../state/versionedGraphSlice";
 import type { GraphSearchOption } from "@react-sigma/graph-search";
 import { useSigma } from "@react-sigma/core";
 
 export const useSigmaSearch = () => {
   const dispatch = useAppDispatch();
   const sigma = useSigma();
-  const selectedNodes = useAppSelector((state) => state.versionedGraph.selectedNodes);
-  const selectedEdges = useAppSelector((state) => state.versionedGraph.selectedEdges);
+  const highlightedNodes = useAppSelector((state) => state.versionedGraph.highlightedNodes);
+  const highlightedEdges = useAppSelector((state) => state.versionedGraph.highlightedEdges);
 
   const findRelatedNodes = useCallback((nodeId: string): string[] => {
     const graph = sigma.getGraph();
@@ -32,27 +32,25 @@ export const useSigmaSearch = () => {
 
   const onFocus = useCallback((value: GraphSearchOption | null) => {
     if (value === null) {
-      dispatch(setFocusNodes([]));
-      dispatch(setFocusEdges([]));
+      dispatch(clearHighlights());
     } else if (value.type === "nodes") {
-      dispatch(setFocusEdges([]));
-      dispatch(setFocusNodes(findRelatedNodes(value.id)));
+      dispatch(setHighlightedEdges({ edges: [], source: "search" }));
+      dispatch(setHighlightedNodes({ nodes: findRelatedNodes(value.id), source: "search" }));
     } else if (value.type === "edges") {
-      dispatch(setFocusNodes([]));
-      dispatch(setFocusEdges(findRelatedEdges(value.id)));
+      dispatch(setHighlightedNodes({ nodes: [], source: "search" }));
+      dispatch(setHighlightedEdges({ edges: findRelatedEdges(value.id), source: "search" }));
     }
   }, [dispatch, findRelatedNodes, findRelatedEdges]);
 
   const onChange = useCallback((value: GraphSearchOption | null) => {
     if (value === null) {
-      dispatch(setSelectedNodes([]));
-      dispatch(setSelectedEdges([]));
+      dispatch(clearHighlights());
     } else if (value.type === "nodes") {
-      dispatch(setSelectedEdges([]));
-      dispatch(setSelectedNodes(findRelatedNodes(value.id)));
+      dispatch(setHighlightedEdges({ edges: [], source: "search" }));
+      dispatch(setHighlightedNodes({ nodes: findRelatedNodes(value.id), source: "search" }));
     } else if (value.type === "edges") {
-      dispatch(setSelectedNodes([]));
-      dispatch(setSelectedEdges(findRelatedEdges(value.id)));
+      dispatch(setHighlightedNodes({ nodes: [], source: "search" }));
+      dispatch(setHighlightedEdges({ edges: findRelatedEdges(value.id), source: "search" }));
     }
   }, [dispatch, findRelatedNodes, findRelatedEdges]);
 
@@ -88,8 +86,8 @@ export const useSigmaSearch = () => {
   );
 
   return {
-    selectedNodes,
-    selectedEdges,
+    selectedNodes: highlightedNodes,
+    selectedEdges: highlightedEdges,
     onFocus,
     onChange,
     postSearchResult,

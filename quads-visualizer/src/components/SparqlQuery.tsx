@@ -3,13 +3,16 @@ import { createPortal } from 'react-dom';
 import Yasgui from "@triply/yasgui";
 import "@triply/yasgui/build/yasgui.min.css";
 import { QueryService } from "../services/QueryService";
-import { store } from "../state/store";
-import { setFocusNodes } from "../state/versionedGraphSlice";
+import { useAppDispatch } from "../state/hooks";
+import { setHighlightedNodes } from "../state/versionedGraphSlice";
 import sparqlIcon from "../assets/sparql.png";
 import { useSigmaSPARQLSearch } from "../hooks/useSigmaSPARQLSearch";
 
 export const SparqlQuery: FC = () => {
   const { isValueInGraph, getFocusNodes } = useSigmaSPARQLSearch();
+  const dispatch = useAppDispatch();
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
   const yasguiRef = useRef<HTMLDivElement>(null);
   const yasguiInstance = useRef<Yasgui | null>(null);
   const [isOpened, setIsOpened] = useState(false);
@@ -107,7 +110,7 @@ export const SparqlQuery: FC = () => {
                 versionedBtn.title = "Display in Versioned Graph";
                 versionedBtn.onclick = (e) => {
                   e.stopPropagation();
-                  store.dispatch(setFocusNodes(getFocusNodes(termValue)));
+                  dispatchRef.current(setHighlightedNodes({ nodes: getFocusNodes(termValue), source: "sparql" }));
                 };
 
                 btnContainer.appendChild(versionedBtn);

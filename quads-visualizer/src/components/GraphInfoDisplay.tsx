@@ -1,11 +1,9 @@
 import { type FC, useState } from "react";
+import { useAppSelector } from "../state/hooks";
 
-interface GraphInfoDisplayProps {
-    graph: string;
-    version: string;
-}
-
-export const GraphInfoDisplay: FC<GraphInfoDisplayProps> = ({ graph, version }) => {
+export const GraphInfoDisplay: FC = () => {
+    const graph = useAppSelector((state) => state.versionedGraph.selectedGraph);
+    const version = useAppSelector((state) => state.versionedGraph.selectedVersion);
     const [isHovered, setIsHovered] = useState(false);
 
     return (

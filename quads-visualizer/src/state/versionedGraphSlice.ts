@@ -1,12 +1,14 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { GRID_LAYOUT } from "../utils/constants";
+
+export type HighlightSource = "search" | "sparql" | null;
 
 export type VersionedGraphState = {
   selectedGraph: string;
   selectedVersion: string;
-  selectedNodes: string[];
-  focusNodes: string[];
-  selectedEdges: string[];
-  focusEdges: string[];
+  highlightedNodes: string[];
+  highlightedEdges: string[];
+  highlightSource: HighlightSource;
   mergedGraphsEnabled: boolean;
   gridColumns: number;
   gridGap: number;
@@ -15,13 +17,12 @@ export type VersionedGraphState = {
 const initialState: VersionedGraphState = {
   selectedGraph: "",
   selectedVersion: "",
-  selectedNodes: [],
-  focusNodes: [],
-  selectedEdges: [],
-  focusEdges: [],
+  highlightedNodes: [],
+  highlightedEdges: [],
+  highlightSource: null,
   mergedGraphsEnabled: false,
-  gridColumns: 3,
-  gridGap: 200,
+  gridColumns: GRID_LAYOUT.DEFAULT_COLUMNS,
+  gridGap: GRID_LAYOUT.DEFAULT_GAP,
 };
 
 const versionedGraphSlice = createSlice({
@@ -34,17 +35,18 @@ const versionedGraphSlice = createSlice({
     setSelectedVersion: (state, action: PayloadAction<string>) => {
       state.selectedVersion = action.payload;
     },
-    setSelectedNodes: (state, action: PayloadAction<string[]>) => {
-      state.selectedNodes = action.payload;
+    setHighlightedNodes: (state, action: PayloadAction<{ nodes: string[]; source: HighlightSource }>) => {
+      state.highlightedNodes = action.payload.nodes;
+      state.highlightSource = action.payload.source;
     },
-    setFocusNodes: (state, action: PayloadAction<string[]>) => {
-      state.focusNodes = action.payload;
+    setHighlightedEdges: (state, action: PayloadAction<{ edges: string[]; source: HighlightSource }>) => {
+      state.highlightedEdges = action.payload.edges;
+      state.highlightSource = action.payload.source;
     },
-    setSelectedEdges: (state, action: PayloadAction<string[]>) => {
-      state.selectedEdges = action.payload;
-    },
-    setFocusEdges: (state, action: PayloadAction<string[]>) => {
-      state.focusEdges = action.payload;
+    clearHighlights: (state) => {
+      state.highlightedNodes = [];
+      state.highlightedEdges = [];
+      state.highlightSource = null;
     },
     setMergedGraphsEnabled: (state, action: PayloadAction<boolean>) => {
       state.mergedGraphsEnabled = action.payload;
@@ -62,10 +64,9 @@ const versionedGraphSlice = createSlice({
 export const {
   setSelectedGraph,
   setSelectedVersion,
-  setSelectedNodes,
-  setFocusNodes,
-  setSelectedEdges,
-  setFocusEdges,
+  setHighlightedNodes,
+  setHighlightedEdges,
+  clearHighlights,
   setMergedGraphsEnabled,
   setGridColumns,
   setGridGap,

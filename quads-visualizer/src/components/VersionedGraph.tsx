@@ -24,6 +24,7 @@ import { useMemo } from "react";
 import { mergeGraphsSeparately } from "../utils/versionedGraphBuilder.ts";
 import { SigmaSearch } from "./common/SigmaSearch.tsx";
 import { GridLayoutControls } from "./GridLayoutControls.tsx";
+import { GRID_LAYOUT } from "../utils/constants";
 
 export const VersionedGraph: FC<{
   response: Response;
@@ -36,13 +37,12 @@ export const VersionedGraph: FC<{
     distinctGraph,
     selectedGraph,
     selectedVersion,
-    mergedGraphsEnabled,
     displayedGraph,
     separateGraphs,
   } = useVersionedGraphLogic(response, metagraph);
 
-  const { focusNodes, focusEdges, selectedNodes, selectedEdges, gridColumns, gridGap } = useAppSelector((state) => state.versionedGraph);
-  const { externalSelection, selectedMetagraphNodeType } = useAppSelector((state) => state.metagraph);
+  const { gridColumns, gridGap } = useAppSelector((state) => state.versionedGraph);
+  const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
 
   useVersionedGraphNavigation(distinctGraph, distinctVersion, selectedGraph, selectedVersion);
 
@@ -66,22 +66,6 @@ export const VersionedGraph: FC<{
     }
   }, [dispatch, selectedGraph, selectedVersion]);
 
-  useEffect(() => {
-    if (!externalSelection || externalSelection.origin !== "travel") {
-      return;
-    }
-
-    const nextGraph = externalSelection.graph;
-    if (nextGraph && nextGraph !== selectedGraph && distinctGraph.includes(nextGraph)) {
-      dispatch(setSelectedGraph(nextGraph));
-    }
-
-    const nextVersion = externalSelection.version;
-    if (nextVersion && nextVersion !== selectedVersion && distinctVersion.includes(nextVersion)) {
-      dispatch(setSelectedVersion(nextVersion));
-    }
-  }, [dispatch, externalSelection, distinctGraph, distinctVersion, selectedGraph, selectedVersion]);
-
   const edgeReducer = useCallback((_edge: string, data: Attributes) => {
     const res = { ...data };
     if (res.status === "deleted") {
@@ -96,7 +80,7 @@ export const VersionedGraph: FC<{
   }, []);
 
   const Y_OFFSET = gridGap;
-  const X_OFFSET = 300;
+  const X_OFFSET = GRID_LAYOUT.X_OFFSET;
 
   const multiViewGraph = useMemo(() => {
     if (separateGraphs && separateGraphs.length > 0) {
@@ -128,11 +112,7 @@ export const VersionedGraph: FC<{
           />
         ) : null
       }
-      <FocusOnNodesAndEdges
-        nodes={focusNodes.length > 0 ? focusNodes : selectedNodes}
-        edges={focusEdges.length > 0 ? focusEdges : selectedEdges}
-        move={focusNodes.length === 0}
-      />
+      <FocusOnNodesAndEdges />
       <ControlsContainer position={"bottom-right"}>
         <FullScreenControl />
       </ControlsContainer>
@@ -147,9 +127,9 @@ export const VersionedGraph: FC<{
       <ControlsContainer position={"bottom-left"}>
         {
           selectedMetagraphNodeType === "vng" ? (
-            <GraphInfoDisplay graph={selectedGraph} version={selectedVersion} />
+            <GraphInfoDisplay />
           ) : (
-            <MergedGraphsToggle enabled={mergedGraphsEnabled} />
+            <MergedGraphsToggle />
           )
         }
       </ControlsContainer>
