@@ -1,13 +1,10 @@
 import { type FC } from "react";
-import { useAppDispatch } from "../state/hooks";
+import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setMergedGraphsEnabled } from "../state/versionedGraphSlice";
 
-interface MergedGraphsToggleProps {
-  enabled: boolean;
-}
-
-export const MergedGraphsToggle: FC<MergedGraphsToggleProps> = ({ enabled }) => {
+export const MergedGraphsToggle: FC = () => {
   const dispatch = useAppDispatch();
+  const enabled = useAppSelector((state) => state.versionedGraph.mergedGraphsEnabled);
 
   const handleToggle = () => {
     dispatch(setMergedGraphsEnabled(!enabled));

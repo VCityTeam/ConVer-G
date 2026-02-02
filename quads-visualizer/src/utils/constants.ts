@@ -1,0 +1,21 @@
+export const GRID_LAYOUT = {
+  DEFAULT_COLUMNS: 3,
+  DEFAULT_GAP: 200,
+  X_OFFSET: 300,
+  LABEL_Y_OFFSET: 75,
+} as const;
+
+export const CLUSTER_LAYOUT = {
+  BASE_RADIUS_SCALE: 0.65,
+  BASE_RADIUS_PAD: 40,
+  SCALE_THRESHOLD: 4,
+  SCALE_FACTOR: 0.15,
+  NODE_BASE_DISTANCE: 14,
+  NODE_DISTANCE_STEP: 4,
+  NODE_DISTANCE_RING: 5,
+} as const;
+
+export const NODE_SIZES = {
+  DEFAULT: 10,
+  HIGHLIGHTED: 12,
+} as const;

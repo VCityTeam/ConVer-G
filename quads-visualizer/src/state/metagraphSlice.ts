@@ -1,11 +1,8 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export type VersionedGraphExternalSelection = {
-  origin: "travel";
-  graph?: string;
-  version?: string;
-  updatedAt: number;
-};
+export type ClusterMode = "none" | "specialization" | "location";
+
+export type ClusterStats = Record<string, { count: number; color: string }>;
 
 export type TravelHoverSelection = {
   graph?: string;
@@ -22,28 +19,31 @@ export type CurrentView = {
 export type MetagraphNodeType = "vng" | "namedGraph" | "version";
 
 export type MetagraphState = {
-  externalSelection: VersionedGraphExternalSelection | null;
   travelHoverSelection: TravelHoverSelection | null;
   currentView: CurrentView | null;
   selectedMetagraphNodeType: MetagraphNodeType;
   selectedMetagraphNode: string | null;
+  showClusters: boolean;
+  focusMode: boolean;
+  clusterMode: ClusterMode;
+  clusterStats: ClusterStats;
 };
 
 const initialState: MetagraphState = {
-  externalSelection: null,
   travelHoverSelection: null,
   currentView: null,
   selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
+  showClusters: true,
+  focusMode: false,
+  clusterMode: "location",
+  clusterStats: {},
 };
 
 const metagraphSlice = createSlice({
   name: "metagraph",
   initialState,
   reducers: {
-    setExternalSelection: (state, action: PayloadAction<VersionedGraphExternalSelection | null>) => {
-      state.externalSelection = action.payload;
-    },
     setTravelHoverSelection: (state, action: PayloadAction<TravelHoverSelection | null>) => {
       state.travelHoverSelection = action.payload;
     },
@@ -56,8 +56,20 @@ const metagraphSlice = createSlice({
     setSelectedMetagraphNode: (state, action: PayloadAction<string | null>) => {
       state.selectedMetagraphNode = action.payload;
     },
+    setShowClusters: (state, action: PayloadAction<boolean>) => {
+      state.showClusters = action.payload;
+    },
+    setFocusMode: (state, action: PayloadAction<boolean>) => {
+      state.focusMode = action.payload;
+    },
+    setClusterMode: (state, action: PayloadAction<ClusterMode>) => {
+      state.clusterMode = action.payload;
+    },
+    setClusterStats: (state, action: PayloadAction<ClusterStats>) => {
+      state.clusterStats = action.payload;
+    },
   },
 });
 
-export const { setExternalSelection, setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode } = metagraphSlice.actions;
+export const { setTravelHoverSelection, setCurrentView, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

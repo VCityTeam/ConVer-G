@@ -1,4 +1,5 @@
 import { type CSSProperties, type FC, useCallback } from "react";
+import { useAppSelector } from "../state/hooks";
 import { type Response } from "../utils/responseSerializer.ts";
 import {
   ControlsContainer,
@@ -8,7 +9,8 @@ import "@react-sigma/graph-search/lib/style.css";
 import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraphBuilder.ts";
 import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
 import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
-import { MetagraphClusters } from "./MetagraphClusters.tsx";
+import { MetagraphClustersUI } from "./MetagraphClusters.tsx";
+import { MetagraphEffectsCoordinator } from "./MetagraphEffectsCoordinator.tsx";
 import type { Attributes } from "graphology-types";
 import { SigmaGraph } from "./common/SigmaGraph.tsx";
 
@@ -17,6 +19,7 @@ export const Metagraph: FC<{
   style?: CSSProperties;
 }> = ({ response, style }) => {
   const metagraph = useBuildMetagraph(response);
+  const showClusters = useAppSelector((state) => state.metagraph.showClusters);
 
   const edgeReducer = useCallback((_edge: string, data: Attributes) => {
     const res = { ...data };
@@ -32,15 +35,18 @@ export const Metagraph: FC<{
       style={style}
     >
       <MetagraphHighlight />
+      <MetagraphEffectsCoordinator />
       <ControlsContainer position={"bottom-left"}>
         <FullScreenControl />
       </ControlsContainer>
       <ControlsContainer position={"top-left"}>
         <MetagraphBuilder />
       </ControlsContainer>
-      <ControlsContainer position={"top-right"}>
-        <MetagraphClusters />
-      </ControlsContainer>
+      {showClusters && (
+        <ControlsContainer position={"top-right"}>
+          <MetagraphClustersUI />
+        </ControlsContainer>
+      )}
     </SigmaGraph>
   );
 };
