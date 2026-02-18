@@ -63,6 +63,7 @@ Furthermore, translating SPARQL, the standard query language for RDF, into SQL f
 This approach allows users to perform snapshot-based queries and analyze the lineage of data, modeled using PROV-O concepts [@provo], without the need for specialized, experimental triple stores.
 
 # Contributions
+## Software design
 
 The software suite contributes three distinct but interoperable tools that operationalize the theoretical framework of concurrent KG versioning.
 The architecture is designed to be modular, allowing each component to be used independently or in combination, depending on user needs.
