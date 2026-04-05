@@ -1,0 +1,10 @@
+# rdfs3: range inference
+# alice ex:enrolledIn CS101 + enrolledIn rdfs:range Course -> CS101 rdf:type Course
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?course WHERE {
+    GRAPH ?g {
+        ?course rdf:type ex:Course .
+    }
+}

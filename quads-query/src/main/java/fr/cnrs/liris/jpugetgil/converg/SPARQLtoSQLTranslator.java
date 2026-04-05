@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
+import fr.cnrs.liris.jpugetgil.converg.entailment.*;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
@@ -50,10 +51,11 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     /**
      * Constructor of the SPARQLtoSQLTranslator
      *
-     * @param condensedMode if true, the SQL query build will use the condensed mode
+     * @param condensedMode    if true, the SQL query build will use the condensed mode
+     * @param entailmentRegime the entailment regime to apply during query translation
      */
-    public SPARQLtoSQLTranslator(boolean condensedMode) {
-        super(condensedMode);
+    public SPARQLtoSQLTranslator(boolean condensedMode, EntailmentRegime entailmentRegime) {
+        super(condensedMode, entailmentRegime);
         this.jdbcConnection = JdbcConnection.getInstance();
     }
 
@@ -104,11 +106,13 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     }
 
     public SQLQuery buildSPARQLContext(Op op) {
-        return buildSPARQLContext(op, new SQLContext(new HashMap<>(), condensedMode, null, null));
+        return buildSPARQLContext(op, new SQLContext(new HashMap<>(), condensedMode, entailmentRegime, null, null));
     }
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
         return switch (op) {
+            case OpTransitiveClosure opTC -> new TransitiveClosureSQLOperator(opTC, context)
+                    .buildSQLQuery();
             case OpJoin opJoin -> new JoinSQLOperator(
                     buildSPARQLContext(opJoin.getLeft(), context),
                     buildSPARQLContext(opJoin.getRight(), context)
@@ -137,8 +141,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     opDistinct,
                     buildSPARQLContext(opDistinct.getSubOp(), context)
             ).buildSQLQuery();
-            case OpQuadPattern opQuadPattern -> new QuadPatternSQLOperator(opQuadPattern, context)
-                    .buildSQLQuery();
+            case OpQuadPattern opQuadPattern ->
+                    SchemaDriftDetector.isSchemaDriftGraph(opQuadPattern.getGraphNode())
+                            ? new SchemaDriftSQLOperator(opQuadPattern, context).buildSQLQuery()
+                            : new QuadPatternSQLOperator(opQuadPattern, context).buildSQLQuery();
             case OpOrder opOrder -> new OrderSQLOperator(
                     opOrder,
                     buildSPARQLContext(opOrder.getSubOp(), context)
@@ -183,6 +189,20 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
+        // Apply entailment rewriting if a regime is active
+        if (entailmentRegime != EntailmentRegime.NONE) {
+            List<EntailmentRule> rules = switch (entailmentRegime) {
+                case RDFS -> RDFSRules.allRules();
+                case OWL_LITE -> RDFSRules.allRules(); // OWL_LITE extends RDFS rules
+                default -> List.of();
+            };
+            if (!rules.isEmpty()) {
+                EntailmentRewriter rewriter = new EntailmentRewriter(rules);
+                quadOp = rewriter.rewrite(quadOp);
+                log.info("Entailment rewriting applied with regime: {}", entailmentRegime);
+            }
+        }
+
         Long startTranslation = System.nanoTime();
         SQLQuery builtQuery = buildSPARQLContext(quadOp);
         SQLQuery finalizedQuery = new FinalizeSQLOperator(builtQuery)
@@ -218,7 +238,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                 String valueType = rs.getString("type$" + v);
 
                 node = valueType == null ?
-                        NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
+                        NodeFactory.createURI(value) : NodeFactory.createLiteralDT(value, NodeFactory.getType(valueType));
             } else {
                 node = NodeFactory.createURI(rs.getString("name$" + node.getName()));
             }

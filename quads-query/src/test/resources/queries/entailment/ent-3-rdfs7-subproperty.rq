@@ -1,0 +1,11 @@
+# rdfs7: subPropertyOf propagation
+# prof1 ex:teaches CS101 -> prof1 ex:relatedTo CS101 (via teaches subPropertyOf relatedTo)
+# prof2 ex:advises charlie -> prof2 ex:teaches charlie -> prof2 ex:relatedTo charlie (v2 only)
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?s ?o WHERE {
+    GRAPH ?g {
+        ?s ex:relatedTo ?o .
+    }
+}
+ORDER BY ?s ?o

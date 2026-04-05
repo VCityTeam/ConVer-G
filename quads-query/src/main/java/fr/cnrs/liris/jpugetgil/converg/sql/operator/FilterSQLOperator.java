@@ -41,7 +41,7 @@ public class FilterSQLOperator extends SQLOperator {
         return new SQLQuery(
                 materialization + select + from + where,
                 new SQLContext(
-                        sqlQuery.getContext().sparqlVarOccurrences(), sqlQuery.getContext().condensedMode(), null, null
+                        sqlQuery.getContext().sparqlVarOccurrences(), sqlQuery.getContext().condensedMode(), sqlQuery.getContext().entailmentRegime(), null, null
                 ));
     }
 

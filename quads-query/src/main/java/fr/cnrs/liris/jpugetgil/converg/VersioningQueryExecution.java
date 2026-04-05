@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import io.prometheus.metrics.core.metrics.Counter;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
@@ -32,6 +33,9 @@ public class VersioningQueryExecution implements QueryExecution {
     private static final boolean CONDENSED_MODE = System.getenv("CONDENSED_MODE") == null ||
             Boolean.parseBoolean(System.getenv("CONDENSED_MODE"));
 
+    private static final EntailmentRegime ENTAILMENT_REGIME =
+            EntailmentRegime.fromString(System.getenv("ENTAILMENT_REGIME"));
+
     public VersioningQueryExecution(Query query) {
         this.query = query;
         this.translator = getTranslator();
@@ -40,7 +44,7 @@ public class VersioningQueryExecution implements QueryExecution {
     private SPARQLLanguageTranslator getTranslator() {
         // Add switch case for other target languages when implemented
         log.info("Using target language: {}", TARGET_LANG);
-        return new SPARQLtoSQLTranslator(CONDENSED_MODE);
+        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME);
     }
 
     private static String getSupportedTargetLanguage(String targetLang) {

@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
@@ -10,8 +11,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SPARQLtoSQLTranslatorTest {
-    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true);
-    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false);
+    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true, EntailmentRegime.NONE);
+    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false, EntailmentRegime.NONE);
 
     @Test
     void testBuildSPARQLContextCondensed() {
@@ -33,7 +34,6 @@ class SPARQLtoSQLTranslatorTest {
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
-        SQLQuery sqlQuery = condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
-        return sqlQuery;
+        return condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
     }
 }
