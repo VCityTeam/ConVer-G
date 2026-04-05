@@ -1,0 +1,12 @@
+# rdfs2: domain inference
+# alice ex:enrolledIn CS101 + enrolledIn rdfs:domain Student -> alice rdf:type Student
+# This should be returned alongside the explicit type and the rdfs9 inferred types.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?x WHERE {
+    GRAPH ?g {
+        ?x rdf:type ex:Student .
+    }
+}
+ORDER BY ?x

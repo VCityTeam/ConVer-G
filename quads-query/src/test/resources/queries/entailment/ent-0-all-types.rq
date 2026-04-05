@@ -1,0 +1,8 @@
+# All explicit rdf:type assertions (baseline without entailment)
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?g ?x ?type WHERE {
+    GRAPH ?g {
+        ?x rdf:type ?type .
+    }
+}

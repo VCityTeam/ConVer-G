@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.FinalizeSQLOperator;
 import org.apache.jena.query.Query;
@@ -15,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SPARQLtoSQLTranslatorTest {
-    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true);
-    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false);
+    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true, EntailmentRegime.NONE);
+    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false, EntailmentRegime.NONE);
 
     @Test
     void testBuildSPARQLContextCondensed() {

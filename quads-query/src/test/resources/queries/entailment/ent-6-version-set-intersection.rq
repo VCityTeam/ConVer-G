@@ -1,0 +1,17 @@
+# Version set intersection verification
+# charlie rdf:type PhDStudent has validity '01' (v2 only)
+# PhDStudent rdfs:subClassOf GradStudent has validity '01' (v2 only)
+# GradStudent rdfs:subClassOf Student has validity '11' (v1+v2)
+# Student rdfs:subClassOf Person has validity '11' (v1+v2)
+#
+# Therefore: charlie rdf:type Person should have validity '01' & '01' & '11' & '11' = '01' (v2 only)
+# This query asks for all Persons -- charlie should only appear in version 2 results.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?person WHERE {
+    GRAPH ?g {
+        ?person rdf:type ex:Person .
+    }
+}
+ORDER BY ?g ?person
