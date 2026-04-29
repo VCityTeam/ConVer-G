@@ -35,10 +35,13 @@ bibliography: paper.bib
 
 # Summary
 
-Knowledge Graphs (KGs) are dynamic artifacts that evolve continuously as data is updated, corrected, and expanded.
-Managing this evolution through explicit versioning is essential to support reproducibility, auditability, provenance tracking, and temporal analysis.
-ConVer-G (Concurrent Versioning of Knowledge Graphs) is a software suite designed to address these challenges by providing snapshot-based version management for RDF datasets [@gil2024convergconcurrentversioningknowledge].
+A Knowledge Graph (KG) is a structured representation of facts in which entities (people, places, observations) are connected by typed relationships, typically encoded using the Resource Description Framework (RDF) standard.
+KGs are widely used to integrate data across domains as varied as life sciences, urban planning, cultural heritage, and weather forecasting.
+However, KGs are not static: they evolve continuously as data is updated, corrected, and expanded.
+Managing this evolution through explicit *versioning*—much like Git does for source code—is essential to support reproducibility, auditability, provenance tracking, and temporal analysis.
 
+ConVer-G (Concurrent Versioning of Knowledge Graphs) is a software suite designed to address these challenges by providing snapshot-based version management for RDF datasets [@gil2024convergconcurrentversioningknowledge].
+It allows users to ingest successive states of an RDF dataset, query any past version using the standard SPARQL query language, compare versions, and visually inspect how the graph and its history evolve.
 The suite is composed of three modular and interoperable components:
 
 1. **Quads-loaDer:** A command-line interface and service for ingesting RDF data, and storing versioned quads efficiently.
@@ -75,16 +78,19 @@ ConVer-G is positioned within this landscape as a *condensed snapshot* approach 
 By materializing quads once and using a bitmask to record their presence across snapshots, it avoids the redundancy of independent copies while preserving the query simplicity of a snapshot model.
 Compared to the systems above, the suite distinguishes itself in three ways: (i) it explicitly models concurrent (non-linear) version histories with branching and merging, rather than purely linear revision chains; (ii) it exposes a standard SPARQL endpoint backed by a SPARQL-to-SQL translator that injects versioning constraints into query rewriting, enabling both snapshot-specific and cross-snapshot analyses; and (iii) it provides an interactive visualization of both the metagraph (versions, branches, derivation) and the versioned graph, which is, to the best of our knowledge, not jointly available in the systems cited above.
 
-# Contributions
-## Software design
+# Software design
 
 The software suite contributes three distinct but interoperable tools that operationalize the theoretical framework of concurrent KG versioning.
-The architecture is designed to be modular, allowing each component to be used independently or in combination, depending on user needs.
+A central design trade-off was whether to build on top of an existing triple store or on top of a relational database management system (RDBMS).
+We chose the latter—specifically PostgreSQL—because it provides mature transactional guarantees, indexing strategies, and operational tooling that triple-store engines often lack, at the cost of having to translate SPARQL into SQL and to encode the versioning model relationally.
+A second trade-off concerned the storage representation: independent copies are simple but redundant, while pure deltas are compact but expensive to query.
+We adopted a *condensed snapshot* representation, where each quad is materialized once and a bitmask records its presence across snapshots, balancing storage efficiency with snapshot-query simplicity.
+The architecture is modular, allowing each component to be used independently or in combination, depending on user needs.
 The overall architecture is illustrated in Figure \autoref{fig:architecture}.
 
 ![Architecture of the ConVer-G system.\label{fig:architecture}](architecture.png){ width=75% }
 
-### Quads-loaDer
+## Quads-loaDer
 
 The **Quads-loaDer** is the ingestion engine of the suite.
 It is responsible for mapping standard RDF serialization formats (Turtle, TriG, N-Quads) into the internal relational schema.
@@ -93,7 +99,7 @@ Its primary goals are:
 * **Metadata Management:** It manages the metadata associated with provenance, effectively building the "Versioned Named Graph."
 * **Storage Optimization:** It condenses storage by identifying and storing the quads by managing a bitmask that indicates the presence of each quad across different snapshots.
 
-### Quads-Query
+## Quads-Query
 
 **Quads-Query** acts as the middleware layer.
 It exposes a SPARQL endpoint compatible with standard clients (e.g., Yasgui, Jena).
@@ -101,7 +107,7 @@ Its core contribution is the **SPARQL-to-SQL translator**.
 Unlike direct mapping approaches[@rodriguez2013evaluating], Quads-Query injects versioning constraints into the SQL generation process.
 It allows users to execute queries against a specific snapshot or named branch, dynamically rewriting the query to filter quads valid at that specific point in the version tree.
 
-### Quads-Visualizer
+## Quads-Visualizer
 
 **Quads-Visualizer** is a React-based frontend application designed to visualize the metagraph: the metadata of the versioned KG.
 While the backend manages the data, Quads-Visualizer renders two graphs:
@@ -111,40 +117,28 @@ While the backend manages the data, Quads-Visualizer renders two graphs:
 
 ![Left panel shows the metagraph and right panel shows the versioned graph.\label{fig:qua-viz}](qua-viz.png)
 
-The clustering feature organizes Versioned Named Graph (VNG) nodes using two PROV-O predicates: `prov:specializationOf` links each VNG node to its *graph name*, grouping all temporal versions of the same named graph; `prov:atLocation` links each VNG node to its *version identifier*, grouping all named graphs captured within the same snapshot.
-This clustering enables users to navigate either by structure—observing how a single named graph evolves—or by time—inspecting the complete dataset state at a specific version.
-
-When users find the visualization cluttered by numerous metadata triples, they can toggle the **Focus mode**.
-This feature hides all metadata except the PROV-O related triples, allowing users to concentrate on the actual data and its provenance annotations without visual noise.
+A clustering feature organizes Versioned Named Graph (VNG) nodes using two PROV-O predicates: `prov:specializationOf` groups all temporal versions of the same named graph, while `prov:atLocation` groups all named graphs captured within the same snapshot.
+Users can therefore navigate either by structure—observing how a single named graph evolves—or by time—inspecting the complete dataset state at a specific version.
+A **Focus mode** further hides non-PROV-O metadata triples to reduce visual noise.
 
 ![Clustering of nodes in the metagraph.\label{fig:qua-viz-clustering}](cluster.png)
 
-To enhance comprehension through topology, the tool computes a static position for every node across all versions of all quads, ensuring a consistent structural layout regardless of the version being viewed.
-Additionally, the **Change versioned graph** facilitates evolution analysis by computing and displaying the delta between the currently selected Versioned Graph and any other version, allowing administrators and users to visually inspect changes, annotate versions, and understand the derivation history.
-This feature also handles selecting a version or a named graph: displaying respectively only the versioned graphs inside the version or the versioned graphs inside the named graph.
+To support comparison, the tool computes a static layout shared across all versions, and a **Change versioned graph** view displays the delta between the currently selected version and any other version.
+A **Merged graphs** option allows users to visualize all versioned graphs merged into a single graph, with a search bar to filter nodes by label for navigation in large datasets.
 
 ![Visualization of differences between two versioned graphs.\label{fig:delta-viz}](delta-viz.png)
 
-The **Merged graphs** option allows users to visualize all versioned graphs merged into a single graph.
-When the merged graph mode is disabled, a list of versioned graphs is displayed, allowing users to select and view individual graphs.
-A search bar is provided to filter nodes by their labels, facilitating navigation in large datasets with many versioned graphs.
-
 ![Merged graph option visualization (left enabled, right disabled).\label{fig:merged-viz}](merged.png)
-
-## Reproducibility
-
-A fully reproducible experiment demonstrating the ConVer-G suite is available in the [UD-Demo-VCity-Knowledge_Evolution repository](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md).
-The experiment uses a weather forecasting use case where the system ingests daily weather predictions from multiple sources, stores them as versioned RDF graphs, and enables snapshots analysis to compare forecast accuracy.
-The demonstration requires only Docker and Docker Compose, and includes pre-configured services for all three ConVer-G components along with example SPARQL queries.
 
 # Research impact statement
 
 ConVer-G targets researchers and practitioners who work with evolving RDF datasets and need to manage their history explicitly rather than implicitly through ad-hoc copies or external scripts.
 By materializing concurrent versioning over a RDBMS and exposing a standard SPARQL endpoint, the suite lowers the entry cost for adopting versioned KGs in projects that already rely on relational infrastructure, and it makes versioned KGs usable from existing SPARQL clients without modification.
 
-The expected impact spans several research and application areas.
-For *urban and geospatial data*, where datasets evolve across time and across competing sources (the original motivation of the VCity use cases), the metagraph view makes the structure of these histories inspectable and navigable.
-More broadly, by demonstrating that concurrent versioning of RDF can be built on top of PostgreSQL with competitive functionality, ConVer-G contributes a reusable architectural template for the semantic web and RDBMS communities, and a teaching artifact for courses on KGs, data versioning, and SPARQL-to-SQL translation.
+The architectural and theoretical foundations of the suite have been published [@gil2024convergconcurrentversioningknowledge], and the software is being used within the VCity research project of the LIRIS laboratory, where evolving urban and geospatial datasets motivate the need for explicit, branch-aware versioning.
+A fully reproducible end-to-end experiment is provided in the [UD-Demo-VCity-Knowledge_Evolution repository](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md): it ingests daily weather predictions from multiple sources, stores them as versioned RDF graphs, and runs snapshot-based SPARQL queries to compare forecast accuracy.
+The demonstration requires only Docker and Docker Compose and includes pre-configured services for all three ConVer-G components along with example SPARQL queries, lowering the barrier for independent evaluation and reuse.
+Beyond the VCity context, by demonstrating that concurrent versioning of RDF can be built on top of PostgreSQL with competitive functionality, ConVer-G contributes a reusable architectural template for the semantic web and RDBMS communities, and a teaching artifact for courses on KGs, data versioning, and SPARQL-to-SQL translation.
 
 # AI usage disclosure
 
