@@ -286,6 +286,7 @@ body {
   border: 1px solid #d1d5db;
   border-radius: 7px;
   overflow: hidden;
+  min-width: 180px;
 }
 
 .mg-view-toggle__btn {
@@ -296,6 +297,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   color: #475569;
+  flex: 1;
 }
 
 .mg-view-toggle__btn + .mg-view-toggle__btn {

@@ -14,7 +14,7 @@ export const computeNodesPositions = (response: Response, fa2Settings: FA2Settin
 
   FA2.assign(g, {
     iterations: fa2Settings.iterations ?? 25,
-    settings: fa2Settings.settings,
+    settings: fa2Settings.settings ?? FA2.inferSettings(g),
   });
 
   const nodesPositions = new Map<string, [number, number]>();

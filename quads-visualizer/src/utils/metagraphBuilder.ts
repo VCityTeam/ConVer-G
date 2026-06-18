@@ -142,9 +142,20 @@ export const resolveTravelTarget = (graph: AbstractGraph, nodeKey: string) => {
     return { linkedGraph, linkedVersion };
 };
 
+const metagraphLayoutCache = new WeakMap<Response, Map<string, [number, number]>>();
+
+const getMetagraphLayout = (response: Response): Map<string, [number, number]> => {
+    let positions = metagraphLayoutCache.get(response);
+    if (!positions) {
+        positions = computeNodesPositions(response, { iterations: 100 }).positions;
+        metagraphLayoutCache.set(response, positions);
+    }
+    return positions;
+};
+
 export const useBuildMetagraph = (response: Response): AbstractGraph => useMemo(() => {
     const g = Graph.from(responseSerializer(response));
-    const { positions: nodesPositions } = computeNodesPositions(response, { iterations: 100});
+    const nodesPositions = getMetagraphLayout(response);
 
     g.forEachNode((node) => {
         const [x, y] = nodesPositions.get(node) ?? [Math.random(), Math.random()];
