@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setFocusMode, setShowClusters } from "../state/metagraphSlice";
 import { useMetagraphEvents, type BuilderMode } from "../hooks/useMetagraphEvents";
 import { useMetagraphEditing } from "../hooks/useMetagraphEditing";
+import { ViewToggle } from "./ViewToggle";
 
 export const MetagraphBuilder: FC = () => {
   const dispatch = useAppDispatch();
@@ -185,6 +186,7 @@ export const MetagraphBuilder: FC = () => {
     <>
       <div style={{ backgroundColor: "white", padding: "10px", display: "flex", flexDirection: "column", gap: "5px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <ViewToggle />
           <div className="metagraph-builder-buttons">
             {/* File dropdown */}
             <div

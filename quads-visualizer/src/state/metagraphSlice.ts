@@ -12,7 +12,10 @@ export type TravelHoverSelection = {
 
 export type MetagraphNodeType = "vng" | "namedGraph" | "version";
 
+export type MetagraphView = "matrix" | "graph";
+
 export type MetagraphState = {
+  metagraphView: MetagraphView;
   travelHoverSelection: TravelHoverSelection | null;
   selectedMetagraphNodeType: MetagraphNodeType;
   selectedMetagraphNode: string | null;
@@ -23,6 +26,7 @@ export type MetagraphState = {
 };
 
 const initialState: MetagraphState = {
+  metagraphView: "matrix",
   travelHoverSelection: null,
   selectedMetagraphNodeType: "vng",
   selectedMetagraphNode: null,
@@ -36,6 +40,9 @@ const metagraphSlice = createSlice({
   name: "metagraph",
   initialState,
   reducers: {
+    setMetagraphView: (state, action: PayloadAction<MetagraphView>) => {
+      state.metagraphView = action.payload;
+    },
     setTravelHoverSelection: (state, action: PayloadAction<TravelHoverSelection | null>) => {
       state.travelHoverSelection = action.payload;
     },
@@ -60,5 +67,5 @@ const metagraphSlice = createSlice({
   },
 });
 
-export const { setTravelHoverSelection, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
+export const { setMetagraphView, setTravelHoverSelection, setSelectedMetagraphNodeType, setSelectedMetagraphNode, setShowClusters, setFocusMode, setClusterMode, setClusterStats } = metagraphSlice.actions;
 export default metagraphSlice.reducer;

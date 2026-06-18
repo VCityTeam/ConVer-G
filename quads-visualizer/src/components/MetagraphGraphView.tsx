@@ -1,0 +1,57 @@
+import { type CSSProperties, type FC, useCallback } from "react";
+import { useAppSelector } from "../state/hooks";
+import { type Response } from "../utils/responseSerializer.ts";
+import {
+  ControlsContainer,
+  FullScreenControl,
+} from "@react-sigma/core";
+import "@react-sigma/graph-search/lib/style.css";
+import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraphBuilder.ts";
+import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
+import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
+import { MetagraphClustersUI } from "./MetagraphClusters.tsx";
+import { MetagraphEffectsCoordinator } from "./MetagraphEffectsCoordinator.tsx";
+import type { Attributes } from "graphology-types";
+import { SigmaGraph } from "./common/SigmaGraph.tsx";
+
+/**
+ * The editable node-link view of the metagraph (ForceAtlas2 layout, clustering,
+ * and the drag-to-link / upload-to-ConVer-G editing tools). Rendered only when
+ * the "graph" view is active so its layout cost is not paid in matrix mode.
+ */
+export const MetagraphGraphView: FC<{
+  response: Response;
+  style?: CSSProperties;
+}> = ({ response, style }) => {
+  const metagraph = useBuildMetagraph(response);
+  const showClusters = useAppSelector((state) => state.metagraph.showClusters);
+
+  const edgeReducer = useCallback((_edge: string, data: Attributes) => {
+    const res = { ...data };
+    res.color = METAGRAPH_RELATION_COLORS.edge;
+    res.labelColor = METAGRAPH_RELATION_COLORS.label;
+    return res;
+  }, []);
+
+  return (
+    <SigmaGraph
+      graph={metagraph}
+      edgeReducer={edgeReducer}
+      style={style}
+    >
+      <MetagraphHighlight />
+      <MetagraphEffectsCoordinator />
+      <ControlsContainer position={"bottom-left"}>
+        <FullScreenControl />
+      </ControlsContainer>
+      <ControlsContainer position={"top-left"}>
+        <MetagraphBuilder />
+      </ControlsContainer>
+      {showClusters && (
+        <ControlsContainer position={"top-right"}>
+          <MetagraphClustersUI />
+        </ControlsContainer>
+      )}
+    </SigmaGraph>
+  );
+};

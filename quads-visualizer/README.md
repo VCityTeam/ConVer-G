@@ -5,7 +5,8 @@ It visualizes the history and structure of versions (the “metagraph”) and le
 
 ## Features ✅
 
-- Visual metagraph of versions and derivations (nodes = snapshots, edges = parent/child)
+- **Coverage matrix** of the metagraph (default view): named graphs (sources) × versions, one cell per snapshot. Click a cell to load that snapshot, a row/column header for the merged source/version view; hovering gives a live delta/merge preview. Scales to any number of sources and versions (virtualized, scroll-synced headers, source/version filters).
+- Editable node-link metagraph behind a **Matrix / Graph** toggle (ForceAtlas2 layout, clustering, drag-to-link, download/upload TTL to ConVer-G)
 - Interactive view of a selected Versioned Graph (quads as nodes/edges)
 - Delta visualization to compare two snapshots and highlight additions/removals
 - Stable node layout across versions for consistent topology-based analysis

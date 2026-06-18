@@ -177,3 +177,270 @@ body {
 .sparql-query-container .yasr td {
   max-width: 300px;
 }
+
+/* ===== Metagraph coverage matrix ===== */
+.mg-matrix {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  background: #fff;
+  color: #1e293b;
+}
+
+.mg-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.mg-toolbar__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mg-spacer {
+  flex: 1;
+}
+
+.mg-counts {
+  font-size: 12px;
+  color: #475569;
+}
+
+.mg-counts b {
+  color: #1e293b;
+}
+
+.mg-counts__filtered {
+  color: #6e56f0;
+  font-style: normal;
+}
+
+.mg-input {
+  padding: 5px 9px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  flex: 0 1 200px;
+  min-width: 140px;
+}
+
+.mg-input:focus {
+  outline: none;
+  border-color: #6e56f0;
+  box-shadow: 0 0 0 2px rgba(110, 86, 240, 0.2);
+}
+
+.mg-density {
+  padding: 5px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 12px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.mg-density:hover {
+  background: #f0f0f0;
+}
+
+.mg-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.mg-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mg-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.mg-legend__hint {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* View toggle (shared by both metagraph views) */
+.mg-view-toggle {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.mg-view-toggle__btn {
+  padding: 5px 11px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.mg-view-toggle__btn + .mg-view-toggle__btn {
+  border-left: 1px solid #e5e7eb;
+}
+
+.mg-view-toggle__btn.is-active {
+  background: #5333ed;
+  color: #fff;
+}
+
+/* Grid panes */
+.mg-grid {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mg-corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  background: #f8fafc;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 8px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.mg-corner__y {
+  align-self: flex-end;
+}
+
+.mg-colhead-pane {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mg-rowhead-pane {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+}
+
+.mg-body {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: auto;
+}
+
+.mg-cell {
+  transition: background-color 0.08s ease, box-shadow 0.08s ease;
+  box-sizing: border-box;
+}
+
+.mg-col-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.mg-col-head span {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 72px;
+  font-size: 10px;
+  line-height: 1;
+  color: #475569;
+}
+
+.mg-col-head.is-hot {
+  background: rgba(110, 86, 240, 0.06);
+}
+
+.mg-col-head.is-active {
+  background: rgba(110, 86, 240, 0.12);
+}
+
+.mg-col-head.is-active span {
+  color: #3413c4;
+  font-weight: 700;
+}
+
+.mg-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.mg-row-head__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #334155;
+}
+
+.mg-row-head.is-hot {
+  background: rgba(110, 86, 240, 0.06);
+}
+
+.mg-row-head.is-active {
+  background: rgba(110, 86, 240, 0.12);
+}
+
+.mg-row-head.is-active .mg-row-head__label {
+  color: #3413c4;
+  font-weight: 700;
+}
+
+.mg-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 14px;
+}

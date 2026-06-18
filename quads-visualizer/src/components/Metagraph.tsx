@@ -1,52 +1,22 @@
-import { type CSSProperties, type FC, useCallback } from "react";
+import { type CSSProperties, type FC } from "react";
 import { useAppSelector } from "../state/hooks";
 import { type Response } from "../utils/responseSerializer.ts";
-import {
-  ControlsContainer,
-  FullScreenControl,
-} from "@react-sigma/core";
-import "@react-sigma/graph-search/lib/style.css";
-import { METAGRAPH_RELATION_COLORS, useBuildMetagraph } from "../utils/metagraphBuilder.ts";
-import { MetagraphBuilder } from "./MetagraphBuilder.tsx";
-import { MetagraphHighlight } from "./MetagraphHighlight.tsx";
-import { MetagraphClustersUI } from "./MetagraphClusters.tsx";
-import { MetagraphEffectsCoordinator } from "./MetagraphEffectsCoordinator.tsx";
-import type { Attributes } from "graphology-types";
-import { SigmaGraph } from "./common/SigmaGraph.tsx";
+import { MetagraphMatrix } from "./MetagraphMatrix.tsx";
+import { MetagraphGraphView } from "./MetagraphGraphView.tsx";
 
+/**
+ * Metagraph panel. Defaults to the readable coverage matrix (sources × versions)
+ * and switches to the editable node-link graph via the in-view toggle.
+ */
 export const Metagraph: FC<{
   response: Response;
   style?: CSSProperties;
 }> = ({ response, style }) => {
-  const metagraph = useBuildMetagraph(response);
-  const showClusters = useAppSelector((state) => state.metagraph.showClusters);
+  const view = useAppSelector((state) => state.metagraph.metagraphView);
 
-  const edgeReducer = useCallback((_edge: string, data: Attributes) => {
-    const res = { ...data };
-    res.color = METAGRAPH_RELATION_COLORS.edge;
-    res.labelColor = METAGRAPH_RELATION_COLORS.label;
-    return res;
-  }, []);
-
-  return (
-    <SigmaGraph
-      graph={metagraph}
-      edgeReducer={edgeReducer}
-      style={style}
-    >
-      <MetagraphHighlight />
-      <MetagraphEffectsCoordinator />
-      <ControlsContainer position={"bottom-left"}>
-        <FullScreenControl />
-      </ControlsContainer>
-      <ControlsContainer position={"top-left"}>
-        <MetagraphBuilder />
-      </ControlsContainer>
-      {showClusters && (
-        <ControlsContainer position={"top-right"}>
-          <MetagraphClustersUI />
-        </ControlsContainer>
-      )}
-    </SigmaGraph>
+  return view === "matrix" ? (
+    <MetagraphMatrix response={response} style={style} />
+  ) : (
+    <MetagraphGraphView response={response} style={style} />
   );
 };
