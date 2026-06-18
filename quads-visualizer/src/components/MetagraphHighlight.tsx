@@ -15,7 +15,8 @@ export const MetagraphHighlight = () => {
   const sigma = useSigma();
   const { gotoNode } = useCamera();
   const graph = sigma.getGraph();
-  const currentView = useAppSelector((state) => state.metagraph.currentView);
+  const selectedGraph = useAppSelector((state) => state.versionedGraph.selectedGraph);
+  const selectedVersion = useAppSelector((state) => state.versionedGraph.selectedVersion);
   const selectedMetagraphNode = useAppSelector((state) => state.metagraph.selectedMetagraphNode);
   const selectedMetagraphNodeType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
@@ -65,13 +66,6 @@ export const MetagraphHighlight = () => {
       });
     }
 
-    if (!currentView) {
-      clearNodeReducer();
-      return;
-    }
-
-    const { graph: selectedGraph, version: selectedVersion } = currentView;
-
     if (!selectedGraph || !selectedVersion) {
       clearNodeReducer();
       return;
@@ -92,7 +86,7 @@ export const MetagraphHighlight = () => {
       targetNode: versionedGraphNode,
       size: NODE_SIZES.DEFAULT,
     });
-  }, [currentView, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, gotoNode, applyNodeReducer]);
+  }, [selectedGraph, selectedVersion, graph, sigma, hoveredNode, selectedMetagraphNode, selectedMetagraphNodeType, clearNodeReducer, gotoNode, applyNodeReducer]);
 
   return null;
 };

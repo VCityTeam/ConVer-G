@@ -1,8 +1,12 @@
 import { type Response } from "../utils/responseSerializer";
 
+// Runtime config injected by env.sh (config.js) at container start; absent in dev.
+const runtimeEnv: Record<string, string | undefined> =
+  (window as Window & { env?: Record<string, string | undefined> }).env ?? {};
+
 export class QueryService {
-  public static readonly QUERY_ENDPOINT = (window as any).env?.VITE_QUERY_ENDPOINT || import.meta.env.VITE_QUERY_ENDPOINT || "http://localhost:5173/rdf/query";
-  private static readonly LOADER_ENDPOINT = (window as any).env?.VITE_LOADER_ENDPOINT || import.meta.env.VITE_LOADER_ENDPOINT || "http://localhost:5173/import/metadata";
+  public static readonly QUERY_ENDPOINT = runtimeEnv.VITE_QUERY_ENDPOINT || import.meta.env.VITE_QUERY_ENDPOINT || "http://localhost:5173/rdf/query";
+  private static readonly LOADER_ENDPOINT = runtimeEnv.VITE_LOADER_ENDPOINT || import.meta.env.VITE_LOADER_ENDPOINT || "http://localhost:5173/import/metadata";
 
   static async executeQuery(query: string): Promise<Response> {
     const body = new URLSearchParams();

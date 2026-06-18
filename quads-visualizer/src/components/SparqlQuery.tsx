@@ -189,7 +189,7 @@ export const SparqlQuery: FC = () => {
         yasguiInstance.current = null;
       }
     };
-  }, [handleTermValue, isOpened]);
+  }, [handleTermValue, isOpened, isValueInGraph, getFocusNodes]);
 
   return (
     <>

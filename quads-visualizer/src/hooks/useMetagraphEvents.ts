@@ -56,6 +56,8 @@ export const useMetagraphEvents = (
       travelHoverNodeRef.current = nodeKey;
       dispatch(navigateToMetagraphNode({ nodeKey, nodeType, version: nodeLabel ?? nodeKey }));
     }
+
+    dispatch(setTravelHoverSelection(null));
   }, [dispatch, sigma]);
 
   const handleTravelHover = useCallback((nodeKey: string) => {
@@ -68,7 +70,6 @@ export const useMetagraphEvents = (
         return;
       }
       dispatch(setTravelHoverSelection({
-        updatedAt: Date.now(),
         graph: target.linkedGraph,
         version: target.linkedVersion,
         nodeType: "vng",
@@ -77,7 +78,6 @@ export const useMetagraphEvents = (
       const graph = sigma.getGraph();
       const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
       dispatch(setTravelHoverSelection({
-        updatedAt: Date.now(),
         graph: nodeLabel ?? nodeKey,
         nodeType: "namedGraph",
       }));
@@ -85,7 +85,6 @@ export const useMetagraphEvents = (
       const graph = sigma.getGraph();
       const nodeLabel = graph.getNodeAttribute(nodeKey, "label") as string | undefined;
       dispatch(setTravelHoverSelection({
-        updatedAt: Date.now(),
         version: nodeLabel ?? nodeKey,
         nodeType: "version",
       }));

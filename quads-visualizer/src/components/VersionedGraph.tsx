@@ -6,7 +6,6 @@ import {
 } from "@react-sigma/core";
 import "@react-sigma/graph-search/lib/style.css";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { setCurrentView } from "../state/metagraphSlice";
 import {
   resetVersionedGraphState,
   setSelectedGraph,
@@ -60,12 +59,6 @@ export const VersionedGraph: FC<{
     dispatch(resetVersionedGraphState());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (selectedGraph && selectedVersion) {
-      dispatch(setCurrentView({ graph: selectedGraph, version: selectedVersion }));
-    }
-  }, [dispatch, selectedGraph, selectedVersion]);
-
   const edgeReducer = useCallback((_edge: string, data: Attributes) => {
     const res = { ...data };
     if (res.status === "deleted") {
@@ -91,7 +84,7 @@ export const VersionedGraph: FC<{
       });
     }
     return null;
-  }, [separateGraphs, gridColumns, Y_OFFSET]);
+  }, [separateGraphs, gridColumns, X_OFFSET, Y_OFFSET]);
 
   const isMultiView = separateGraphs && separateGraphs.length > 0 && multiViewGraph;
   const graphToDisplay = isMultiView ? multiViewGraph : displayedGraph;
