@@ -7,6 +7,7 @@ import {
 import "@react-sigma/graph-search/lib/style.css";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import {
+  clearHighlights,
   resetVersionedGraphState,
   setSelectedGraph,
   setSelectedVersion,
@@ -36,6 +37,7 @@ export const VersionedGraph: FC<{
     distinctGraph,
     selectedGraph,
     selectedVersion,
+    mergedGraphsEnabled,
     displayedGraph,
     separateGraphs,
   } = useVersionedGraphLogic(response, metagraph);
@@ -58,6 +60,11 @@ export const VersionedGraph: FC<{
   useEffect(() => () => {
     dispatch(resetVersionedGraphState());
   }, [dispatch]);
+
+  // Highlights reference node/edge IDs from the currently displayed view.
+  useEffect(() => {
+    dispatch(clearHighlights());
+  }, [dispatch, selectedGraph, selectedVersion, selectedMetagraphNodeType, mergedGraphsEnabled]);
 
   const edgeReducer = useCallback((_edge: string, data: Attributes) => {
     const res = { ...data };

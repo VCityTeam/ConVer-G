@@ -9,6 +9,7 @@ export const useSigmaSearch = () => {
   const sigma = useSigma();
   const highlightedNodes = useAppSelector((state) => state.versionedGraph.highlightedNodes);
   const highlightedEdges = useAppSelector((state) => state.versionedGraph.highlightedEdges);
+  const highlightSource = useAppSelector((state) => state.versionedGraph.highlightSource);
 
   const findRelatedNodes = useCallback((nodeId: string): string[] => {
     const graph = sigma.getGraph();
@@ -85,9 +86,11 @@ export const useSigmaSearch = () => {
     [],
   );
 
+  const isSearchSource = highlightSource === "search";
+
   return {
-    selectedNodes: highlightedNodes,
-    selectedEdges: highlightedEdges,
+    selectedNodes: isSearchSource ? highlightedNodes : [],
+    selectedEdges: isSearchSource ? highlightedEdges : [],
     onFocus,
     onChange,
     postSearchResult,
