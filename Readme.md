@@ -106,6 +106,12 @@ This project:
 
 This project has been tested with: `junit-jupiter-engine`
 
+#### 🔀 Quads-Delta
+
+This project computes the delta (additions and deletions) between two RDF datasets. It provides an
+in-memory program (`RDFDelta`) and a stream-mode program (`RDFStreamDelta`) for large or
+memory-constrained inputs. See [quads-delta/README.md](quads-delta/README.md) for which one to use.
+
 ### Start the application
 
 #### ⌛ Quads-Loader
