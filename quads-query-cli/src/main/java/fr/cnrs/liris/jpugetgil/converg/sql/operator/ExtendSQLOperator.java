@@ -56,9 +56,17 @@ public class ExtendSQLOperator extends SQLOperator {
         Map<Var, Expr> exprs = opExtend.getVarExprList().getExprs();
 
         return "*, " + exprs.keySet().stream()
-                .map(variable -> Expression.fromJenaExpr(exprs.get(variable)).toSQLStringAgg() +
-                        " AS " + new SQLVariable(SQLVarType.VALUE, variable.getVarName().replace(".", "agg")).getSelect()
-                ).collect(Collectors.joining(", "));
+                .map(variable -> {
+                    String aggName = variable.getVarName().replace(".", "agg");
+                    String valueExpr = Expression.fromJenaExpr(exprs.get(variable)).toSQLStringAgg();
+                    // Project a native numeric sibling (num$) so a downstream numeric
+                    // filter on this computed variable can use it like any stored
+                    // literal. try_cast_numeric keeps non-numeric binds (e.g. CONCAT)
+                    // safe by yielding NULL instead of failing the cast.
+                    return valueExpr + " AS " + new SQLVariable(SQLVarType.VALUE, aggName).getSelect()
+                            + ", try_cast_numeric((" + valueExpr + ")::text) AS num$" + aggName;
+                })
+                .collect(Collectors.joining(", "));
     }
 
     /**
