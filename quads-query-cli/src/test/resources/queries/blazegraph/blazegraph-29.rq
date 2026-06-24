@@ -1,0 +1,15 @@
+# Two GRAPH variables connected by a shared subject through an OPTIONAL:
+# list each building height (mandatory, found in any named graph) together with an
+# optional width found for the same building in any (possibly different) named graph.
+PREFIX schema: <http://schema.org/>
+
+SELECT * WHERE {
+    GRAPH ?graph1 {
+        ?subject schema:height ?height .
+    }
+    OPTIONAL {
+        GRAPH ?graph2 {
+            ?subject schema:width ?width .
+        }
+    }
+}

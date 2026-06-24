@@ -93,6 +93,81 @@ class SPARQLtoSQLTranslatorTest {
                 "Expected a num$ column for the computed variable: " + sqlQuery.getSql());
     }
 
+    /**
+     * Baseline OPTIONAL nested inside a single GRAPH block (as in sts-12/23/24/25):
+     * it must translate to a LEFT JOIN.
+     */
+    @Test
+    void optionalInsideSingleGraphBuildsLeftJoin() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT ?g ?s ?o ?o2 WHERE { GRAPH ?g { " +
+                        "?s schema:height ?o . OPTIONAL { ?s schema:width ?o2 . } } }");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+
+        assertNotNull(sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("LEFT JOIN"),
+                "OPTIONAL must translate to a LEFT JOIN: " + sqlQuery.getSql());
+    }
+
+    /**
+     * Two distinct GRAPH variables connected through a shared subject by an OPTIONAL.
+     * This is the case suspected to be buggy. At minimum the translation must build
+     * (not throw) and produce a LEFT JOIN that keeps both graph variables
+     * (?graph1 mandatory, ?graph2 optional).
+     */
+    @Test
+    void optionalAcrossTwoGraphVariablesCondensedBuildsLeftJoin() {
+        SQLQuery sqlQuery = getSqlQuery(twoGraphOptionalQuery(), condensedSPARQLtoSQLTranslator);
+
+        assertNotNull(sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("LEFT JOIN"),
+                "OPTIONAL across two graphs must translate to a LEFT JOIN: " + sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("graph1"),
+                "The mandatory graph variable must be projected: " + sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("graph2"),
+                "The optional graph variable must be projected: " + sqlQuery.getSql());
+    }
+
+    /**
+     * Same two-graph OPTIONAL but for the flat (non-condensed) model, which takes a
+     * different code path (no condensed UNION/difference branch).
+     */
+    @Test
+    void optionalAcrossTwoGraphVariablesFlatBuildsLeftJoin() {
+        SQLQuery sqlQuery = getSqlQuery(twoGraphOptionalQuery(), flatSPARQLtoSQLTranslator);
+
+        assertNotNull(sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("LEFT JOIN"),
+                "OPTIONAL across two graphs must translate to a LEFT JOIN: " + sqlQuery.getSql());
+    }
+
+    /**
+     * OPTIONAL carrying a FILTER condition exercises the left-join WHERE/expression
+     * path ({@link fr.cnrs.liris.jpugetgil.converg.sql.operator.LeftJoinSQLOperator#buildWhere}).
+     */
+    @Test
+    void optionalWithFilterBuildsLeftJoin() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT ?g ?s ?o ?o2 WHERE { GRAPH ?g { " +
+                        "?s schema:height ?o . OPTIONAL { ?s schema:width ?o2 . FILTER(?o2 > 3) } } }");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+
+        assertNotNull(sqlQuery.getSql());
+        assertTrue(sqlQuery.getSql().contains("LEFT JOIN"),
+                "OPTIONAL with FILTER must translate to a LEFT JOIN: " + sqlQuery.getSql());
+    }
+
+    private static Query twoGraphOptionalQuery() {
+        return QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT * WHERE { " +
+                        "  GRAPH ?graph1 { ?subject schema:height ?height . } " +
+                        "  OPTIONAL { GRAPH ?graph2 { ?subject schema:width ?width . } } " +
+                        "}");
+    }
+
     private static SQLQuery getSqlQuery(Query query, SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator) {
         Op op = Algebra.compile(query);
 
