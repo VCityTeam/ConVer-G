@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class QuadsImporterHttpRequestTests {
+class QuadsImporterHttpRequestTests extends EmbeddedPostgresTestSupport {
 
     @LocalServerPort
     private int port;

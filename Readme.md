@@ -62,18 +62,18 @@ Using a SQL as a backend for SPARQL has been done in some cases.
 
 ### Installation
 
-This project uses Java 21 JDK + Maven and
+This project uses Java 25 JDK + Maven and
 a [dockerized (make sure that Docker is installed too)](https://www.docker.com/) [PostgreSQL 17 database](https://www.postgresql.org/docs/17/index.html).
-If you don't have Java 21 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this
-tool to set Java 21 as current session version.
+If you don't have Java 25 installed by default, I recommend that you install [SDKMAN!](https://sdkman.io/) and use this
+tool to set Java 25 as current session version.
 
 > SDKMAN! is a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems.
 
 Once you have `SDKMAN!` installed, run:
 
 ```shell
-sdk install java 21.0.1-amzn
-sdk use java 21.0.1-amzn
+sdk install java 25.0.3-tem
+sdk use java 25.0.3-tem
 ```
 
 Make sure you have Maven installed. If you don't have Maven installed, run: `sudo apt install maven`.

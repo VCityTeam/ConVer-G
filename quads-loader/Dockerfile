@@ -1,9 +1,9 @@
-FROM maven:3-eclipse-temurin-21 AS build-loader
+FROM maven:3-eclipse-temurin-25 AS build-loader
 WORKDIR /app
 COPY . .
 RUN ["mvn", "package", "-Dmaven.test.skip=true"]
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:25
 
 LABEL maintainer="vcity, jey.puget-gil@liris.cnrs.fr"
 LABEL authors="jey.puget-gil@liris.cnrs.fr"
