@@ -12,4 +12,5 @@ SELECT * WHERE {
             ?subject schema:width ?width .
         }
     }
+    FILTER(?graph2 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> AND ?graph2 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
 }
