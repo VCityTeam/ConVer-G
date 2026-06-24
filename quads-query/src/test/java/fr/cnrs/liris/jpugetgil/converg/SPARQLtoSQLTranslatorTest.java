@@ -130,6 +130,32 @@ class SPARQLtoSQLTranslatorTest {
     }
 
     /**
+     * Two SHARED condensed graph variables between the left and the OPTIONAL force an
+     * n = 2 Product-Set Difference. Per Lemma 5.1 the difference must be the disjoint
+     * union of slices, not the coordinate-wise product (A1\B1)x(A2\B2) which undercounts
+     * for n >= 2 (Example 5.9). A "blocked" factor (A_j & B_j, rendered as "& bit_or("
+     * without negation) appears only in the correct multi-slice decomposition.
+     */
+    @Test
+    void optionalTwoSharedGraphVariablesUsesLemma51Slicing() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT * WHERE { " +
+                        "  GRAPH ?g1 { ?s schema:height ?o1 } " +
+                        "  GRAPH ?g2 { ?s schema:width ?o2 } " +
+                        "  OPTIONAL { GRAPH ?g1 { ?s schema:depth ?o3 } GRAPH ?g2 { ?s schema:alpha ?o4 } } }");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+        String sql = sqlQuery.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("& ~bit_or("),
+                "Expected a version-set difference factor (A_i \\ B_i): " + sql);
+        assertTrue(sql.contains("& bit_or("),
+                "Expected a blocked factor (A_j & B_j) from Lemma 5.1 slicing, absent in the "
+                        + "coordinate-wise difference: " + sql);
+    }
+
+    /**
      * Same two-graph OPTIONAL but for the flat (non-condensed) model, which takes a
      * different code path (no condensed UNION/difference branch).
      */

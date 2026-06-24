@@ -67,7 +67,13 @@ public class SQLVariable {
     }
 
     public String getNullSelect() {
-        return "NULL AS " + getSelect();
+        return switch (this.sqlVarType) {
+            case VALUE, ID -> "NULL AS v$" + this.sqlVarName;
+            // A condensed variable maps to two columns; each must be NULL-aliased
+            // separately, otherwise the second one becomes a dangling reference.
+            case CONDENSED -> "NULL AS ng$" + this.sqlVarName + ", NULL AS bs$" + this.sqlVarName;
+            case UNBOUND_GRAPH -> "NULL AS " + getSelect();
+        };
     }
 
     /**
@@ -104,6 +110,44 @@ public class SQLVariable {
      */
     public String leftJoinDifferenceProjections(SQLVariable rightSQLVar, String leftTableName, String rightTableName) {
         return leftJoinDifferenceProjections(this, rightSQLVar, leftTableName, rightTableName);
+    }
+
+    /**
+     * The role a shared condensed (ζ) coordinate plays within one slice of the
+     * Product-Set Difference decomposition (Lemma 5.1, eq. 5.2). For slice {@code i},
+     * a coordinate {@code j} is:
+     * <ul>
+     *   <li>{@link #BLOCKED} when {@code j < i}: the version-set is intersected with
+     *       the blocked set, i.e. {@code A_j ∩ B_j};</li>
+     *   <li>{@link #DIFFERENCE} when {@code j == i}: the version-set difference
+     *       {@code A_i \ B_i};</li>
+     *   <li>{@link #FULL} when {@code j > i}: the full left version-set {@code A_j}.</li>
+     * </ul>
+     */
+    public enum DifferenceRole {BLOCKED, DIFFERENCE, FULL}
+
+    /**
+     * Projection of a shared condensed coordinate for one difference slice. Only
+     * valid for a CONDENSED-CONDENSED shared variable. The blocked set {@code B}
+     * aggregates every compatible right mapping via {@code bit_or}, so the enclosing
+     * SELECT must group by the left columns.
+     *
+     * @param rightSQLVar    the matching right SQL variable
+     * @param leftTableName  the left table name
+     * @param rightTableName the right table name
+     * @param role           the coordinate's role in the current slice
+     * @return the condensed projection for this coordinate
+     */
+    public String leftJoinDifferenceSliceProjection(
+            SQLVariable rightSQLVar, String leftTableName, String rightTableName, DifferenceRole role) {
+        String bitString = switch (role) {
+            case BLOCKED -> leftTableName + ".bs$" + this.sqlVarName
+                    + " & bit_or(" + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")";
+            case DIFFERENCE -> leftTableName + ".bs$" + this.sqlVarName
+                    + " & ~bit_or(" + rightTableName + ".bs$" + rightSQLVar.getSqlVarName() + ")";
+            case FULL -> leftTableName + ".bs$" + this.sqlVarName;
+        };
+        return bitString + " AS bs$" + this.sqlVarName + ", " + leftTableName + ".ng$" + this.sqlVarName;
     }
 
     /**
@@ -205,7 +249,11 @@ public class SQLVariable {
         }
 
         SQLClause.SQLClauseBuilder sqlClauseBuilder = new SQLClause.SQLClauseBuilder();
-        return "JOIN versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
+        // An optional graph variable (right side of an OPTIONAL) may be NULL when the
+        // optional part did not match; a plain JOIN would then drop the row, so it must
+        // be flattened with a LEFT JOIN to preserve the unmatched (NULL) bindings.
+        String joinKeyword = this.isOptional ? "LEFT JOIN" : "JOIN";
+        return joinKeyword + " versioned_named_graph " + getVNGName() + " ON " + sqlClauseBuilder.and(new EqualToOperator()
                         .buildComparisonOperatorSQL(
                                 tableName + ".ng$" + this.sqlVarName,
                                 getVNGName() + ".id_named_graph"
