@@ -95,6 +95,21 @@ public interface Expression {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }
 
+    /**
+     * Renders this expression as a numeric SQL value.
+     * <p>
+     * Variables resolve to the native {@code numeric_value} column of
+     * {@code resource_or_literal} (see {@code Var}), so numeric operators no
+     * longer cast the textual {@code name} at query time. The default keeps the
+     * previous behaviour (an explicit cast) for expressions without a native
+     * numeric representation.
+     *
+     * @return the numeric SQL representation of this expression
+     */
+    default String toNumericSQLString() {
+        return "(" + toSQLString() + ")::numeric";
+    }
+
     default String toSQLStringAgg() {
         throw new IllegalArgumentException("This expression does not have a SQL representation.");
     }

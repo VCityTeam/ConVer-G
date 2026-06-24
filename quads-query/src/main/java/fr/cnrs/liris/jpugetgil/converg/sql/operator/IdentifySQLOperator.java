@@ -49,7 +49,7 @@ public class IdentifySQLOperator extends SQLOperator {
                     ) {
                         return maxSPARQLOccurrence.getSqlVariable().getSelectIdentifyVariable();
                     } else {
-                        return maxSPARQLOccurrence.getSqlVariable().getSelect(IDENTIFY_TABLE_NAME);
+                        return maxSPARQLOccurrence.getSqlVariable().getSelectPropagateNumeric(IDENTIFY_TABLE_NAME);
                     }
                 })
                 .collect(Collectors.joining(", "));

@@ -9,7 +9,12 @@ public class Divide extends AbstractFunction<E_Divide> {
 
     @Override
     public String toSQLString() {
-        return "(" + args[0].toSQLString() + "::float" + getJenaExpr().getOpName() + args[1].toSQLString() + "::float)";
+        return "(" + args[0].toNumericSQLString() + getJenaExpr().getOpName() + args[1].toNumericSQLString() + ")";
+    }
+
+    @Override
+    public String toNumericSQLString() {
+        return toSQLString();
     }
 
     @Override

@@ -43,4 +43,9 @@ public class Var extends AbstractExpression<ExprVar> {
     public String toNameSQLString() {
         return "name$" + varName();
     }
+
+    @Override
+    public String toNumericSQLString() {
+        return "num$" + varName();
+    }
 }

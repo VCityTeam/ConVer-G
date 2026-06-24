@@ -150,7 +150,22 @@ public class SQLVariable {
      * @return the identified SQL variable Select part
      */
     public String getSelectIdentifyVariable() {
-        return "rl.name as v$" + this.sqlVarName;
+        return "rl.name as v$" + this.sqlVarName + ", rl.numeric_value as num$" + this.sqlVarName;
+    }
+
+    /**
+     * Same as {@link #getSelect(String)} but, for already identified value
+     * variables, also forwards the native {@code num$} column so it stays
+     * available across successive identifications (e.g. multi-variable filters).
+     *
+     * @param tableName the table name
+     * @return the propagating select part
+     */
+    public String getSelectPropagateNumeric(String tableName) {
+        if (this.sqlVarType == SQLVarType.VALUE) {
+            return tableName + ".v$" + this.sqlVarName + ", " + tableName + ".num$" + this.sqlVarName;
+        }
+        return getSelect(tableName);
     }
 
     /**

@@ -27,8 +27,115 @@ CREATE TABLE IF NOT EXISTS resource_or_literal
 (
     id_resource_or_literal integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name                   text,
-    type                   varchar(255)
+    type                   varchar(255),
+    -- Native (pre-parsed) representations of the literal. They are populated
+    -- automatically from (name, type) by trg_resource_or_literal_native_type so
+    -- the query side never has to cast the textual `name` at query time.
+    numeric_value          numeric,
+    datetime_value         timestamptz,
+    boolean_value          boolean
 )^;
+
+-- Make the native columns available on databases created before this change.
+ALTER TABLE resource_or_literal ADD COLUMN IF NOT EXISTS numeric_value  numeric^;
+ALTER TABLE resource_or_literal ADD COLUMN IF NOT EXISTS datetime_value timestamptz^;
+ALTER TABLE resource_or_literal ADD COLUMN IF NOT EXISTS boolean_value  boolean^;
+
+-- Exception-safe casts: an ill-formed lexical form yields NULL instead of
+-- aborting the (batched) insert.
+CREATE OR REPLACE FUNCTION try_cast_numeric(v text)
+    RETURNS numeric
+    LANGUAGE plpgsql
+    IMMUTABLE
+AS
+$$
+BEGIN
+    RETURN v::numeric;
+EXCEPTION
+    WHEN others THEN RETURN NULL;
+END;
+$$^;
+
+CREATE OR REPLACE FUNCTION try_cast_timestamptz(v text)
+    RETURNS timestamptz
+    LANGUAGE plpgsql
+    IMMUTABLE
+AS
+$$
+BEGIN
+    RETURN v::timestamptz;
+EXCEPTION
+    WHEN others THEN RETURN NULL;
+END;
+$$^;
+
+CREATE OR REPLACE FUNCTION try_cast_boolean(v text)
+    RETURNS boolean
+    LANGUAGE plpgsql
+    IMMUTABLE
+AS
+$$
+BEGIN
+    RETURN v::boolean;
+EXCEPTION
+    WHEN others THEN RETURN NULL;
+END;
+$$^;
+
+-- Populate the native columns from the RDF datatype URI. Centralised in a
+-- trigger so every insert path (catalog, version_named_graph, save) benefits.
+CREATE OR REPLACE FUNCTION trg_fn_resource_or_literal_native_type()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    NEW.numeric_value := NULL;
+    NEW.datetime_value := NULL;
+    NEW.boolean_value := NULL;
+
+    IF NEW.type IS NOT NULL THEN
+        CASE
+            WHEN NEW.type IN (
+                'http://www.w3.org/2001/XMLSchema#integer',
+                'http://www.w3.org/2001/XMLSchema#decimal',
+                'http://www.w3.org/2001/XMLSchema#double',
+                'http://www.w3.org/2001/XMLSchema#float',
+                'http://www.w3.org/2001/XMLSchema#long',
+                'http://www.w3.org/2001/XMLSchema#int',
+                'http://www.w3.org/2001/XMLSchema#short',
+                'http://www.w3.org/2001/XMLSchema#byte',
+                'http://www.w3.org/2001/XMLSchema#nonNegativeInteger',
+                'http://www.w3.org/2001/XMLSchema#nonPositiveInteger',
+                'http://www.w3.org/2001/XMLSchema#negativeInteger',
+                'http://www.w3.org/2001/XMLSchema#positiveInteger',
+                'http://www.w3.org/2001/XMLSchema#unsignedLong',
+                'http://www.w3.org/2001/XMLSchema#unsignedInt',
+                'http://www.w3.org/2001/XMLSchema#unsignedShort',
+                'http://www.w3.org/2001/XMLSchema#unsignedByte'
+            ) THEN
+                NEW.numeric_value := try_cast_numeric(NEW.name);
+            WHEN NEW.type IN (
+                'http://www.w3.org/2001/XMLSchema#dateTime',
+                'http://www.w3.org/2001/XMLSchema#dateTimeStamp',
+                'http://www.w3.org/2001/XMLSchema#date'
+            ) THEN
+                NEW.datetime_value := try_cast_timestamptz(NEW.name);
+            WHEN NEW.type = 'http://www.w3.org/2001/XMLSchema#boolean' THEN
+                NEW.boolean_value := try_cast_boolean(NEW.name);
+            ELSE
+                NULL;
+        END CASE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$^;
+
+CREATE OR REPLACE TRIGGER trg_resource_or_literal_native_type
+    BEFORE INSERT OR UPDATE ON resource_or_literal
+    FOR EACH ROW
+EXECUTE FUNCTION trg_fn_resource_or_literal_native_type()^;
 
 CREATE UNIQUE INDEX IF NOT EXISTS resource_or_literal_idx ON resource_or_literal (sha512(name::bytea), type) NULLS NOT DISTINCT^;
 

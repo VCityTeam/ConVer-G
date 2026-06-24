@@ -9,7 +9,7 @@ public class GreaterThanOrEqual extends AbstractFunction<E_GreaterThanOrEqual> {
 
     @Override
     public String toSQLString() {
-        return "(" + args[0].toSQLString() + "::float" + getJenaExpr().getOpName() + args[1].toSQLString() + "::float)";
+        return "(" + args[0].toNumericSQLString() + getJenaExpr().getOpName() + args[1].toNumericSQLString() + ")";
     }
 
     @Override
