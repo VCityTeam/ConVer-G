@@ -20,3 +20,17 @@ This project reads runtime endpoints from `window.env` created by `env.sh`. Set 
 - `VITE_LOADER_ENDPOINT` — URL of the Quads-Loader import endpoint
 
 The provided `env.sh` writes a small `config.js` to ` /usr/share/nginx/html` so the containerized app can be configured at runtime.
+
+## Development 🛠️
+
+```shell
+npm install      # install dependencies
+npm run dev      # start the dev server
+npm run lint     # static analysis (ESLint)
+npm test         # run the component/unit tests (Vitest)
+npm run build    # type-check and build for production
+```
+
+Tests live next to the code as `*.test.ts` files under `src/` and run with
+[Vitest](https://vitest.dev/). The same `lint` and `test` steps run in
+continuous integration on every push.

@@ -56,20 +56,20 @@ Traditional approaches rely on independent snapshots, which cause data redundanc
 
 Weather forecasting illustrates these needs: predictions for a target date are updated daily and different agencies produce competing forecasts, requiring a system that handles non-linear histories where users can query a specific forecast version or compare diverging predictions.
 
-Although several RDF versioning solutions have been proposed—such as SemVersion **SemVersion** [@volkel2005semversion], **R&WBase** [@vander2013r], **R43ples** [@graube2014r43ples], and **OSTRICH** [@taelman2018ostrich]—there remains a clear need for systems that support concurrent versioning, i.e., non-linear histories with branching and merging, while benefiting from the robustness, scalability, and maturity of standard relational database management systems (RDBMS).
+Although several RDF versioning solutions have been proposed—such as SemVersion [@volkel2005semversion], R&WBase [@vander2013r], R43ples [@graube2014r43ples], and OSTRICH [@taelman2018ostrich]—there remains a clear need for systems that support concurrent versioning, i.e., non-linear histories with branching and merging, while benefiting from the robustness, scalability, and maturity of standard relational database management systems (RDBMS).
 
 Furthermore, translating SPARQL, the standard query language for RDF, into SQL for versioned contexts remains a complex task [@prud2009mapping].
-**ConVer-G** addresses these needs by providing an architecture where the **Quads-loaDer** handles the provenance of quads (handling named graphs and snapshots), and **Quads-Query** provides a transparent SPARQL endpoint that translates queries into optimized SQL, leveraging the storage capabilities of PostgreSQL.
+ConVer-G addresses these needs by providing an architecture where the **Quads-loaDer** handles the provenance of quads (handling named graphs and snapshots), and **Quads-Query** provides a transparent SPARQL endpoint that translates queries into optimized SQL, leveraging the storage capabilities of PostgreSQL.
 This approach allows users to perform snapshot-based queries and analyze the lineage of data, modeled using PROV-O concepts [@provo], without the need for specialized, experimental triple stores.
 
 # State of the field
 
 Existing approaches to RDF versioning generally fall into four categories.
-*Independent-copy* (full snapshot) strategies store each revision in full, providing fast version-specific queries at the cost of significant data redundancy.
-*Change-based* (delta) strategies, such as those underpinning **R43ples** [@graube2014r43ples], record only the differences between revisions, which is space-efficient but degrades query performance as histories grow because reconstructing a state requires composing many deltas.
-*Timestamp-based* approaches, like **Dydra** [@thompson2011dydra], that associates each RDF triple with a timestamp or a validity interval, indicating the period during which it belongs to the knowledge graph.
-*Hybrid* strategies, exemplified by **OSTRICH** [@taelman2018ostrich], combine snapshots and deltas to balance storage and query performance, but they rely on dedicated triple-store engines whose operational maturity, indexing, and ecosystem tooling differ from mainstream RDBMS.
-Earlier systems such as **SemVersion** [@volkel2005semversion] and **R&WBase** [@vander2013r] introduced versioning concepts (including branching) for RDF, but were not designed around a relational backend nor around an explicit metagraph that captures non-linear histories with branching and merging at the level of named graphs and snapshots.
+*Independent-copy* (full snapshot) strategies store each revision in full, providing fast version-specific queries at the cost of significant data redundancy; compressed self-indexed archives such as RDFCSA [@7786197] mitigate this redundancy through dedicated compression and indexing rather than a relational backend.
+*Change-based* (delta) strategies, such as those underpinning R43ples [@graube2014r43ples], record only the differences between revisions, which is space-efficient but degrades query performance as histories grow because reconstructing a state requires composing many deltas.
+*Timestamp-based* approaches, like Dydra [@thompson2011dydra], associate each RDF triple with a timestamp or a validity interval, indicating the period during which it belongs to the knowledge graph; RDF-TX [@gao2016rdf] and x-RDF-3X [@10.14778/1920841.1920877] follow this line, building dedicated temporal or multi-version indexes on top of specialized RDF engines to answer time-travel queries.
+*Hybrid* strategies, exemplified by OSTRICH [@taelman2018ostrich], combine snapshots and deltas to balance storage and query performance, but they rely on dedicated triple-store engines whose operational maturity, indexing, and ecosystem tooling differ from mainstream RDBMS.
+Earlier systems such as SemVersion [@volkel2005semversion] and R&WBase [@vander2013r] introduced versioning concepts (including branching) for RDF, but were not designed around a relational backend nor around an explicit metagraph that captures non-linear histories with branching and merging at the level of named graphs and snapshots.
 
 ConVer-G is positioned within this landscape as a *condensed snapshot* approach realized on top of a standard RDBMS (PostgreSQL).
 By materializing quads once and using a bitmask to record their presence across snapshots, it avoids the redundancy of independent copies while preserving the query simplicity of a snapshot model.
@@ -98,7 +98,7 @@ Its primary goals are:
 **Quads-Query** acts as the middleware layer.
 It exposes a SPARQL endpoint compatible with standard clients (e.g., Yasgui, Jena).
 Its core contribution is the **SPARQL-to-SQL translator**.
-Unlike direct mapping approaches[@rodriguez2013evaluating], Quads-Query injects versioning constraints into the SQL generation process.
+Unlike direct mapping approaches [@rodriguez2013evaluating], Quads-Query injects versioning constraints into the SQL generation process.
 It allows users to execute queries against a specific snapshot or named branch, dynamically rewriting the query to filter quads valid at that specific point in the version tree.
 
 ## Quads-Visualizer
@@ -129,16 +129,24 @@ A **Merged graphs** option allows users to visualize all versioned graphs merged
 ConVer-G targets researchers and practitioners working with evolving RDF datasets who need to manage history explicitly rather than through ad-hoc copies or external scripts.
 By building concurrent versioning over a RDBMS and exposing a standard SPARQL endpoint, the suite lowers the entry cost for adopting versioned KGs in projects relying on relational infrastructure, and makes them usable from existing SPARQL clients without modification.
 
-The architectural and theoretical foundations have been published [@gil2024convergconcurrentversioningknowledge], and the software is used within the VCity project at the LIRIS laboratory, where evolving urban and geospatial datasets motivate explicit, branch-aware versioning.
+The architectural and theoretical foundations, together with an empirical evaluation comparing the query performance of the condensed representation against an extensional (one-dataset-per-version) baseline, have been published [@gil2024convergconcurrentversioningknowledge].
+The software is used within the VCity project at the LIRIS laboratory, where evolving urban and geospatial datasets motivate explicit, branch-aware versioning.
 A fully reproducible end-to-end experiment in the [UD-Demo-VCity-Knowledge_Evolution repository](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md) ingests daily weather predictions from multiple sources, stores them as versioned RDF graphs, and runs snapshot-based SPARQL queries to compare forecast accuracy.
 It requires only Docker and Docker Compose, with pre-configured services for all three components and example SPARQL queries.
-Beyond VCity, by showing that concurrent RDF versioning can be built on PostgreSQL with competitive functionality, ConVer-G contributes a reusable architectural template for the semantic web and RDBMS communities, and a teaching artifact for courses on KGs, data versioning, and SPARQL-to-SQL translation.
+Beyond VCity, by showing that concurrent RDF versioning can be built on a standard RDBMS while exposing a SPARQL interface, ConVer-G contributes a reusable architectural template for the semantic web and RDBMS communities, and a teaching artifact for courses on KGs, data versioning, and SPARQL-to-SQL translation.
 
 # AI usage disclosure
 
 AI tools were used for language refinement and formatting only.
 All technical content—system design, SPARQL-to-SQL translation, visualization features, experiments, and citations—was conceived, implemented, verified, and authored by the human authors, who take full responsibility for the manuscript and software.
 No AI was used to generate results, unreviewed source code, or citations; every reference was checked by the authors.
+
+# Author contributions
+
+Jey Puget Gil designed and implemented the software suite (Quads-loaDer, Quads-Query, and Quads-Visualizer), conducted the experiments, and wrote the manuscript.
+John Samuel contributed to the design of the versioning model and the overall research direction.
+Emmanuel Coquery and Gilles Gesquière contributed in a scientific supervisory and advisory capacity—guiding the research questions, methodology, and evaluation—rather than through source code.
+All authors reviewed and approved the manuscript.
 
 # Acknowledgements
 

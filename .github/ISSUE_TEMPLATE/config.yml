@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question / support
+    url: https://github.com/VCityTeam/ConVer-G/issues/new?labels=question&template=question.md
+    about: Ask a question about installing, configuring, or using ConVer-G.
+  - name: Documentation (README & SUPPORT)
+    url: https://github.com/VCityTeam/ConVer-G/blob/main/SUPPORT.md
+    about: Read how to get help before opening an issue.
