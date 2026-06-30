@@ -1,0 +1,18 @@
+# Two GRAPH variables connected by a shared subject through an OPTIONAL:
+# list each building height (mandatory, found in any named graph) together with an
+# optional width found for the same building in any (possibly different) named graph.
+# Exclude the internal Metadata named graph (which ConVer-G never returns for
+# versioned-data queries); the optional graph variable is only checked when bound.
+PREFIX schema: <http://schema.org/>
+
+SELECT * WHERE {
+    GRAPH ?graph1 {
+        ?subject schema:height ?height .
+    }
+    OPTIONAL {
+        GRAPH ?graph2 {
+            ?subject schema:width ?width .
+        }
+    }
+    FILTER(?graph1 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> && (!BOUND(?graph2) || ?graph2 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>))
+}

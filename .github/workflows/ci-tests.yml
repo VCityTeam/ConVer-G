@@ -7,6 +7,30 @@ on:
       - 'develop'
 
 jobs:
+  visualizer-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quads-visualizer
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: quads-visualizer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run component tests
+        run: npm test
+
   unit-test:
     runs-on: ubuntu-latest
     steps:

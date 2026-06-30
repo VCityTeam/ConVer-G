@@ -10,6 +10,13 @@ The aim of this POC is to query a set of city version and extract associated kno
 > This system has a demonstration and its code source is [available on GitHub](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution).
 > An experiment on knowledge evolution with weather forecasting data is also available [on GitHub](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md).
 
+## Community
+
+- 🐛 **Found a bug or have a feature idea?** Open an issue on the [issue tracker](https://github.com/VCityTeam/ConVer-G/issues).
+- ❓ **Need help?** See [SUPPORT.md](SUPPORT.md) for where to ask questions.
+- 🤝 **Want to contribute?** Read [CONTRIBUTING.md](CONTRIBUTING.md) for the branching model, how to run the tests, and how to propose a change.
+- 📜 All participation is governed by our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Motivations
 
 ### Why create a "SPARQL to SQL" translator rather than a from scratch engine?
@@ -20,14 +27,17 @@ format*.
 Motivations for linking SPARQL and SQL are numerous, particularly in the fields of science, technology,
 and business, where there is a growing need to integrate increasingly diverse data sources (captors, institutions, ...).
 By using a SPARQL to SQL translator, we can enable relational databases to be exposed on the Semantic Web and queried
-with SPARQL *(with the same performance as with SQL?)*.
-This allows researchers and developers to work with RDF and relational data seamlessly and efficiently while leveraging
-the performance optimizations of existing relational databases.
+with SPARQL while reusing the maturity of an existing RDBMS.
+This allows researchers and developers to work with RDF and relational data seamlessly while leveraging
+the storage, indexing, and transactional optimizations of existing relational databases.
 
 A *"from scratch"* engine that is not based on SPARQL nor SQL *would not be interoperable* with these query systems.
-It is more simple than reimplementing the full stack (algebra, including join algorithms, optimisation, efficient
-storage and indexing)
-and because we think that performance will be comparable to a dedicated implementation.
+It is simpler than reimplementing the full stack (algebra, including join algorithms, optimisation, efficient
+storage and indexing).
+An evaluation of the query performance of the condensed representation against an extensional (one-dataset-per-version)
+baseline is reported in the accompanying paper [(ConVer-G, arXiv:2409.04499)](https://arxiv.org/abs/2409.04499); see the
+[reproducibility guide](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md)
+to reproduce those measurements.
 
 ### Why this experiment?
 
@@ -144,7 +154,8 @@ cd quads-query
 mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" -jar quads-query-1.0-SNAPSHOT-jar-with-dependencies.jar
+## `mvn package` produces the runnable shaded jar at target/quads-query-1.0-SNAPSHOT.jar
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" -jar target/quads-query-1.0-SNAPSHOT.jar
 ```
 
 ### Implementation
@@ -335,10 +346,16 @@ The API description is available on the [swagger-ui](http://localhost:8080/swagg
 #### Tests
 
 ```shell
-# make sure your database is up
+# make sure the databases are up (docker compose up -d)
 
-# starts the tests
-mvn spring-boot:run test
+# run the unit tests
+mvn test
+
+# run the unit + integration tests (integration tests require the databases)
+mvn verify
+
+# run the integration tests against the flattened representation
+mvn verify -Pflat
 ```
 
 #### Code quality and coverage
@@ -461,3 +478,32 @@ After the import inside the relational database, we have the following quads rep
 | http://example.edu/Building#1 | height    | 11     | http://example.edu/Named-Graph#IGN        | 10       |
 | http://example.edu/Building#1 | height    | 10.5   | http://example.edu/Named-Graph#IGN        | 01       |
 | http://example.edu/Building#3 | height    | 15     | http://example.edu/Named-Graph#Grand-Lyon | 01       |
+
+##### Example query and expected result
+
+Using the two-version sample dataset above, the following SPARQL query asks for
+every building whose `height` is greater than `12`, across all versioned named
+graphs:
+
+```sparql
+SELECT ?vg ?building ?height WHERE {
+    GRAPH ?vg {
+      ?building <height> ?height .
+      FILTER(?height > 12)
+    }
+}
+```
+
+Only `Building#3` (height `15`) satisfies the filter, and it appears solely in
+the `buildings-2018` snapshot of the `Grand-Lyon` named graph
+(`Versioned-Named-Graph#sha256-3`, validity `01`). The expected result is
+therefore a single row:
+
+| ?vg                                                                  | ?building                     | ?height |
+| -------------------------------------------------------------------- | ----------------------------- | ------- |
+| https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#sha256-3 | http://example.edu/Building#3 | 15      |
+
+A larger, runnable set of example queries together with the data needed to
+reproduce them end-to-end is provided in the
+[reproducibility guide](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/Reproducibility.md),
+and the queries themselves live under [versioned-queries/](versioned-queries).

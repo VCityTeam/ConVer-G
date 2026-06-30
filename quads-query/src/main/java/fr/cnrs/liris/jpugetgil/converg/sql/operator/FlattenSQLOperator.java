@@ -45,13 +45,18 @@ public class FlattenSQLOperator extends SQLOperator {
                 List<SPARQLOccurrence> sparqlOccurrences = new ArrayList<>();
                 occurrences.forEach(occurrence -> {
                     if (occurrence.getSqlVariable().getSqlVarType() == SQLVarType.CONDENSED) {
+                        SQLVariable flattenedSqlVariable =
+                                new SQLVariable(SQLVarType.ID, occurrence.getSqlVariable().getSqlVarName());
+                        // Keep the optional flag so a flattened optional graph variable is
+                        // still LEFT JOIN-ed to resource_or_literal downstream (Finalize).
+                        flattenedSqlVariable.setOptional(occurrence.getSqlVariable().isOptional());
                         newSPARQLOccurrences
                                 .computeIfAbsent(node, k -> sparqlOccurrences)
                                 .add(new SPARQLOccurrence(
                                         occurrence.getType(),
                                         occurrence.getPosition(),
                                         occurrence.getContextType(),
-                                        new SQLVariable(SQLVarType.ID, occurrence.getSqlVariable().getSqlVarName())
+                                        flattenedSqlVariable
                                 ));
                     } else {
                         newSPARQLOccurrences.computeIfAbsent(node, k -> sparqlOccurrences).add(occurrence);
