@@ -36,7 +36,11 @@ public class Var extends AbstractExpression<ExprVar> {
 
     @Override
     public String toSQLStringAgg() {
-        return varName().replace(".", "agg");
+        String name = varName();
+        if (name.contains(".")) {
+            return name.replace(".", "agg");
+        }
+        return "v$" + name;
     }
 
     @Override

@@ -185,6 +185,74 @@ class SPARQLtoSQLTranslatorTest {
                 "OPTIONAL with FILTER must translate to a LEFT JOIN: " + sqlQuery.getSql());
     }
 
+    /**
+     * A computed projection over bound variables - {@code (?a - ?b AS ?diff)} - must
+     * reference the value columns ({@code v$a} / {@code v$b}), not the bare SPARQL names,
+     * and must first materialise the operands to their actual values. Regression test for
+     * the {@code column "a" does not exist} failure (renaming / computed SELECT expression).
+     */
+    @Test
+    void computedProjectionOverBoundVariablesReferencesValueColumns() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.org/> " +
+                        "SELECT ?s (?a - ?b AS ?diff) WHERE { GRAPH ?g { " +
+                        "?s ex:a ?a ; ex:b ?b . } }");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+        String sql = sqlQuery.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("(v$a::float-v$b::float)"),
+                "The computed binding must reference the value columns: " + sql);
+        assertFalse(sql.contains("(a::float"),
+                "The computed binding must not reference a bare variable name: " + sql);
+        assertTrue(sql.contains("rl.numeric_value as num$a"),
+                "The operands must be identified to their actual values: " + sql);
+    }
+
+    /**
+     * Renaming an aggregate result - {@code (AVG(...) AS ?avg)} - still references the
+     * GROUP BY column alias ({@code aggN}) and must not be rewritten to a (non-existent)
+     * value column. Guards the aggregate branch of the computed-projection fix.
+     */
+    @Test
+    void aggregateRenameStillReferencesAggregateColumnAlias() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.org/> " +
+                        "SELECT ?s (AVG(?o) AS ?avg) WHERE { GRAPH ?g { ?s ex:p ?o } } GROUP BY ?s");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+        String sql = sqlQuery.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("agg0 AS v$avg"),
+                "The aggregate rename must reference the aggregate column alias: " + sql);
+    }
+
+    /**
+     * FILTER comparing two CONDENSED graph variables with {@code !=} must flatten them to a
+     * concrete {@code id_versioned_named_graph} so the WHERE clause has real {@code v$}
+     * columns to compare. Regression test for {@code column "v$g2" does not exist}
+     * (change-representation-twice).
+     */
+    @Test
+    void inequalityFilterOnCondensedGraphVariablesFlattensThem() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.org/> " +
+                        "SELECT ?s1 ?s2 WHERE { " +
+                        "  GRAPH ?g1 { ?s1 ex:p ?o1 } " +
+                        "  GRAPH ?g2 { ?s2 ex:p ?o2 } " +
+                        "  FILTER(?g1 != ?g2) }");
+        SQLQuery sqlQuery = getSqlQuery(query, condensedSPARQLtoSQLTranslator);
+        String sql = sqlQuery.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("id_versioned_named_graph AS v$g1"),
+                "Graph variable ?g1 must be flattened to a concrete v$ column: " + sql);
+        assertTrue(sql.contains("id_versioned_named_graph AS v$g2"),
+                "Graph variable ?g2 must be flattened to a concrete v$ column: " + sql);
+        assertTrue(sql.contains("v$g1!=v$g2") || sql.contains("v$g2!=v$g1"),
+                "The inequality must compare the flattened value columns: " + sql);
+    }
+
     private static Query twoGraphOptionalQuery() {
         return QueryFactory.create(
                 "PREFIX schema: <http://schema.org/> " +
