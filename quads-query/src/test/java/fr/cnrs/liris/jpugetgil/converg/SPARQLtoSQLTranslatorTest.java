@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.FinalizeSQLOperator;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.sparql.algebra.Algebra;
@@ -29,6 +30,28 @@ class SPARQLtoSQLTranslatorTest {
         Query query = QueryFactory.create("SELECT ?g ?s ?p ?o WHERE { GRAPH ?g { ?s ?p ?o } }");
         SQLQuery sqlQuery = getSqlQuery(query, flatSPARQLtoSQLTranslator);
         assertNotNull(sqlQuery.getSql());
+    }
+
+    /**
+     * A CONSTRUCT query compiles without a projection operator; the finalized SQL
+     * must still expose the {@code name$}/{@code type$} columns that the template
+     * instantiation reads for every pattern variable.
+     */
+    @Test
+    void constructQueryProjectsNameAndTypeColumns() {
+        Query query = QueryFactory.create(
+                "CONSTRUCT { ?s <http://example.org/p> ?o } WHERE { GRAPH ?g { ?s <http://example.org/p> ?o } }");
+        SQLQuery finalized = new FinalizeSQLOperator(getSqlQuery(query, condensedSPARQLtoSQLTranslator))
+                .buildSQLQuery();
+        String sql = finalized.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("name$s") && sql.contains("type$s"),
+                "Subject variable must be projected as name$/type$ columns: " + sql);
+        assertTrue(sql.contains("name$o") && sql.contains("type$o"),
+                "Object variable must be projected as name$/type$ columns: " + sql);
+        assertTrue(sql.contains("name$g"),
+                "Graph variable must be projected as a name$ column: " + sql);
     }
 
     /**

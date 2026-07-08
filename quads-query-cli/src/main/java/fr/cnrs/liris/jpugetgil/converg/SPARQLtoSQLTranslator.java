@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,14 +79,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
             List<Quad> quadList = query.getConstructTemplate().getQuads();
 
             while (rs.next()) {
-                for (Quad quad : quadList) {
-                    Node graphNode = getTypedNode(quad.getGraph(), rs);
-                    Node subjectNode = getTypedNode(quad.getSubject(), rs);
-                    Node predicateNode = getTypedNode(quad.getPredicate(), rs);
-                    Node objectNode = getTypedNode(quad.getObject(), rs);
-
-                    dsg.add(new Quad(graphNode, subjectNode, predicateNode, objectNode));
-                }
+                instantiateTemplate(quadList, rs).forEach(dsg::add);
             }
 
             return DatasetFactory.wrap(dsg);
@@ -193,21 +187,60 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return rs;
     }
 
-    private static Node getTypedNode(Node node, java.sql.ResultSet rs) throws SQLException {
-        if (node.isVariable()) {
-            String v = node.getName();
-            String value = rs.getString("name$" + v);
+    /**
+     * Instantiate the CONSTRUCT template against the current solution (row) of the
+     * SQL result set. Template quads with an unbound variable or an illegal node
+     * position are skipped, and blank nodes are scoped to the solution.
+     */
+    static List<Quad> instantiateTemplate(List<Quad> templateQuads, java.sql.ResultSet rs) throws SQLException {
+        Map<Node, Node> solutionBNodes = new HashMap<>();
+        List<Quad> quads = new ArrayList<>();
 
-            if (PgUtils.hasColumn(rs, "type$" + v)) {
-                String valueType = rs.getString("type$" + v);
+        for (Quad quad : templateQuads) {
+            Node graphNode = getTypedNode(quad.getGraph(), rs, solutionBNodes);
+            Node subjectNode = getTypedNode(quad.getSubject(), rs, solutionBNodes);
+            Node predicateNode = getTypedNode(quad.getPredicate(), rs, solutionBNodes);
+            Node objectNode = getTypedNode(quad.getObject(), rs, solutionBNodes);
 
-                node = valueType == null ?
-                        NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-            } else {
-                node = NodeFactory.createURI(rs.getString("name$" + node.getName()));
+            if (isLegalQuad(graphNode, subjectNode, predicateNode, objectNode)) {
+                quads.add(new Quad(graphNode, subjectNode, predicateNode, objectNode));
             }
         }
 
-        return node;
+        return quads;
+    }
+
+    private static boolean isLegalQuad(Node graph, Node subject, Node predicate, Node object) {
+        return graph != null && subject != null && predicate != null && object != null
+                && !graph.isLiteral() && !subject.isLiteral() && predicate.isURI();
+    }
+
+    private static Node getTypedNode(Node node, java.sql.ResultSet rs, Map<Node, Node> solutionBNodes) throws SQLException {
+        if (node.isBlank()) {
+            return solutionBNodes.computeIfAbsent(node, ignored -> NodeFactory.createBlankNode());
+        }
+        if (!node.isVariable()) {
+            return node;
+        }
+
+        String v = node.getName();
+        if (!PgUtils.hasColumn(rs, "name$" + v)) {
+            return null;
+        }
+
+        String value = rs.getString("name$" + v);
+        if (value == null) {
+            return null;
+        }
+
+        String valueType;
+        if (PgUtils.hasColumn(rs, "type$" + v)) {
+            valueType = rs.getString("type$" + v);
+        } else {
+            valueType = PgUtils.getAssociatedRDFType(rs.getMetaData().getColumnType(rs.findColumn("name$" + v)));
+        }
+
+        return valueType == null ?
+                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
     }
 }

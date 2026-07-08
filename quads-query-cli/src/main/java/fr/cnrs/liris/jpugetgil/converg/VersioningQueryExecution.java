@@ -7,7 +7,9 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.ARQNotImplemented;
+import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.util.Context;
 import org.slf4j.Logger;
@@ -77,22 +79,23 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public Model execConstruct() {
-        return null;
+        return execConstruct(ModelFactory.createDefaultModel());
     }
 
     @Override
     public Model execConstruct(Model model) {
-        return null;
+        execConstructQuads().forEachRemaining(quad -> model.getGraph().add(quad.asTriple()));
+        return model;
     }
 
     @Override
     public Iterator<Triple> execConstructTriples() {
-        return null;
+        return execConstruct().getGraph().find();
     }
 
     @Override
     public Iterator<Quad> execConstructQuads() {
-        return null;
+        return translator.translateAndExecConstruct(query).asDatasetGraph().find();
     }
 
     @Override
@@ -102,7 +105,9 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public Dataset execConstructDataset(Dataset dataset) {
-        return null;
+        DatasetGraph dsg = dataset.asDatasetGraph();
+        execConstructQuads().forEachRemaining(dsg::add);
+        return dataset;
     }
 
     @Override
