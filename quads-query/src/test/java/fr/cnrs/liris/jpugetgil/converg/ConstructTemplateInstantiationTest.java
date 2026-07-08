@@ -45,9 +45,9 @@ class ConstructTemplateInstantiationTest {
         List<Quad> quads = SPARQLtoSQLTranslator.instantiateTemplate(template, resultSetOf(row, Map.of()));
 
         assertEquals(1, quads.size(), "The quad with the unbound ?o must be skipped, the other kept");
-        assertTrue(quads.getFirst().getSubject().isURI());
-        assertEquals("http://example.org/s", quads.getFirst().getSubject().getURI());
-        assertEquals("http://example.org/o2", quads.getFirst().getObject().getURI());
+        assertTrue(quads.get(0).getSubject().isURI());
+        assertEquals("http://example.org/s", quads.get(0).getSubject().getURI());
+        assertEquals("http://example.org/o2", quads.get(0).getObject().getURI());
     }
 
     @Test
@@ -75,7 +75,7 @@ class ConstructTemplateInstantiationTest {
         List<Quad> quads = SPARQLtoSQLTranslator.instantiateTemplate(template, resultSetOf(row, Map.of()));
 
         assertEquals(1, quads.size());
-        Node object = quads.getFirst().getObject();
+        Node object = quads.get(0).getObject();
         assertTrue(object.isLiteral());
         assertEquals("42", object.getLiteralLexicalForm());
         assertEquals(XSDDatatype.XSDinteger.getURI(), object.getLiteralDatatypeURI());
@@ -93,7 +93,7 @@ class ConstructTemplateInstantiationTest {
                 template, resultSetOf(row, Map.of("name$count", Types.BIGINT)));
 
         assertEquals(1, quads.size());
-        Node object = quads.getFirst().getObject();
+        Node object = quads.get(0).getObject();
         assertTrue(object.isLiteral(), "An aggregated value must become a literal, not a URI: " + object);
         assertEquals(XSDDatatype.XSDlong.getURI(), object.getLiteralDatatypeURI());
     }
@@ -127,12 +127,12 @@ class ConstructTemplateInstantiationTest {
         List<Quad> secondSolution = SPARQLtoSQLTranslator.instantiateTemplate(template, resultSetOf(row, Map.of()));
 
         assertEquals(2, firstSolution.size());
-        assertTrue(firstSolution.getFirst().getSubject().isBlank());
-        assertEquals(firstSolution.getFirst().getSubject(), firstSolution.get(1).getSubject(),
+        assertTrue(firstSolution.get(0).getSubject().isBlank());
+        assertEquals(firstSolution.get(0).getSubject(), firstSolution.get(1).getSubject(),
                 "The same template blank node must map to one node within a solution");
-        assertNotEquals(templateBNode, firstSolution.getFirst().getSubject(),
+        assertNotEquals(templateBNode, firstSolution.get(0).getSubject(),
                 "The template blank node itself must not be emitted");
-        assertNotEquals(firstSolution.getFirst().getSubject(), secondSolution.getFirst().getSubject(),
+        assertNotEquals(firstSolution.get(0).getSubject(), secondSolution.get(0).getSubject(),
                 "Each solution must instantiate fresh blank nodes");
     }
 
