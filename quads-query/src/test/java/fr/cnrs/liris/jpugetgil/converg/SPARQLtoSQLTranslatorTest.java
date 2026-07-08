@@ -192,8 +192,7 @@ class SPARQLtoSQLTranslatorTest {
     }
 
     /**
-     * OPTIONAL carrying a FILTER condition exercises the left-join WHERE/expression
-     * path ({@link fr.cnrs.liris.jpugetgil.converg.sql.operator.LeftJoinSQLOperator#buildWhere}).
+     * OPTIONAL carrying a FILTER condition exercises the left-join WHERE/expression.
      */
     @Test
     void optionalWithFilterBuildsLeftJoin() {
@@ -291,7 +290,6 @@ class SPARQLtoSQLTranslatorTest {
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
-        SQLQuery sqlQuery = condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
-        return sqlQuery;
+        return condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
     }
 }

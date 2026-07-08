@@ -257,6 +257,6 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         }
 
         return valueType == null ?
-                NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
+                NodeFactory.createURI(value) : NodeFactory.createLiteralDT(value, NodeFactory.getType(valueType));
     }
 }
