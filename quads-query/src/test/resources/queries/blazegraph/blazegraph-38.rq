@@ -1,0 +1,9 @@
+# Heights joined with the widths of the same building (plain join)
+PREFIX schema: <http://schema.org/>
+
+SELECT ?g ?s ?h ?w WHERE {
+  GRAPH ?g { ?s schema:height ?h . }
+  GRAPH ?g2 { ?s schema:width ?w . }
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata> && ?g2 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+
+}

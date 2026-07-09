@@ -1,0 +1,9 @@
+# Building 2 and everything transitively adjacent to it in a concrete versioned graph (zero-or-more path)
+PREFIX ex: <http://example.edu/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?x WHERE {
+  GRAPH <https://github.com/VCityTeam/ConVer-G/Versioned-Named-Graph#4d38b1d5a7a4e7d20c9ffc531ffccdb96ff5dce6b1cfd644229cc0f99a5145178d4d1ca69b349dd566c74317c2752e5aef164d8d4df1a6beffb391ddf80342e1> {
+      building:2 ex:adjacentTo* ?x .
+  }
+}

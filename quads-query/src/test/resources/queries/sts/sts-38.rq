@@ -1,0 +1,9 @@
+# Heights joined laterally with the widths of the same building (Jena LATERAL)
+PREFIX schema: <http://schema.org/>
+
+SELECT ?g ?s ?h ?w WHERE {
+  GRAPH ?g { ?s schema:height ?h . }
+  LATERAL {
+    GRAPH ?g2 { ?s schema:width ?w . }
+  }
+}

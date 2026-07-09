@@ -1,0 +1,11 @@
+# Find the buildings that building 2 is adjacent to (inverse path)
+PREFIX ex: <http://example.edu/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?g ?x WHERE {
+  GRAPH ?g {
+      ?x ^ex:adjacentTo building:2 .
+  }
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+
+}

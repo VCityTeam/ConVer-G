@@ -1,0 +1,10 @@
+# Double the height of building 1 in each versioned graph (ARQ LET assignment)
+PREFIX schema: <http://schema.org/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?g ?h ?double WHERE {
+  GRAPH ?g {
+      building:1 schema:height ?h .
+  }
+  LET(?double := ?h * 2)
+}

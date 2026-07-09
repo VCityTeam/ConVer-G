@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
@@ -12,11 +13,17 @@ public abstract class SPARQLLanguageTranslator {
 
     protected boolean condensedMode;
 
-    protected SPARQLLanguageTranslator(boolean condensedMode) {
+    protected EntailmentRegime entailmentRegime;
+
+    protected SPARQLLanguageTranslator(boolean condensedMode, EntailmentRegime entailmentRegime) {
         this.condensedMode = condensedMode;
+        this.entailmentRegime = entailmentRegime;
 
         if (condensedMode) {
             log.info("Condensed mode enabled");
+        }
+        if (entailmentRegime != EntailmentRegime.NONE) {
+            log.info("Entailment regime: {}", entailmentRegime);
         }
     }
 

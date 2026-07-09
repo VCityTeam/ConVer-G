@@ -210,6 +210,7 @@ public class LeftJoinSQLOperator extends JoinSQLOperator {
                                 new SQLContext(
                                                 mergedMapOccurrences,
                                                 leftQuery.getContext().condensedMode(),
+                                                leftQuery.getContext().entailmentRegime(),
                                                 null,
                                                 null));
         }

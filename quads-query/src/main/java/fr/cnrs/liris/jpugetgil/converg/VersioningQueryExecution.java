@@ -1,5 +1,6 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import io.prometheus.metrics.core.metrics.Counter;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
@@ -8,7 +9,9 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.ARQNotImplemented;
+import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.util.Context;
 import org.slf4j.Logger;
@@ -32,6 +35,9 @@ public class VersioningQueryExecution implements QueryExecution {
     private static final boolean CONDENSED_MODE = System.getenv("CONDENSED_MODE") == null ||
             Boolean.parseBoolean(System.getenv("CONDENSED_MODE"));
 
+    private static final EntailmentRegime ENTAILMENT_REGIME =
+            EntailmentRegime.fromString(System.getenv("ENTAILMENT_REGIME"));
+
     public VersioningQueryExecution(Query query) {
         this.query = query;
         this.translator = getTranslator();
@@ -40,7 +46,7 @@ public class VersioningQueryExecution implements QueryExecution {
     private SPARQLLanguageTranslator getTranslator() {
         // Add switch case for other target languages when implemented
         log.info("Using target language: {}", TARGET_LANG);
-        return new SPARQLtoSQLTranslator(CONDENSED_MODE);
+        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME);
     }
 
     private static String getSupportedTargetLanguage(String targetLang) {
@@ -82,22 +88,23 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public Model execConstruct() {
-        return null;
+        return execConstruct(ModelFactory.createDefaultModel());
     }
 
     @Override
     public Model execConstruct(Model model) {
-        return null;
+        execConstructQuads().forEachRemaining(quad -> model.getGraph().add(quad.asTriple()));
+        return model;
     }
 
     @Override
     public Iterator<Triple> execConstructTriples() {
-        return null;
+        return execConstruct().getGraph().find();
     }
 
     @Override
     public Iterator<Quad> execConstructQuads() {
-        return null;
+        return translator.translateAndExecConstruct(query).asDatasetGraph().find();
     }
 
     @Override
@@ -107,7 +114,9 @@ public class VersioningQueryExecution implements QueryExecution {
 
     @Override
     public Dataset execConstructDataset(Dataset dataset) {
-        return null;
+        DatasetGraph dsg = dataset.asDatasetGraph();
+        execConstructQuads().forEachRemaining(dsg::add);
+        return dataset;
     }
 
     @Override

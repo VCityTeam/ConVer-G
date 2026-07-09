@@ -1,0 +1,12 @@
+# Double the height of building 1 in each versioned graph (standard BIND)
+PREFIX schema: <http://schema.org/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?g ?h ?double WHERE {
+  GRAPH ?g {
+      building:1 schema:height ?h .
+  }
+  BIND(?h * 2 AS ?double)
+    FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+
+}

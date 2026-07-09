@@ -11,11 +11,16 @@ ng:Test {
         schema:depth "12"^^xsd:float .
 
     building:2 schema:height "9.1"^^xsd:float ;
-        schema:width "6"^^xsd:float .
+        schema:width "6"^^xsd:float ;
+        ex:adjacentTo building:3 .
+
+    building:3 ex:adjacentTo building:2 ;
+        ex:adjacentTo building:1 .
 }
 
 ng:Test-2 {
     building:1 schema:height "11"^^xsd:float .
     building:2 schema:height "9.1"^^xsd:float ;
-        schema:width "6"^^xsd:float .
+        schema:width "6"^^xsd:float ;
+        ex:adjacentTo building:1 .
 }

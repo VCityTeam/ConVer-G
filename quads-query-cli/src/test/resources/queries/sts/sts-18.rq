@@ -1,6 +1,6 @@
 # Find the versions that are in the graph Test
-PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX ng: <https://github.com/VCityTeam/ConVer-G/Named-Graph#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?version WHERE {
     ?vg prov:atLocation ?version ;

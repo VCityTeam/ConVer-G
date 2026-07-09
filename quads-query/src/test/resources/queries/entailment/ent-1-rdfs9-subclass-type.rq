@@ -1,0 +1,13 @@
+# rdfs9: subClassOf type propagation
+# With RDFS entailment, alice (a GradStudent) should also be typed as Student and Person.
+# charlie (a PhDStudent, v2 only) should also be GradStudent, Student, Person.
+# bob (a Student, v1 only) should also be Person.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?x ?type WHERE {
+    GRAPH ?g {
+        ?x rdf:type ?type .
+    }
+}
+ORDER BY ?x ?type

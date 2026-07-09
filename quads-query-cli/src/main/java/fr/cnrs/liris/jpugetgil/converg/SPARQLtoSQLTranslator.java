@@ -1,6 +1,9 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
+import fr.cnrs.liris.jpugetgil.converg.entailment.OpTransitiveClosure;
+import fr.cnrs.liris.jpugetgil.converg.path.OpZeroLengthPath;
+import fr.cnrs.liris.jpugetgil.converg.path.PathRewriter;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
 import fr.cnrs.liris.jpugetgil.converg.sql.operator.*;
@@ -14,6 +17,8 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.algebra.OpVisitorBase;
+import org.apache.jena.sparql.algebra.OpWalker;
 import org.apache.jena.sparql.algebra.op.*;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.Quad;
@@ -27,6 +32,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,14 +84,7 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
             List<Quad> quadList = query.getConstructTemplate().getQuads();
 
             while (rs.next()) {
-                for (Quad quad : quadList) {
-                    Node graphNode = getTypedNode(quad.getGraph(), rs);
-                    Node subjectNode = getTypedNode(quad.getSubject(), rs);
-                    Node predicateNode = getTypedNode(quad.getPredicate(), rs);
-                    Node objectNode = getTypedNode(quad.getObject(), rs);
-
-                    dsg.add(new Quad(graphNode, subjectNode, predicateNode, objectNode));
-                }
+                instantiateTemplate(quadList, rs).forEach(dsg::add);
             }
 
             return DatasetFactory.wrap(dsg);
@@ -100,6 +99,8 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
         return switch (op) {
+            case OpTransitiveClosure opTC -> new TransitiveClosureSQLOperator(opTC, context)
+                    .buildSQLQuery();
             case OpJoin opJoin -> new JoinSQLOperator(
                     buildSPARQLContext(opJoin.getLeft(), context),
                     buildSPARQLContext(opJoin.getRight(), context)
@@ -159,13 +160,66 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
                     opDatasetNames,
                     context
             ).buildSQLQuery();
-            case OpAssign opAssign -> throw new ARQNotImplemented("TODO: OpAssign not implemented");
-            case OpLateral opLateral -> throw new ARQNotImplemented("TODO: OpLateral not implemented");
-            case OpTopN opTopN -> throw new ARQNotImplemented("TODO: OpTopN not implemented");
-            case OpPath opPath -> throw new ARQNotImplemented("TODO: OpPath not implemented");
-            case OpLabel opLabel -> throw new ARQNotImplemented("TODO: OpLabel not implemented");
+            // Property paths survive quadization wrapped in an OpGraph scope
+            case OpGraph opGraph ->
+                    buildSPARQLContext(PathRewriter.rewrite(opGraph.getNode(), opGraph.getSubOp()), context);
+            case OpPath opPath ->
+                    buildSPARQLContext(PathRewriter.rewrite(Quad.defaultGraphNodeGenerated, opPath), context);
+            case OpZeroLengthPath opZLP -> new ZeroLengthPathSQLOperator(opZLP, context)
+                    .buildSQLQuery();
+            // Mixed BGP + path groups compile to a sequence of operators
+            case OpSequence opSequence -> opSequence.getElements().stream()
+                    .map(element -> buildSPARQLContext(element, context))
+                    .reduce((left, right) -> new JoinSQLOperator(left, right).buildSQLQuery())
+                    .orElse(new SQLQuery(null, context));
+            // LET(?v := expr) has the same translation as BIND for a fresh variable
+            case OpAssign opAssign ->
+                    buildSPARQLContext(OpExtend.create(opAssign.getSubOp(), opAssign.getVarExprList()), context);
+            // A lateral join without slice/group on the right-hand side is a plain join
+            case OpLateral opLateral -> {
+                if (containsSolutionModifier(opLateral.getRight())) {
+                    throw new ARQNotImplemented(
+                            "LATERAL with LIMIT/OFFSET or GROUP BY on the right-hand side is not implemented");
+                }
+                yield new JoinSQLOperator(
+                        buildSPARQLContext(opLateral.getLeft(), context),
+                        buildSPARQLContext(opLateral.getRight(), context)
+                ).buildSQLQuery();
+            }
+            // Produced by the optimizer for ORDER BY + LIMIT
+            case OpTopN opTopN -> buildSPARQLContext(
+                    new OpSlice(new OpOrder(opTopN.getSubOp(), opTopN.getConditions()),
+                            Long.MIN_VALUE, opTopN.getLimit()),
+                    context);
+            case OpLabel opLabel -> buildSPARQLContext(opLabel.getSubOp(), context);
             default -> throw new ARQNotImplemented("TODO: operator " + op.getClass().getName() + "not implemented");
         };
+    }
+
+    /**
+     * A lateral right-hand side containing a slice or a grouping cannot be
+     * translated as a join: those operators would apply globally instead of once
+     * per left binding.
+     */
+    private static boolean containsSolutionModifier(Op op) {
+        boolean[] found = new boolean[1];
+        OpWalker.walk(op, new OpVisitorBase() {
+            @Override
+            public void visit(OpSlice opSlice) {
+                found[0] = true;
+            }
+
+            @Override
+            public void visit(OpTopN opTopN) {
+                found[0] = true;
+            }
+
+            @Override
+            public void visit(OpGroup opGroup) {
+                found[0] = true;
+            }
+        });
+        return found[0];
     }
 
     private SQLQuery getSqlQuery(Query query) {
@@ -193,21 +247,60 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return rs;
     }
 
-    private static Node getTypedNode(Node node, java.sql.ResultSet rs) throws SQLException {
-        if (node.isVariable()) {
-            String v = node.getName();
-            String value = rs.getString("name$" + v);
+    /**
+     * Instantiate the CONSTRUCT template against the current solution (row) of the
+     * SQL result set. Template quads with an unbound variable or an illegal node
+     * position are skipped, and blank nodes are scoped to the solution.
+     */
+    static List<Quad> instantiateTemplate(List<Quad> templateQuads, java.sql.ResultSet rs) throws SQLException {
+        Map<Node, Node> solutionBNodes = new HashMap<>();
+        List<Quad> quads = new ArrayList<>();
 
-            if (PgUtils.hasColumn(rs, "type$" + v)) {
-                String valueType = rs.getString("type$" + v);
+        for (Quad quad : templateQuads) {
+            Node graphNode = getTypedNode(quad.getGraph(), rs, solutionBNodes);
+            Node subjectNode = getTypedNode(quad.getSubject(), rs, solutionBNodes);
+            Node predicateNode = getTypedNode(quad.getPredicate(), rs, solutionBNodes);
+            Node objectNode = getTypedNode(quad.getObject(), rs, solutionBNodes);
 
-                node = valueType == null ?
-                        NodeFactory.createURI(value) : NodeFactory.createLiteral(value, NodeFactory.getType(valueType));
-            } else {
-                node = NodeFactory.createURI(rs.getString("name$" + node.getName()));
+            if (isLegalQuad(graphNode, subjectNode, predicateNode, objectNode)) {
+                quads.add(new Quad(graphNode, subjectNode, predicateNode, objectNode));
             }
         }
 
-        return node;
+        return quads;
+    }
+
+    private static boolean isLegalQuad(Node graph, Node subject, Node predicate, Node object) {
+        return graph != null && subject != null && predicate != null && object != null
+                && !graph.isLiteral() && !subject.isLiteral() && predicate.isURI();
+    }
+
+    private static Node getTypedNode(Node node, java.sql.ResultSet rs, Map<Node, Node> solutionBNodes) throws SQLException {
+        if (node.isBlank()) {
+            return solutionBNodes.computeIfAbsent(node, ignored -> NodeFactory.createBlankNode());
+        }
+        if (!node.isVariable()) {
+            return node;
+        }
+
+        String v = node.getName();
+        if (!PgUtils.hasColumn(rs, "name$" + v)) {
+            return null;
+        }
+
+        String value = rs.getString("name$" + v);
+        if (value == null) {
+            return null;
+        }
+
+        String valueType;
+        if (PgUtils.hasColumn(rs, "type$" + v)) {
+            valueType = rs.getString("type$" + v);
+        } else {
+            valueType = PgUtils.getAssociatedRDFType(rs.getMetaData().getColumnType(rs.findColumn("name$" + v)));
+        }
+
+        return valueType == null ?
+                NodeFactory.createURI(value) : NodeFactory.createLiteralDT(value, NodeFactory.getType(valueType));
     }
 }

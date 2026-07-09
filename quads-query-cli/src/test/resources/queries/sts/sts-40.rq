@@ -1,0 +1,9 @@
+# Buildings having a height but no width in any versioned graph
+PREFIX schema: <http://schema.org/>
+
+SELECT DISTINCT ?s WHERE {
+  GRAPH ?g { ?s schema:height ?h . }
+  MINUS {
+    GRAPH ?g2 { ?s schema:width ?w . }
+  }
+}

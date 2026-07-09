@@ -1,21 +1,27 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
+import fr.cnrs.liris.jpugetgil.converg.sql.operator.FinalizeSQLOperator;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.sparql.ARQNotImplemented;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.algebra.op.OpLabel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SPARQLtoSQLTranslatorTest {
-    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true);
-    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false);
+    SPARQLtoSQLTranslator condensedSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(true, EntailmentRegime.NONE);
+    SPARQLtoSQLTranslator flatSPARQLtoSQLTranslator = new SPARQLtoSQLTranslator(false, EntailmentRegime.NONE);
 
     @Test
     void testBuildSPARQLContextCondensed() {
@@ -29,6 +35,28 @@ class SPARQLtoSQLTranslatorTest {
         Query query = QueryFactory.create("SELECT ?g ?s ?p ?o WHERE { GRAPH ?g { ?s ?p ?o } }");
         SQLQuery sqlQuery = getSqlQuery(query, flatSPARQLtoSQLTranslator);
         assertNotNull(sqlQuery.getSql());
+    }
+
+    /**
+     * A CONSTRUCT query compiles without a projection operator; the finalized SQL
+     * must still expose the {@code name$}/{@code type$} columns that the template
+     * instantiation reads for every pattern variable.
+     */
+    @Test
+    void constructQueryProjectsNameAndTypeColumns() {
+        Query query = QueryFactory.create(
+                "CONSTRUCT { ?s <http://example.org/p> ?o } WHERE { GRAPH ?g { ?s <http://example.org/p> ?o } }");
+        SQLQuery finalized = new FinalizeSQLOperator(getSqlQuery(query, condensedSPARQLtoSQLTranslator))
+                .buildSQLQuery();
+        String sql = finalized.getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("name$s") && sql.contains("type$s"),
+                "Subject variable must be projected as name$/type$ columns: " + sql);
+        assertTrue(sql.contains("name$o") && sql.contains("type$o"),
+                "Object variable must be projected as name$/type$ columns: " + sql);
+        assertTrue(sql.contains("name$g"),
+                "Graph variable must be projected as a name$ column: " + sql);
     }
 
     /**
@@ -169,8 +197,7 @@ class SPARQLtoSQLTranslatorTest {
     }
 
     /**
-     * OPTIONAL carrying a FILTER condition exercises the left-join WHERE/expression
-     * path ({@link fr.cnrs.liris.jpugetgil.converg.sql.operator.LeftJoinSQLOperator#buildWhere}).
+     * OPTIONAL carrying a FILTER condition exercises the left-join WHERE/expression.
      */
     @Test
     void optionalWithFilterBuildsLeftJoin() {
@@ -253,6 +280,227 @@ class SPARQLtoSQLTranslatorTest {
                 "The inequality must compare the flattened value columns: " + sql);
     }
 
+    /**
+     * A one-or-more property path must translate to a recursive CTE anchored on
+     * the concrete start node, in both storage layouts.
+     */
+    @Test
+    void oneOrMorePathGeneratesRecursiveClosure() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?x WHERE { GRAPH ?g { <http://example.edu/Building#1> ex:adjacentTo+ ?x } }");
+
+        String condensedSql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+        String flatSql = getSqlQuery(query, flatSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(condensedSql.contains("WITH RECURSIVE"),
+                "A + path must generate a recursive CTE: " + condensedSql);
+        assertTrue(condensedSql.contains("'http://example.edu/Building#1'"),
+                "The closure must be anchored on the concrete start: " + condensedSql);
+        assertTrue(flatSql.contains("WITH RECURSIVE"),
+                "A + path must generate a recursive CTE in flat mode too: " + flatSql);
+    }
+
+    /**
+     * With a bound end and an unbound start, the closure must explore the chain
+     * backward from the end; filtering the base case on the end would lose
+     * multi-hop chains (regression test for the anchoring direction).
+     */
+    @Test
+    void oneOrMorePathWithBoundEndExploresChainBackward() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?x WHERE { GRAPH ?g { ?x ex:adjacentTo+ <http://example.edu/Building#3> } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("ON c.id_start = t1.id_object"),
+                "A bound-end closure must recurse backward through the subjects: " + sql);
+    }
+
+    /**
+     * A zero-or-more path adds a zero-length arm (the start node itself, valid in
+     * every version where the graph exists) and collapses duplicate chains.
+     */
+    @Test
+    void zeroOrMorePathAddsZeroLengthArm() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?x WHERE { GRAPH ?g { <http://example.edu/Building#1> ex:adjacentTo* ?x } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("WITH RECURSIVE"), "A * path must generate a recursive CTE: " + sql);
+        assertTrue(sql.contains("bit_or"),
+                "The zero-length arm and chain collapsing rely on bit_or aggregation: " + sql);
+    }
+
+    /**
+     * The zero-length component of a * path binds both endpoints to the same
+     * term, which cannot be enumerated when both are variables.
+     */
+    @Test
+    void zeroOrMorePathWithTwoVariablesIsRejected() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?s ?x WHERE { GRAPH ?g { ?s ex:adjacentTo* ?x } }");
+
+        assertThrows(ARQNotImplemented.class, () -> getSqlQuery(query, condensedSPARQLtoSQLTranslator));
+    }
+
+    /**
+     * A zero-or-one path is the union of the zero-length binding and the single
+     * hop.
+     */
+    @Test
+    void zeroOrOnePathUnionsZeroLengthBinding() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?x WHERE { GRAPH ?g { <http://example.edu/Building#1> ex:adjacentTo? ?x } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("UNION"), "A ? path must union the zero and one hop cases: " + sql);
+        assertTrue(sql.contains("'http://example.edu/Building#1'"),
+                "The zero-length arm must bind the variable to the concrete term: " + sql);
+    }
+
+    /**
+     * A sequence path joins its two steps through a generated intermediate
+     * variable.
+     */
+    @Test
+    void sequencePathJoinsThroughFreshVariable() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?x WHERE { GRAPH ?g { <http://example.edu/Building#1> (ex:adjacentTo/ex:adjacentTo) ?x } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("__path_p"),
+                "A sequence path must join through a fresh intermediate variable: " + sql);
+    }
+
+    /**
+     * An alternation path is a union of its branches.
+     */
+    @Test
+    void alternationPathTranslatesToUnion() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT ?g ?s ?v WHERE { GRAPH ?g { ?s (schema:height|schema:width) ?v } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("UNION"), "An alternation path must translate to a UNION: " + sql);
+        assertTrue(sql.contains("'http://schema.org/height'") && sql.contains("'http://schema.org/width'"),
+                "Both branches must be present: " + sql);
+    }
+
+    /**
+     * An inverse path swaps subject and object of the underlying pattern.
+     */
+    @Test
+    void inversePathSwapsSubjectAndObject() {
+        Query query = QueryFactory.create(
+                "PREFIX ex: <http://example.edu/> " +
+                        "SELECT ?g ?o WHERE { GRAPH ?g { ?o ^ex:adjacentTo <http://example.edu/Building#2> } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("id_subject") && sql.contains("'http://example.edu/Building#2'"),
+                "The inverse path must place the concrete node in subject position: " + sql);
+    }
+
+    /**
+     * A property path over the default graph runs on the metadata table.
+     */
+    @Test
+    void metadataPathUsesMetadataTable() {
+        Query query = QueryFactory.create(
+                "PREFIX prov: <http://www.w3.org/ns/prov#> " +
+                        "SELECT ?vng ?ng WHERE { ?vng prov:specializationOf+ ?ng }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertTrue(sql.contains("FROM metadata"),
+                "A default-graph path must recurse over the metadata table: " + sql);
+        assertTrue(sql.contains("WITH RECURSIVE"), "It must still be a recursive closure: " + sql);
+    }
+
+    /**
+     * LET(?v := expr) (OpAssign) is translated like BIND for a fresh variable.
+     */
+    @Test
+    void letAssignmentProjectsComputedVariable() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT ?g ?h ?d WHERE { GRAPH ?g { <http://example.edu/Building#1> schema:height ?h } LET(?d := ?h + 1) }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("$d"), "The assigned variable must be projected: " + sql);
+    }
+
+    /**
+     * The optimizer rewrites ORDER BY + LIMIT into OpTopN; it must translate to
+     * the same SQL as the unoptimized slice over an order.
+     */
+    @Test
+    void topNTranslatesToOrderAndLimit() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT ?h WHERE { GRAPH ?g { ?s schema:height ?h } } ORDER BY DESC(?h) LIMIT 3");
+        Op quadOp = Algebra.toQuadForm(Algebra.optimize(Algebra.compile(query)));
+        assertTrue(quadOp.toString().contains("(top"),
+                "Expected the optimizer to produce an OpTopN: " + quadOp);
+
+        SQLQuery finalized = new FinalizeSQLOperator(condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp))
+                .buildSQLQuery();
+        String sql = finalized.getSql();
+
+        assertTrue(sql.contains("ORDER BY"), "TopN must order the results: " + sql);
+        assertTrue(sql.contains("LIMIT 3"), "TopN must limit the results: " + sql);
+    }
+
+    /**
+     * A LATERAL right-hand side without slice or grouping behaves like a join.
+     */
+    @Test
+    void lateralWithoutModifiersTranslatesAsJoin() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT * WHERE { GRAPH ?g { ?s schema:height ?h } LATERAL { GRAPH ?g2 { ?s schema:width ?w } } }");
+        String sql = getSqlQuery(query, condensedSPARQLtoSQLTranslator).getSql();
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("'http://schema.org/width'"),
+                "The lateral right-hand side must be joined in: " + sql);
+    }
+
+    /**
+     * A LATERAL right-hand side with a LIMIT applies once per left binding; that
+     * cannot be expressed as a global join and must be rejected.
+     */
+    @Test
+    void lateralWithLimitIsRejected() {
+        Query query = QueryFactory.create(
+                "PREFIX schema: <http://schema.org/> " +
+                        "SELECT * WHERE { GRAPH ?g { ?s schema:height ?h } " +
+                        "LATERAL { { SELECT ?s ?w WHERE { GRAPH ?g2 { ?s schema:width ?w } } LIMIT 1 } } }");
+
+        assertThrows(ARQNotImplemented.class, () -> getSqlQuery(query, condensedSPARQLtoSQLTranslator));
+    }
+
+    /**
+     * OpLabel is a transparent annotation: the labelled operator must translate
+     * exactly like its sub-operator.
+     */
+    @Test
+    void labelUnwrapsToSubOperator() {
+        Query query = QueryFactory.create("SELECT ?g ?s WHERE { GRAPH ?g { ?s ?p ?o } }");
+        Op quadOp = Algebra.toQuadForm(Algebra.compile(query));
+
+        String unwrapped = condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp).getSql();
+        String labelled = condensedSPARQLtoSQLTranslator.buildSPARQLContext(OpLabel.create("note", quadOp)).getSql();
+
+        assertEquals(unwrapped, labelled);
+    }
+
     private static Query twoGraphOptionalQuery() {
         return QueryFactory.create(
                 "PREFIX schema: <http://schema.org/> " +
@@ -268,7 +516,6 @@ class SPARQLtoSQLTranslatorTest {
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
-        SQLQuery sqlQuery = condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
-        return sqlQuery;
+        return condensedSPARQLtoSQLTranslator.buildSPARQLContext(quadOp);
     }
 }

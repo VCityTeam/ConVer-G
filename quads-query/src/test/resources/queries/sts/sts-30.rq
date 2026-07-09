@@ -1,0 +1,10 @@
+# Find the distinct buildings transitively adjacent to building 2 in any versioned graph
+# (DISTINCT because Blazegraph does not bind the graph variable inside ALP property paths)
+PREFIX ex: <http://example.edu/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT DISTINCT ?x WHERE {
+  GRAPH ?g {
+      building:2 ex:adjacentTo+ ?x .
+  }
+}

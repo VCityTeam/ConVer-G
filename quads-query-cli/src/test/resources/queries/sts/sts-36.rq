@@ -1,0 +1,6 @@
+# Follow the specializationOf chain from every versioned named graph (metadata)
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+SELECT ?vng ?ng WHERE {
+  ?vng prov:specializationOf+ ?ng .
+}

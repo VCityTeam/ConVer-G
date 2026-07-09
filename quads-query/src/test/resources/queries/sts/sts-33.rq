@@ -1,0 +1,8 @@
+# List the height or width of every building in each versioned graph
+PREFIX schema: <http://schema.org/>
+
+SELECT ?g ?s ?v WHERE {
+  GRAPH ?g {
+      ?s (schema:height|schema:width) ?v .
+  }
+}

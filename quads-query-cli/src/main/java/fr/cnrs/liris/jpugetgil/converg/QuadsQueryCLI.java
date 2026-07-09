@@ -1,6 +1,8 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import org.apache.jena.query.*;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +46,8 @@ public class QuadsQueryCLI {
                     ResultSet results = qExec.execSelect();
                     ResultSetFormatter.out(System.out, results, query);
                 } else if (query.isConstructType()) {
-                    org.apache.jena.rdf.model.Model model = qExec.execConstruct();
-                    model.write(System.out, "TURTLE");
+                    Dataset dataset = qExec.execConstructDataset();
+                    RDFDataMgr.write(System.out, dataset, RDFFormat.TRIG_PRETTY);
                 } else if (query.isDescribeType()) {
                     org.apache.jena.rdf.model.Model model = qExec.execDescribe();
                     model.write(System.out, "TURTLE");
