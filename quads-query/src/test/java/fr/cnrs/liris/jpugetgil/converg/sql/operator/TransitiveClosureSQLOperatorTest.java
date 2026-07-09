@@ -56,7 +56,7 @@ class TransitiveClosureSQLOperatorTest {
                 "Should NOT query versioned_quad_flat in condensed mode");
 
         // Must contain validity intersection
-        assertTrue(sql.contains("c.validity & t1.validity"),
+        assertTrue(sql.contains("c.validity::varbit & t1.validity"),
                 "Recursive step must intersect validity bitsets (conjunctive version set semantics)");
 
         // Must check bit_count for non-empty intersection
