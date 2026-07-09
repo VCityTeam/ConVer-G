@@ -1,0 +1,37 @@
+@prefix ex: <http://example.edu/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Version 1: University dataset with RDFS schema and instance data
+#
+# Schema (class hierarchy):
+#   ex:GradStudent rdfs:subClassOf ex:Student rdfs:subClassOf ex:Person
+#
+# Schema (property declarations):
+#   ex:enrolledIn  rdfs:domain ex:Student ; rdfs:range ex:Course
+#   ex:teaches     rdfs:subPropertyOf ex:relatedTo
+#
+# Instance data:
+#   ex:alice  a ex:GradStudent ; ex:enrolledIn ex:CS101
+#   ex:bob    a ex:Student
+#   ex:prof1  ex:teaches ex:CS101
+
+ex:university {
+    # --- RDFS Schema triples ---
+    ex:Student     rdfs:subClassOf ex:Person .
+    ex:GradStudent rdfs:subClassOf ex:Student .
+
+    ex:enrolledIn  rdfs:domain ex:Student .
+    ex:enrolledIn  rdfs:range  ex:Course .
+
+    ex:teaches     rdfs:subPropertyOf ex:relatedTo .
+
+    # --- Instance data ---
+    ex:alice  rdf:type     ex:GradStudent .
+    ex:alice  ex:enrolledIn ex:CS101 .
+
+    ex:bob    rdf:type     ex:Student .
+
+    ex:prof1  ex:teaches   ex:CS101 .
+}

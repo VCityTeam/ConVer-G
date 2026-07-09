@@ -1,0 +1,40 @@
+@prefix ex: <http://example.edu/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Version 2: University dataset — schema drift + new instances
+#
+# Schema changes from v1:
+#   ADDED:  ex:PhDStudent rdfs:subClassOf ex:GradStudent  (deeper class hierarchy)
+#   ADDED:  ex:advises    rdfs:subPropertyOf ex:teaches   (deeper property hierarchy)
+#
+# Data changes from v1:
+#   REMOVED: ex:bob rdf:type ex:Student
+#   ADDED:   ex:charlie rdf:type ex:PhDStudent
+#   ADDED:   ex:prof2   ex:advises ex:charlie
+
+ex:university {
+    # --- RDFS Schema triples (kept from v1) ---
+    ex:Student     rdfs:subClassOf ex:Person .
+    ex:GradStudent rdfs:subClassOf ex:Student .
+
+    ex:enrolledIn  rdfs:domain ex:Student .
+    ex:enrolledIn  rdfs:range  ex:Course .
+
+    ex:teaches     rdfs:subPropertyOf ex:relatedTo .
+
+    # --- RDFS Schema triples (NEW in v2) ---
+    ex:PhDStudent  rdfs:subClassOf ex:GradStudent .
+    ex:advises     rdfs:subPropertyOf ex:teaches .
+
+    # --- Instance data (kept from v1) ---
+    ex:alice  rdf:type     ex:GradStudent .
+    ex:alice  ex:enrolledIn ex:CS101 .
+
+    ex:prof1  ex:teaches   ex:CS101 .
+
+    # --- Instance data (NEW in v2) ---
+    ex:charlie rdf:type     ex:PhDStudent .
+    ex:prof2   ex:advises   ex:charlie .
+}

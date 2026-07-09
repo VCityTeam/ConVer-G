@@ -1,0 +1,11 @@
+# rdfs9 with concrete class: find all instances of ex:Person (including inferred)
+# With entailment, this should find alice, bob, charlie via subClassOf chains.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?person WHERE {
+    GRAPH ?g {
+        ?person rdf:type ex:Person .
+    }
+}
+ORDER BY ?person

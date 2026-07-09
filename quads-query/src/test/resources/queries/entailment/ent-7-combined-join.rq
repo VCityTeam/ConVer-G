@@ -1,0 +1,15 @@
+# Combined query: find all Persons and what they are enrolled in.
+# Tests entailment within a BGP join:
+#   ?person rdf:type ex:Person (entailed via rdfs9)
+#   ?person ex:enrolledIn ?course (explicit)
+# Only alice satisfies both patterns.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://example.edu/>
+
+SELECT ?g ?person ?course WHERE {
+    GRAPH ?g {
+        ?person rdf:type ex:Person .
+        ?person ex:enrolledIn ?course .
+    }
+}
+ORDER BY ?person ?course

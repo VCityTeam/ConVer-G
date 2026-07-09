@@ -155,7 +155,7 @@ mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
 ## `mvn package` produces the runnable shaded jar at target/quads-query-1.0-SNAPSHOT.jar
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" -jar target/quads-query-1.0-SNAPSHOT.jar
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" ?"-DENTAILMENT_REGIME=<NONE|RDFS|OWL_LITE>" -jar target/quads-query-1.0-SNAPSHOT.jar
 ```
 
 ### Implementation
@@ -336,6 +336,56 @@ flowchart TB
         DB -->|Sends the version information| JDBC
     end
 ```
+
+#### Inference (entailment regimes)
+
+`quads-query` can apply RDFS inference at query time. When enabled, incoming SPARQL queries are
+rewritten (query expansion) so that they return both explicitly stored and inferred triples — nothing is
+materialized in the database. The rewriting is version-aware: an inferred triple only holds in the
+versions where **all** of its premises hold (version-set intersection on the `validity` bitstrings).
+
+Inference is **disabled by default**. It is controlled by the `ENTAILMENT_REGIME` environment variable
+of the `quads-query` service:
+
+| Value                | Effect                                              |
+|----------------------|-----------------------------------------------------|
+| _(unset)_ / `NONE`   | No inference (default)                              |
+| `RDFS`               | RDFS entailment rules (see below)                   |
+| `OWL` / `OWL_LITE`   | Currently the same rule set as `RDFS`               |
+
+```shell
+# locally
+ENTAILMENT_REGIME=RDFS java ... -jar target/quads-query-1.0-SNAPSHOT.jar
+
+# or with Docker Compose, add to the ud-quads-query service environment:
+#   - "ENTAILMENT_REGIME=RDFS"
+```
+
+Supported rules:
+
+- **rdfs9** — `?x rdf:type ?C` also matches instances of any subclass of `?C` (`rdfs:subClassOf`,
+  transitive),
+- **rdfs7** — `?s <p> ?o` also matches any sub-property of `<p>` (`rdfs:subPropertyOf`, transitive),
+- **rdfs2** — `?x rdf:type ?C` is inferred from `?x ?p ?_` when `?p rdfs:domain ?C`,
+- **rdfs3** — `?x rdf:type ?C` is inferred from `?_ ?p ?x` when `?p rdfs:range ?C`.
+
+Transitive closures (`rdfs:subClassOf+`, `rdfs:subPropertyOf+`) are translated into PostgreSQL
+recursive CTEs, intersecting the version validity at each step of the chain. Rules are applied in a
+single pass (no fixpoint iteration).
+
+Independently of the regime, the virtual graph `urn:converg:schema-drift` can be queried to inspect
+the schema layer and how it changes across versions:
+
+```sparql
+SELECT ?s ?p ?o WHERE {
+  GRAPH <urn:converg:schema-drift> { ?s ?p ?o }
+}
+```
+
+It returns all schema triples (`rdfs:subClassOf`, `rdfs:subPropertyOf`, `rdfs:domain`, `rdfs:range`)
+with their version sets, so ontological drift can be detected with standard SPARQL filters.
+
+Example queries live in `quads-query/src/test/resources/queries/entailment/`.
 
 ### Testing
 
