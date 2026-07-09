@@ -7,6 +7,7 @@
 ng:Test {
     building:1 schema:height "10.5"^^xsd:float ;
         schema:width "5.1"^^xsd:float .
+    building:2 ex:adjacentTo building:3 .
     building:3 schema:height "15"^^xsd:float .
 }
 

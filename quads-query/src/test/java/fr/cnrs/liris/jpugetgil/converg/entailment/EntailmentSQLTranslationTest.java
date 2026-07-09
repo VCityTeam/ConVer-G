@@ -105,7 +105,7 @@ class EntailmentSQLTranslationTest {
 
         String sql = result.getSql();
         // The recursive CTE should intersect validity at each step
-        assertTrue(sql.contains("c.validity & t1.validity"),
+        assertTrue(sql.contains("c.validity::varbit & t1.validity"),
                 "Recursive CTE should intersect validity (conjunctive version set semantics)");
     }
 

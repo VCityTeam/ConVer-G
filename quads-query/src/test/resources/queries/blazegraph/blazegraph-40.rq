@@ -1,0 +1,12 @@
+# Buildings having a height but no width in any versioned graph
+PREFIX schema: <http://schema.org/>
+
+# ?g2 is only in scope inside the MINUS block, so its Metadata guard must live there
+SELECT DISTINCT ?s WHERE {
+  GRAPH ?g { ?s schema:height ?h . }
+  FILTER(?g != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+  MINUS {
+    GRAPH ?g2 { ?s schema:width ?w . }
+    FILTER(?g2 != <https://github.com/VCityTeam/ConVer-G/Named-Graph#Metadata>)
+  }
+}

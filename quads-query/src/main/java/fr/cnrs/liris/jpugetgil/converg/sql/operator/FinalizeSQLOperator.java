@@ -38,12 +38,14 @@ public class FinalizeSQLOperator extends SQLOperator {
 
         this.query.setSql(select + from + join);
 
-        if (this.query.getContext().opSlice() != null) {
-            insertLimit();
-        }
-
+        // The slice must wrap the ordered query, never the other way around:
+        // LIMIT over an unordered subquery keeps arbitrary rows
         if (this.query.getContext().opOrder() != null) {
             insertOrder();
+        }
+
+        if (this.query.getContext().opSlice() != null) {
+            insertLimit();
         }
 
         return new SQLQuery(
@@ -65,6 +67,12 @@ public class FinalizeSQLOperator extends SQLOperator {
                     };
                     Expression columnExpression = Expression.fromJenaExpr(sortCondition.getExpression());
                     String column = columnExpression.toNameSQLString();
+                    if (sortCondition.getExpression().isVariable()) {
+                        // Sort numeric literals by value (name$ is text, so "9.1" > "15"
+                        // lexicographically); non-numeric values follow, ordered as text
+                        return "try_cast_numeric(" + column + ") " + direction + " NULLS LAST, "
+                                + column + " " + direction;
+                    }
                     return column + " " + direction;
                 }).collect(Collectors.joining(", "));
 

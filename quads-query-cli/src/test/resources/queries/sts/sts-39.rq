@@ -1,0 +1,9 @@
+# The two largest heights of building 1 across all versioned graphs
+PREFIX schema: <http://schema.org/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?h WHERE {
+  GRAPH ?g {
+      building:1 schema:height ?h .
+  }
+} ORDER BY DESC(?h) LIMIT 2

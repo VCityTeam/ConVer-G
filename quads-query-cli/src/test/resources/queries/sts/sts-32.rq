@@ -1,0 +1,9 @@
+# Find the buildings exactly two adjacency hops away from building 2
+PREFIX ex: <http://example.edu/>
+PREFIX building: <http://example.edu/Building#>
+
+SELECT ?g ?x WHERE {
+  GRAPH ?g {
+      building:2 (ex:adjacentTo/ex:adjacentTo) ?x .
+  }
+}
