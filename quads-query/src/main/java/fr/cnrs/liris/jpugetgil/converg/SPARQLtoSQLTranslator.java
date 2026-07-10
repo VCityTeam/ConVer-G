@@ -111,6 +111,10 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return switch (op) {
             case OpTransitiveClosure opTC -> new TransitiveClosureSQLOperator(opTC, context)
                     .buildSQLQuery();
+            case OpGraphVersionIntersection opGVI -> new GraphVersionIntersectionSQLOperator(
+                    opGVI,
+                    buildSPARQLContext(opGVI.getSubOp(), context)
+            ).buildSQLQuery();
             case OpJoin opJoin -> new JoinSQLOperator(
                     buildSPARQLContext(opJoin.getLeft(), context),
                     buildSPARQLContext(opJoin.getRight(), context)

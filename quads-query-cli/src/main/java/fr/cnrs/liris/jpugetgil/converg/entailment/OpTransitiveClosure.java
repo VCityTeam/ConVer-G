@@ -13,6 +13,10 @@ import java.util.Objects;
 /**
  * Custom algebra operator representing a transitive closure over a property.
  * For example, {@code ?start rdfs:subClassOf* ?end} within a graph {@code ?g}.
+ * <p>
+ * This operator is produced by the {@link EntailmentRewriter} and consumed by
+ * the {@code TransitiveClosureSQLOperator} to generate a recursive CTE.
+ * The version set at each step of the chain is intersected (conjunctive semantics).
  */
 public class OpTransitiveClosure extends OpExt {
 
@@ -21,6 +25,18 @@ public class OpTransitiveClosure extends OpExt {
     private final Node endNode;
     private final String predicateURI;
     private final int minHops;
+
+    /**
+     * One-or-more closure ({@code +} semantics).
+     *
+     * @param graphNode    the graph scope (variable or URI)
+     * @param startNode    the start of the transitive path (variable or URI)
+     * @param endNode      the end of the transitive path (variable or URI)
+     * @param predicateURI the URI of the transitive property (e.g., rdfs:subClassOf)
+     */
+    public OpTransitiveClosure(Node graphNode, Node startNode, Node endNode, String predicateURI) {
+        this(graphNode, startNode, endNode, predicateURI, 1);
+    }
 
     /**
      * @param graphNode    the graph scope (variable, URI or the generated default graph node)

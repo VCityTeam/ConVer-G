@@ -186,9 +186,9 @@ public class LeftJoinSQLOperator extends JoinSQLOperator {
         String fromSimOrNotExist = buildFrom();
         String whereSimOrNotExist = buildWhere();
 
-        String sql = "WITH " + LEFT_TABLE_NAME + " AS (" + leftQuery.getSql() + "),\n" +
+        StringBuilder sql = new StringBuilder("WITH " + LEFT_TABLE_NAME + " AS (" + leftQuery.getSql() + "),\n" +
                 RIGHT_TABLE_NAME + " AS (" + rightQuery.getSql() + ")\n" +
-                selectSimOrNotExist + fromSimOrNotExist + whereSimOrNotExist;
+                selectSimOrNotExist + fromSimOrNotExist + whereSimOrNotExist);
 
         if (leftQuery.getContext().condensedMode() && hasCondensedCommonVariable()) {
             String differenceFrom = buildDifferenceFrom();
@@ -196,17 +196,21 @@ public class LeftJoinSQLOperator extends JoinSQLOperator {
 
             List<Node> orderedZeta = orderedSharedCondensedNodes();
             for (int sliceIndex = 0; sliceIndex < orderedZeta.size(); sliceIndex++) {
-                sql = sql + "\n UNION \n "
-                        + buildDifferenceSliceSelect(orderedZeta, sliceIndex)
-                        + differenceFrom + whereSimOrNotExist + "\n" + groupByDifferences;
+                sql
+                    .append("\n UNION \n ")
+                    .append(buildDifferenceSliceSelect(orderedZeta, sliceIndex))
+                    .append(differenceFrom)
+                    .append(whereSimOrNotExist)
+                    .append("\n").append(groupByDifferences);
             }
         }
 
         return new SQLQuery(
-                sql,
+                sql.toString(),
                 new SQLContext(
                         mergedMapOccurrences,
                         leftQuery.getContext().condensedMode(),
+                        leftQuery.getContext().entailmentRegime(),
                         null,
                         null
                 ));
