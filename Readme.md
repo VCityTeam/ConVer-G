@@ -155,7 +155,7 @@ mvn package
 
 ## starts the Java Spring application locally (http://localhost:8081/)
 ## `mvn package` produces the runnable shaded jar at target/quads-query-1.0-SNAPSHOT.jar
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" ?"-DENTAILMENT_REGIME=<NONE|RDFS|OWL_LITE>" -jar target/quads-query-1.0-SNAPSHOT.jar
+java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" ?"-DENTAILMENT_REGIME=<NONE|RDFS|OWL_LITE>" ?"-DSWRL_RULES=<path to a SWRL rules ontology>" -jar target/quads-query-1.0-SNAPSHOT.jar
 ```
 
 ### Implementation
@@ -372,6 +372,38 @@ Supported rules:
 Transitive closures (`rdfs:subClassOf+`, `rdfs:subPropertyOf+`) are translated into PostgreSQL
 recursive CTEs, intersecting the version validity at each step of the chain. Rules are applied in a
 single pass (no fixpoint iteration).
+
+#### SWRL reasoning and verification (Openllet)
+
+Independently of the entailment regime, `quads-query` and `quads-query-cli` can apply user-defined
+[SWRL](https://www.w3.org/submissions/SWRL/) rules at query time. The rules are shipped in an OWL
+ontology file (any format OWLAPI can parse: RDF/XML, Turtle, OWL/XML, functional syntax) referenced
+by the `SWRL_RULES` environment variable:
+
+```shell
+SWRL_RULES=/path/to/rules.owl java ... -jar target/quads-query-1.0-SNAPSHOT.jar
+
+# combines freely with the entailment regime:
+ENTAILMENT_REGIME=RDFS SWRL_RULES=/path/to/rules.owl java ... -jar target/quads-query-1.0-SNAPSHOT.jar
+```
+
+Before any rule is used, the ontology is **verified with the [Openllet](https://github.com/Galigator/openllet)
+reasoner**: an inconsistent ontology is a configuration error and is refused (the first query fails
+loudly). Each rule is then checked against what the query rewriter supports — named-class atoms,
+named object/data property atoms, and variable, named-individual or literal arguments. Rules using
+builtin atoms (`swrlb:*`), `sameAs`/`differentFrom` or anonymous class/property expressions are
+skipped with a warning; the remaining verified rules stay active.
+
+Reasoning itself is performed by query rewriting, like the entailment regimes: a pattern matching a
+rule head is unioned with the rule body. For a rule
+`hasParent(?x, ?y) ^ hasBrother(?y, ?z) -> hasUncle(?x, ?z)`, the pattern `?a :hasUncle ?u` also
+returns bindings of `?a :hasParent ?_ . ?_ :hasBrother ?u`. Body atoms are matched in the same graph
+scope as the head pattern, so the versioned semantics of a plain BGP apply: an inferred triple only
+holds in the versions where all body premises hold.
+
+The active inference configuration is reported by the Fuseki `$/server` endpoint: the version string
+is suffixed with the inference mode (`RDFS`, `SWRL`, `RDFS+SWRL`, …) and left untouched when no
+inference is enabled. A sample rules file lives in `quads-query/src/test/resources/swrl/`.
 
 Independently of the regime, the virtual graph `urn:converg:schema-drift` can be queried to inspect
 the schema layer and how it changes across versions:

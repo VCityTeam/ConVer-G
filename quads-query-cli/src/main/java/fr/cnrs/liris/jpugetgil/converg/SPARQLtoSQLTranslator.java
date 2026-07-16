@@ -51,7 +51,19 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
      * @param entailmentRegime the entailment regime to apply during query translation
      */
     public SPARQLtoSQLTranslator(boolean condensedMode, EntailmentRegime entailmentRegime) {
-        super(condensedMode, entailmentRegime);
+        this(condensedMode, entailmentRegime, List.of());
+    }
+
+    /**
+     * Constructor of the SPARQLtoSQLTranslator
+     *
+     * @param condensedMode    if true, the SQL query build will use the condensed mode
+     * @param entailmentRegime the entailment regime to apply during query translation
+     * @param swrlRules        verified SWRL rules applied during query translation
+     */
+    public SPARQLtoSQLTranslator(boolean condensedMode, EntailmentRegime entailmentRegime,
+                                 List<EntailmentRule> swrlRules) {
+        super(condensedMode, entailmentRegime, swrlRules);
         this.jdbcConnection = JdbcConnection.getInstance();
     }
 
@@ -235,18 +247,17 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
-        // Apply entailment rewriting if a regime is active
+        // Apply inference rewriting if an entailment regime or SWRL rules are active
+        List<EntailmentRule> rules = new ArrayList<>();
         if (entailmentRegime != EntailmentRegime.NONE) {
-            List<EntailmentRule> rules = switch (entailmentRegime) {
-                case RDFS -> RDFSRules.allRules();
-                case OWL_LITE -> RDFSRules.allRules(); // OWL_LITE extends RDFS rules
-                default -> List.of();
-            };
-            if (!rules.isEmpty()) {
-                EntailmentRewriter rewriter = new EntailmentRewriter(rules);
-                quadOp = rewriter.rewrite(quadOp);
-                log.info("Entailment rewriting applied with regime: {}", entailmentRegime);
-            }
+            rules.addAll(RDFSRules.allRules()); // OWL_LITE currently extends the RDFS rule set
+        }
+        rules.addAll(swrlRules);
+        if (!rules.isEmpty()) {
+            EntailmentRewriter rewriter = new EntailmentRewriter(rules);
+            quadOp = rewriter.rewrite(quadOp);
+            log.info("Inference rewriting applied (entailment regime: {}, SWRL rules: {})",
+                    entailmentRegime, swrlRules.size());
         }
 
         Long startTranslation = System.nanoTime();

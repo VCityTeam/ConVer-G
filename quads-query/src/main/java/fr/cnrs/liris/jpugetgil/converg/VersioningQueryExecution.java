@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
+import fr.cnrs.liris.jpugetgil.converg.swrl.SWRLReasoner;
 import io.prometheus.metrics.core.metrics.Counter;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.StringJoiner;
 
 public class VersioningQueryExecution implements QueryExecution {
 
@@ -38,6 +40,8 @@ public class VersioningQueryExecution implements QueryExecution {
     private static final EntailmentRegime ENTAILMENT_REGIME =
             EntailmentRegime.fromString(System.getenv("ENTAILMENT_REGIME"));
 
+    private static final SWRLReasoner SWRL_REASONER = SWRLReasoner.fromEnv();
+
     public VersioningQueryExecution(Query query) {
         this.query = query;
         this.translator = getTranslator();
@@ -46,7 +50,26 @@ public class VersioningQueryExecution implements QueryExecution {
     private SPARQLLanguageTranslator getTranslator() {
         // Add switch case for other target languages when implemented
         log.info("Using target language: {}", TARGET_LANG);
-        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME);
+        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME, SWRL_REASONER.getRules());
+    }
+
+    /**
+     * Describes the active inference configuration, e.g. "RDFS", "SWRL" or
+     * "RDFS+SWRL". Empty when no inference is enabled.
+     */
+    public static String inferenceMode() {
+        return describeInferenceMode(ENTAILMENT_REGIME, SWRL_REASONER.isEnabled());
+    }
+
+    static String describeInferenceMode(EntailmentRegime entailmentRegime, boolean swrlEnabled) {
+        StringJoiner joiner = new StringJoiner("+");
+        if (entailmentRegime != EntailmentRegime.NONE) {
+            joiner.add(entailmentRegime.name());
+        }
+        if (swrlEnabled) {
+            joiner.add("SWRL");
+        }
+        return joiner.toString();
     }
 
     private static String getSupportedTargetLanguage(String targetLang) {
