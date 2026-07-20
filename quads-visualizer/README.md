@@ -10,6 +10,7 @@ It visualizes the history and structure of versions (the “metagraph”) and le
 - Interactive view of a selected Versioned Graph (quads as nodes/edges)
 - Delta visualization to compare two snapshots and highlight additions/removals
 - Stable node layout across versions for consistent topology-based analysis
+- **Inference mode selector** (toolbar): choose the query-time reasoning applied to every query — `Server default`, `Off`, `RDFS`, `OWL Lite`, `SWRL`, `RDFS + SWRL` or `All`. The choice is sent to Quads-Query as the [`?infer=` parameter](../docs/inference.md) and applies to both graph panels and the ad-hoc SPARQL panel; changing it reloads the graphs.
 - Minimal config: connects to `Quads-Query` (SPARQL-to-SQL) and `Quads-Loader` endpoints
 
 ## Configuration ⚙️

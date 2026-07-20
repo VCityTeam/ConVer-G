@@ -24,12 +24,11 @@ const ROW_HEADER_W = 172;
 const COL_HEADER_H = 86;
 const OVERSCAN = 4;
 
-const DENSITY = {
-  compact: { cell: 18, gap: 3 },
-  comfortable: { cell: 28, gap: 4 },
-} as const;
+// Cell-size slider bounds (px); the gap and corner radius are derived from it.
+const CELL_MIN = 12;
+const CELL_MAX = 36;
+const CELL_DEFAULT = 18;
 
-type Density = keyof typeof DENSITY;
 type Hover = { r: number | null; c: number | null };
 
 const COLORS = {
@@ -52,7 +51,7 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
   const selectedVersion = useAppSelector((state) => state.versionedGraph.selectedVersion);
   const selectedType = useAppSelector((state) => state.metagraph.selectedMetagraphNodeType);
 
-  const [density, setDensity] = useState<Density>("compact");
+  const [cellSize, setCellSize] = useState<number>(CELL_DEFAULT);
   const [sourceFilter, setSourceFilter] = useState("");
   const [versionFilter, setVersionFilter] = useState("");
   const [scroll, setScroll] = useState({ left: 0, top: 0 });
@@ -63,7 +62,9 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
   const rafRef = useRef<number | null>(null);
   const previewTimer = useRef<number | null>(null);
 
-  const { cell, gap } = DENSITY[density];
+  const cell = cellSize;
+  const gap = Math.max(2, Math.round(cell / 6));
+  const cellRadius = cell <= 20 ? 3 : 4;
   const stride = cell + gap;
 
   // Filtered axes (case-insensitive substring match on the display label).
@@ -123,6 +124,17 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
   const clearPreview = () => {
     if (previewTimer.current != null) window.clearTimeout(previewTimer.current);
     dispatch(setTravelHoverSelection(null));
+  };
+
+  // Deferred clear for when the cursor leaves a snapshot cell (into a gap, a
+  // header or off the grid). It is cancelled by the next `schedulePreview`, so
+  // sweeping between cells stays smooth, but resting off a snapshot ends the
+  // preview instead of leaving a stale diff on the right panel.
+  const scheduleClear = () => {
+    if (previewTimer.current != null) window.clearTimeout(previewTimer.current);
+    previewTimer.current = window.setTimeout(() => {
+      dispatch(setTravelHoverSelection(null));
+    }, 60);
   };
 
   // Visible window (virtualization).
@@ -186,6 +198,7 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
           className="mg-cell"
           title={`${sourceLabel(source)} · ${versionLabel(version)}\n${filled ? "snapshot — click to load" : "no snapshot"}`}
           onMouseEnter={() => onCellEnter(r, c, filled, source, version)}
+          onMouseLeave={() => scheduleClear()}
           onClick={() => onCellClick(filled, source, version)}
           style={{
             position: "absolute",
@@ -194,7 +207,7 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
             width: cell,
             height: cell,
             background,
-            borderRadius: density === "compact" ? 3 : 4,
+            borderRadius: cellRadius,
             cursor: filled ? "pointer" : "default",
             boxShadow: isSelected && filled ? "0 0 0 2px #1e0fa8" : undefined,
             zIndex: isSelected ? 2 : 1,
@@ -280,14 +293,19 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
             )}
           </span>
           <div className="mg-spacer" />
-          <button
-            type="button"
-            className="mg-density"
-            title="Toggle cell size"
-            onClick={() => setDensity((d) => (d === "compact" ? "comfortable" : "compact"))}
-          >
-            {density === "compact" ? "⊕ Larger" : "⊖ Smaller"}
-          </button>
+          <label className="mg-size" title="Cell size">
+            <span className="mg-size__icon" aria-hidden="true">⊖</span>
+            <input
+              type="range"
+              className="mg-size__slider"
+              min={CELL_MIN}
+              max={CELL_MAX}
+              value={cellSize}
+              aria-label="Matrix cell size"
+              onChange={(e) => setCellSize(Number(e.target.value))}
+            />
+            <span className="mg-size__icon" aria-hidden="true">⊕</span>
+          </label>
         </div>
         <div className="mg-toolbar__row">
           <input
@@ -305,7 +323,6 @@ export const MetagraphMatrix: FC<{ response: Response; style?: CSSProperties }> 
           <div className="mg-legend">
             <span><i style={{ background: COLORS.filled }} /> snapshot</span>
             <span><i style={{ background: COLORS.empty }} /> none</span>
-            <span className="mg-legend__hint">cell → load · header → merged view</span>
           </div>
         </div>
       </div>

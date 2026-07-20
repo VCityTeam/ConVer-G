@@ -13,7 +13,7 @@ export default defineConfig({
         secure: false,
       },
       '/rdf': {
-        target: 'https://quaque-reasoning.ud-evolution.pagoda.liris.cnrs.fr',
+        target: 'https://quaque.ud-evolution.pagoda.liris.cnrs.fr',
         changeOrigin: true,
         secure: true,
       },
