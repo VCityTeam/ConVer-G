@@ -1,7 +1,8 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
-import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRule;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceConfig;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceRule;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
@@ -16,24 +17,27 @@ public abstract class SPARQLLanguageTranslator {
 
     protected boolean condensedMode;
 
+    /** The inference sources to saturate over for this query (regime and/or SWRL). */
+    protected InferenceConfig inferenceConfig;
+
+    /** The regime component of {@link #inferenceConfig}, retained for SQLContext plumbing. */
     protected EntailmentRegime entailmentRegime;
 
-    protected List<EntailmentRule> swrlRules;
+    /** The server's verified SWRL rules, compiled for query-time saturation. */
+    protected List<InferenceRule> swrlRules;
 
-    protected SPARQLLanguageTranslator(boolean condensedMode, EntailmentRegime entailmentRegime,
-                                       List<EntailmentRule> swrlRules) {
+    protected SPARQLLanguageTranslator(boolean condensedMode, InferenceConfig inferenceConfig,
+                                       List<InferenceRule> swrlRules) {
         this.condensedMode = condensedMode;
-        this.entailmentRegime = entailmentRegime;
-        this.swrlRules = swrlRules;
+        this.inferenceConfig = inferenceConfig;
+        this.entailmentRegime = inferenceConfig.regime();
+        this.swrlRules = swrlRules == null ? List.of() : swrlRules;
 
         if (condensedMode) {
             log.info("Condensed mode enabled");
         }
-        if (entailmentRegime != EntailmentRegime.NONE) {
-            log.info("Entailment regime: {}", entailmentRegime);
-        }
-        if (!swrlRules.isEmpty()) {
-            log.info("SWRL reasoning enabled with {} rule(s)", swrlRules.size());
+        if (inferenceConfig.isEnabled()) {
+            log.info("Query-time inference enabled ({})", inferenceConfig.describe());
         }
     }
 

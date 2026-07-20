@@ -13,9 +13,9 @@ export default defineConfig({
         secure: false,
       },
       '/rdf': {
-        target: 'http://localhost:8081',
+        target: 'https://quaque-reasoning.ud-evolution.pagoda.liris.cnrs.fr',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
     }
   }

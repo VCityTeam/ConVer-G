@@ -4,8 +4,10 @@ Thanks for using ConVer-G! If you need help, here is where to look.
 
 ## Documentation
 
-- The [README](Readme.md) covers installation, the data model, and how to run
-  each component.
+- The [README](Readme.md) is the entry point; the detailed guides live under
+  [`docs/`](docs) — [getting started](docs/getting-started.md) (installation and
+  how to run each component), [architecture](docs/architecture.md),
+  [inference](docs/inference.md), and the [data model & workflow](docs/data-model.md).
 - Each module has its own `README.md` (for example
   [quads-delta/README.md](quads-delta/README.md)) with module-specific details.
 - A fully reproducible end-to-end example is available in the

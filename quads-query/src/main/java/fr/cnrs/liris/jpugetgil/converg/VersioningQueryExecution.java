@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceConfig;
 import fr.cnrs.liris.jpugetgil.converg.swrl.SWRLReasoner;
 import io.prometheus.metrics.core.metrics.Counter;
 import org.apache.jena.atlas.json.JsonArray;
@@ -19,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
-import java.util.StringJoiner;
 
 public class VersioningQueryExecution implements QueryExecution {
 
@@ -42,34 +42,34 @@ public class VersioningQueryExecution implements QueryExecution {
 
     private static final SWRLReasoner SWRL_REASONER = SWRLReasoner.fromEnv();
 
-    public VersioningQueryExecution(Query query) {
+    /** The inference applied when a query does not specify {@code ?infer}. */
+    private static final InferenceConfig SERVER_DEFAULT =
+            new InferenceConfig(ENTAILMENT_REGIME, SWRL_REASONER.isEnabled());
+
+    /**
+     * @param query      the SPARQL query
+     * @param inferParam the raw {@code ?infer=} request parameter (may be null), used to
+     *                   enable/disable reasoning per query
+     */
+    public VersioningQueryExecution(Query query, String inferParam) {
         this.query = query;
-        this.translator = getTranslator();
+        InferenceConfig config = InferenceConfig.resolve(inferParam, SERVER_DEFAULT, SWRL_REASONER.isEnabled());
+        this.translator = getTranslator(config);
     }
 
-    private SPARQLLanguageTranslator getTranslator() {
+    private SPARQLLanguageTranslator getTranslator(InferenceConfig config) {
         // Add switch case for other target languages when implemented
         log.info("Using target language: {}", TARGET_LANG);
-        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME, SWRL_REASONER.getRules());
+        return new SPARQLtoSQLTranslator(CONDENSED_MODE, config, SWRL_REASONER.getRules());
     }
 
     /**
-     * Describes the active inference configuration, e.g. "RDFS", "SWRL" or
-     * "RDFS+SWRL". Empty when no inference is enabled.
+     * Describes the server's default inference configuration, e.g. "RDFS", "SWRL" or
+     * "RDFS+SWRL". Empty when no inference is enabled by default. Individual queries may
+     * override it with {@code ?infer=}.
      */
     public static String inferenceMode() {
-        return describeInferenceMode(ENTAILMENT_REGIME, SWRL_REASONER.isEnabled());
-    }
-
-    static String describeInferenceMode(EntailmentRegime entailmentRegime, boolean swrlEnabled) {
-        StringJoiner joiner = new StringJoiner("+");
-        if (entailmentRegime != EntailmentRegime.NONE) {
-            joiner.add(entailmentRegime.name());
-        }
-        if (swrlEnabled) {
-            joiner.add("SWRL");
-        }
-        return joiner.toString();
+        return SERVER_DEFAULT.describe();
     }
 
     private static String getSupportedTargetLanguage(String targetLang) {

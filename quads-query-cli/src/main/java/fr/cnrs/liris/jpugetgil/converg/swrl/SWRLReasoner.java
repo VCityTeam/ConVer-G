@@ -1,6 +1,7 @@
 package fr.cnrs.liris.jpugetgil.converg.swrl;
 
-import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRule;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceRule;
+import fr.cnrs.liris.jpugetgil.converg.inference.SwrlRuleTranslator;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -17,14 +18,14 @@ import java.util.Optional;
 /**
  * SWRL reasoner: loads a SWRL rules ontology, verifies it with Openllet
  * ({@link SWRLVerifier}) and exposes the supported rules as
- * {@link EntailmentRule}s applied at query-rewriting time, alongside the RDFS
+ * {@link InferenceRule}s applied during query-time saturation, alongside the RDFS
  * entailment rules.
  * <p>
  * The rules file is configured with the {@code SWRL_RULES} environment
  * variable (any ontology format OWLAPI can parse: RDF/XML, Turtle, OWL/XML,
  * functional syntax). An inconsistent ontology or an unreadable file is a
- * configuration error and fails loudly; individual rules the rewriter cannot
- * translate are skipped with a warning.
+ * configuration error and fails loudly; individual rules the saturation builder
+ * cannot translate are skipped with a warning.
  */
 public class SWRLReasoner {
 
@@ -35,10 +36,10 @@ public class SWRLReasoner {
     private static final SWRLReasoner DISABLED =
             new SWRLReasoner(List.of(), new SWRLVerificationReport(true, List.of(), Map.of()));
 
-    private final List<EntailmentRule> rules;
+    private final List<InferenceRule> rules;
     private final SWRLVerificationReport report;
 
-    private SWRLReasoner(List<EntailmentRule> rules, SWRLVerificationReport report) {
+    private SWRLReasoner(List<InferenceRule> rules, SWRLVerificationReport report) {
         this.rules = rules;
         this.report = report;
     }
@@ -97,10 +98,10 @@ public class SWRLReasoner {
         report.rejectedRules().forEach((rule, reason) ->
                 log.warn("SWRL rule skipped, {}: {}", reason, rule));
 
-        List<EntailmentRule> rules = new ArrayList<>();
+        List<InferenceRule> rules = new ArrayList<>();
         int index = 0;
         for (SWRLRule rule : report.supportedRules()) {
-            rules.addAll(SWRLEntailmentRule.fromRule(rule, ruleName(rule, index)));
+            rules.addAll(SwrlRuleTranslator.translate(rule, ruleName(rule, index)));
             index++;
         }
         log.info("SWRL reasoner enabled: {} rule(s) verified and active, {} skipped",
@@ -116,9 +117,9 @@ public class SWRLReasoner {
     }
 
     /**
-     * @return the verified SWRL rules as entailment rules for the query rewriter
+     * @return the verified SWRL rules compiled for query-time saturation
      */
-    public List<EntailmentRule> getRules() {
+    public List<InferenceRule> getRules() {
         return rules;
     }
 

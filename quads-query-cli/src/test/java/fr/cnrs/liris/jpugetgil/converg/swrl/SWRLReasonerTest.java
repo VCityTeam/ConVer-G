@@ -1,24 +1,20 @@
 package fr.cnrs.liris.jpugetgil.converg.swrl;
 
-import fr.cnrs.liris.jpugetgil.converg.SPARQLtoSQLTranslator;
 import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
-import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRewriter;
-import fr.cnrs.liris.jpugetgil.converg.sql.SQLQuery;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.sparql.algebra.Algebra;
-import org.apache.jena.sparql.algebra.Op;
-import org.apache.jena.sparql.algebra.op.Op1;
-import org.apache.jena.sparql.algebra.op.Op2;
-import org.apache.jena.sparql.algebra.op.OpExtend;
-import org.apache.jena.sparql.algebra.op.OpUnion;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceConfig;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceRule;
+import fr.cnrs.liris.jpugetgil.converg.inference.SaturationSqlBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SWRLReasonerTest {
 
@@ -38,10 +34,10 @@ class SWRLReasonerTest {
         }
     }
 
-    private static Op parseToQuadOp(String sparql) {
-        Query query = QueryFactory.create(sparql);
-        Op op = Algebra.compile(query);
-        return Algebra.toQuadForm(op);
+    private static String saturationSql(List<InferenceRule> rules) {
+        // SWRL only (no RDFS regime) so the SQL isolates the SWRL stratum
+        return new SaturationSqlBuilder(true, new InferenceConfig(EntailmentRegime.NONE, true), rules)
+                .buildWithPrefix();
     }
 
     @Test
@@ -53,7 +49,7 @@ class SWRLReasonerTest {
         assertEquals(2, reasoner.getReport().supportedRules().size(),
                 "Two rules should pass verification");
         assertEquals(2, reasoner.getRules().size(),
-                "Each supported single-head rule should yield one entailment rule");
+                "Each supported single-head rule should yield one inference rule");
         assertEquals(1, reasoner.getReport().rejectedRules().size(),
                 "The builtin rule should be rejected");
         assertTrue(reasoner.getReport().rejectedRules().values().iterator().next()
@@ -76,105 +72,45 @@ class SWRLReasonerTest {
     }
 
     @Test
-    void uncleRuleExpandsPropertyPattern() {
-        // ?a :hasUncle ?u should be unioned with the rule body
-        // (?a :hasParent ?__ent_y . ?__ent_y :hasBrother ?u)
-        Op op = parseToQuadOp(
-                "PREFIX fam: <http://example.org/family#>\n" +
-                "SELECT ?g ?a ?u WHERE { GRAPH ?g { ?a fam:hasUncle ?u } }");
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(op);
-
-        assertNotEquals(op, rewritten, "hasUncle pattern should be expanded by the SWRL rule");
-        assertTrue(containsOpType(rewritten, OpUnion.class),
-                "Rewritten tree should union explicit and inferred results");
+    void saturationExposesInferredRelation() {
+        String sql = saturationSql(reasoner.getRules());
+        assertTrue(sql.startsWith("WITH RECURSIVE"), "Saturation must be a WITH prefix");
+        assertTrue(sql.contains("inf_quad AS ("),
+                "Saturation must define the inf_quad relation scanned by the BGP");
+        assertTrue(sql.contains("bit_or(validity)"),
+                "Derivations of the same triple should be merged with bit_or over the version sets");
     }
 
     @Test
-    void classAtomHeadBindsVariableObject() {
-        // ?x rdf:type ?t triggers the "child" rule; the expansion must bind ?t to
-        // fam:Child (OpExtend) so both union branches expose the same variables
-        Op op = parseToQuadOp(
-                "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "SELECT ?g ?x ?t WHERE { GRAPH ?g { ?x rdf:type ?t } }");
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(op);
-
-        assertNotEquals(op, rewritten, "rdf:type pattern should trigger the class-atom rule");
-        assertTrue(containsOpType(rewritten, OpExtend.class),
-                "Variable type object should be bound to the rule head class via OpExtend");
+    void multiAtomRuleBecomesSelfJoinWithVersionIntersection() {
+        // uncle: hasParent(x,y) ^ hasBrother(y,z) -> hasUncle(x,z)
+        String sql = saturationSql(reasoner.getRules());
+        assertTrue(sql.contains("http://example.org/family#hasUncle"),
+                "The hasUncle head predicate should be produced");
+        assertTrue(sql.contains("http://example.org/family#hasParent")
+                        && sql.contains("http://example.org/family#hasBrother"),
+                "Both body predicates should be matched");
+        assertTrue(sql.contains("b0.validity & b1.validity"),
+                "A two-atom body should intersect the two atoms' version sets");
+        assertTrue(sql.contains("b0.id_named_graph = b1.id_named_graph"),
+                "Body atoms of one rule should share a named graph");
+        assertTrue(sql.contains("UNION ALL"),
+                "The SWRL stratum should union the rule results onto the base relation");
     }
 
     @Test
-    void classAtomHeadMatchesConcreteClass() {
-        Op op = parseToQuadOp(
-                """
-                        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                        PREFIX fam: <http://example.org/family#>
-                        SELECT ?g ?x WHERE { GRAPH ?g { ?x rdf:type fam:Child } }""");
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(op);
-
-        assertNotEquals(op, rewritten, "Concrete fam:Child pattern should trigger the child rule");
-        assertTrue(containsOpType(rewritten, OpUnion.class),
-                "Rewritten tree should union the explicit pattern with the rule body BGP");
-        assertFalse(containsOpType(rewritten, OpExtend.class),
-                "Concrete head match needs no extra binding");
+    void inactiveConfigProducesNoPrefixAndScansBaseTable() {
+        SaturationSqlBuilder inactive =
+                new SaturationSqlBuilder(true, InferenceConfig.NONE, reasoner.getRules());
+        assertFalse(inactive.isActive());
+        assertEquals("", inactive.buildWithPrefix());
+        assertEquals("versioned_quad", inactive.quadSourceRelation());
     }
 
     @Test
-    void nonMatchingPatternsAreUntouched() {
-        // hasBrother is not the head of any rule
-        Op op = parseToQuadOp(
-                "PREFIX fam: <http://example.org/family#>\n" +
-                "SELECT ?g ?s ?o WHERE { GRAPH ?g { ?s fam:hasBrother ?o } }");
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(op);
-
-        assertEquals(op, rewritten, "Patterns matching no rule head should not be rewritten");
-    }
-
-    @Test
-    void otherConcreteClassDoesNotTriggerClassAtomRule() {
-        // fam:Person is not the head of the child rule (head is fam:Child)
-        Op op = parseToQuadOp(
-                """
-                        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                        PREFIX fam: <http://example.org/family#>
-                        SELECT ?g ?x WHERE { GRAPH ?g { ?x rdf:type fam:Person } }""");
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(op);
-
-        assertEquals(op, rewritten, "A concrete class that is no rule head should not be rewritten");
-    }
-
-    @Test
-    void swrlRewritingTranslatesToSQL() {
-        String sparql = """
-                PREFIX fam: <http://example.org/family#>
-                SELECT ?g ?a ?u WHERE { GRAPH ?g { ?a fam:hasUncle ?u } }
-                """;
-        Op quadOp = parseToQuadOp(sparql);
-
-        SPARQLtoSQLTranslator translator =
-                new SPARQLtoSQLTranslator(true, EntailmentRegime.NONE, reasoner.getRules());
-
-        SQLQuery withoutRules = translator.buildSPARQLContext(quadOp);
-        Op rewritten = new EntailmentRewriter(reasoner.getRules()).rewrite(quadOp);
-        SQLQuery withRules = translator.buildSPARQLContext(rewritten);
-
-        assertNotNull(withoutRules.getSql());
-        assertNotNull(withRules.getSql());
-        assertTrue(withRules.getSql().contains("UNION"),
-                "SWRL expansion should union explicit and inferred results in SQL");
-        assertTrue(withRules.getSql().length() > withoutRules.getSql().length(),
-                "SWRL-expanded SQL should be larger than the plain translation");
-    }
-
-    /**
-     * Recursively check if an Op tree contains a node of the given type.
-     */
-    private static boolean containsOpType(Op op, Class<? extends Op> type) {
-        if (type.isInstance(op)) return true;
-        return switch (op) {
-            case Op2 op2 -> containsOpType(op2.getLeft(), type) || containsOpType(op2.getRight(), type);
-            case Op1 op1 -> containsOpType(op1.getSubOp(), type);
-            default -> false;
-        };
+    void flatModeInferenceIsRejected() {
+        SaturationSqlBuilder flat =
+                new SaturationSqlBuilder(false, new InferenceConfig(EntailmentRegime.NONE, true), reasoner.getRules());
+        assertThrows(IllegalStateException.class, flat::buildWithPrefix);
     }
 }

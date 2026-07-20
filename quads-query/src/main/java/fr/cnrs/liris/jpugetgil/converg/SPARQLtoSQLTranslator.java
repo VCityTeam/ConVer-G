@@ -1,7 +1,12 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.connection.JdbcConnection;
-import fr.cnrs.liris.jpugetgil.converg.entailment.*;
+import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
+import fr.cnrs.liris.jpugetgil.converg.entailment.OpTransitiveClosure;
+import fr.cnrs.liris.jpugetgil.converg.entailment.SchemaDriftDetector;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceConfig;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceRule;
+import fr.cnrs.liris.jpugetgil.converg.inference.SaturationSqlBuilder;
 import fr.cnrs.liris.jpugetgil.converg.path.OpZeroLengthPath;
 import fr.cnrs.liris.jpugetgil.converg.path.PathRewriter;
 import fr.cnrs.liris.jpugetgil.converg.sql.SQLContext;
@@ -53,27 +58,31 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
 
     private final Counter queryCounter = MetricsSingleton.getInstance().queryCounter;
 
+    /** Builds the query-time saturation ({@code WITH RECURSIVE ...}) prefix and quad source. */
+    private final SaturationSqlBuilder saturation;
+
     /**
-     * Constructor of the SPARQLtoSQLTranslator
+     * Constructor of the SPARQLtoSQLTranslator (no inference).
      *
      * @param condensedMode    if true, the SQL query build will use the condensed mode
      * @param entailmentRegime the entailment regime to apply during query translation
      */
     public SPARQLtoSQLTranslator(boolean condensedMode, EntailmentRegime entailmentRegime) {
-        this(condensedMode, entailmentRegime, List.of());
+        this(condensedMode, new InferenceConfig(entailmentRegime, false), List.of());
     }
 
     /**
-     * Constructor of the SPARQLtoSQLTranslator
+     * Constructor of the SPARQLtoSQLTranslator.
      *
-     * @param condensedMode    if true, the SQL query build will use the condensed mode
-     * @param entailmentRegime the entailment regime to apply during query translation
-     * @param swrlRules        verified SWRL rules applied during query translation
+     * @param condensedMode   if true, the SQL query build will use the condensed mode
+     * @param inferenceConfig the inference sources (regime and/or SWRL) to saturate over
+     * @param swrlRules       verified SWRL rules available for saturation
      */
-    public SPARQLtoSQLTranslator(boolean condensedMode, EntailmentRegime entailmentRegime,
-                                 List<EntailmentRule> swrlRules) {
-        super(condensedMode, entailmentRegime, swrlRules);
+    public SPARQLtoSQLTranslator(boolean condensedMode, InferenceConfig inferenceConfig,
+                                 List<InferenceRule> swrlRules) {
+        super(condensedMode, inferenceConfig, swrlRules);
         this.jdbcConnection = JdbcConnection.getInstance();
+        this.saturation = new SaturationSqlBuilder(condensedMode, inferenceConfig, this.swrlRules);
     }
 
     /**
@@ -116,17 +125,16 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
     }
 
     public SQLQuery buildSPARQLContext(Op op) {
-        return buildSPARQLContext(op, new SQLContext(new HashMap<>(), condensedMode, entailmentRegime, null, null));
+        // BGP scans read the saturated relation when inference is active, else versioned_quad
+        SQLContext rootContext = new SQLContext(new HashMap<>(), condensedMode, entailmentRegime, null, null)
+                .copyWithQuadSource(saturation.quadSourceRelation());
+        return buildSPARQLContext(op, rootContext);
     }
 
     private SQLQuery buildSPARQLContext(Op op, SQLContext context) {
         return switch (op) {
             case OpTransitiveClosure opTC -> new TransitiveClosureSQLOperator(opTC, context)
                     .buildSQLQuery();
-            case OpGraphVersionIntersection opGVI -> new GraphVersionIntersectionSQLOperator(
-                    opGVI,
-                    buildSPARQLContext(opGVI.getSubOp(), context)
-            ).buildSQLQuery();
             case OpJoin opJoin -> new JoinSQLOperator(
                     buildSPARQLContext(opJoin.getLeft(), context),
                     buildSPARQLContext(opJoin.getRight(), context)
@@ -250,29 +258,24 @@ public class SPARQLtoSQLTranslator extends SPARQLLanguageTranslator {
         return found[0];
     }
 
-    private SQLQuery getSqlQuery(Query query) {
+    SQLQuery getSqlQuery(Query query) {
         Op op = Algebra.compile(query);
 
         // Transform the op to a quad form
         Op quadOp = Algebra.toQuadForm(op);
 
-        // Apply inference rewriting if an entailment regime or SWRL rules are active
-        List<EntailmentRule> rules = new ArrayList<>();
-        if (entailmentRegime != EntailmentRegime.NONE) {
-            rules.addAll(RDFSRules.allRules()); // OWL_LITE currently extends the RDFS rule set
-        }
-        rules.addAll(swrlRules);
-        if (!rules.isEmpty()) {
-            EntailmentRewriter rewriter = new EntailmentRewriter(rules);
-            quadOp = rewriter.rewrite(quadOp);
-            log.info("Inference rewriting applied (entailment regime: {}, SWRL rules: {})",
-                    entailmentRegime, swrlRules.size());
-        }
-
         Long startTranslation = System.nanoTime();
         SQLQuery builtQuery = buildSPARQLContext(quadOp);
         SQLQuery finalizedQuery = new FinalizeSQLOperator(builtQuery)
                 .buildSQLQuery();
+
+        // Query-time inference: prepend the deductive-closure CTEs so the BGP scans
+        // (which reference the saturated relation) see inferred triples. Reasoning on
+        // the data itself, not the query, so open patterns (?s ?p ?o) see inferences too.
+        String withPrefix = saturation.buildWithPrefix();
+        if (!withPrefix.isEmpty()) {
+            finalizedQuery.setSql(withPrefix + finalizedQuery.getSql());
+        }
 
         Long endTranslation = System.nanoTime();
 
