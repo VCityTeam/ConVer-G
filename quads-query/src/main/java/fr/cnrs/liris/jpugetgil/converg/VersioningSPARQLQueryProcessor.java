@@ -49,6 +49,8 @@ public class VersioningSPARQLQueryProcessor extends SPARQLQueryProcessor {
 
     @Override
     protected QueryExec createQueryExec(HttpAction action, Query query, DatasetGraph dataset) {
-        return QueryExecAdapter.adapt(new VersioningQueryExecution(query));
+        // Per-query reasoning toggle: ?infer=rdfs|owl|swrl|rdfs+swrl|off (absent -> server default)
+        String inferParam = action.getRequestParameter("infer");
+        return QueryExecAdapter.adapt(new VersioningQueryExecution(query, inferParam));
     }
 }

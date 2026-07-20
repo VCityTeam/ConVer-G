@@ -65,6 +65,10 @@ public class ActionServerStatus extends ActionCtl
 
     private void describeServer(JsonBuilder builder) {
         String versionStr = Fuseki.VERSION + "-edited";
+        String inferenceMode = VersioningQueryExecution.inferenceMode();
+        if (!inferenceMode.isEmpty()) {
+            versionStr += "-" + inferenceMode;
+        }
         builder
                 .pair("version",   versionStr)
                 .pair("uptime",    Fuseki.serverUptimeSeconds());

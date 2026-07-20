@@ -1,0 +1,54 @@
+Prefix(:=<http://example.org/family#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(swrlb:=<http://www.w3.org/2003/11/swrlb#>)
+
+Ontology(<http://example.org/family>
+
+Declaration(Class(:Person))
+Declaration(Class(:Child))
+Declaration(Class(:Adult))
+Declaration(ObjectProperty(:hasParent))
+Declaration(ObjectProperty(:hasBrother))
+Declaration(ObjectProperty(:hasUncle))
+Declaration(DataProperty(:hasAge))
+
+# hasParent(?x, ?y) ^ hasBrother(?y, ?z) -> hasUncle(?x, ?z)
+DLSafeRule(
+    Annotation(rdfs:label "uncle")
+    Body(
+        ObjectPropertyAtom(:hasParent Variable(:x) Variable(:y))
+        ObjectPropertyAtom(:hasBrother Variable(:y) Variable(:z))
+    )
+    Head(
+        ObjectPropertyAtom(:hasUncle Variable(:x) Variable(:z))
+    )
+)
+
+# Person(?x) ^ hasParent(?x, ?y) -> Child(?x)
+DLSafeRule(
+    Annotation(rdfs:label "child")
+    Body(
+        ClassAtom(:Person Variable(:x))
+        ObjectPropertyAtom(:hasParent Variable(:x) Variable(:y))
+    )
+    Head(
+        ClassAtom(:Child Variable(:x))
+    )
+)
+
+# Person(?x) ^ hasAge(?x, ?age) ^ swrlb:greaterThanOrEqual(?age, 18) -> Adult(?x)
+# uses a builtin atom: verified by Openllet but rejected for query rewriting
+DLSafeRule(
+    Annotation(rdfs:label "adult")
+    Body(
+        ClassAtom(:Person Variable(:x))
+        DataPropertyAtom(:hasAge Variable(:x) Variable(:age))
+        BuiltInAtom(swrlb:greaterThanOrEqual Variable(:age) "18"^^xsd:integer)
+    )
+    Head(
+        ClassAtom(:Adult Variable(:x))
+    )
+)
+
+)

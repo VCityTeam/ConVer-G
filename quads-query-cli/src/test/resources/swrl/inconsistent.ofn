@@ -1,0 +1,13 @@
+Prefix(:=<http://example.org/family#>)
+
+Ontology(<http://example.org/inconsistent>
+
+Declaration(Class(:Person))
+Declaration(Class(:Robot))
+Declaration(NamedIndividual(:bob))
+
+DisjointClasses(:Person :Robot)
+ClassAssertion(:Person :bob)
+ClassAssertion(:Robot :bob)
+
+)

@@ -1,6 +1,8 @@
 package fr.cnrs.liris.jpugetgil.converg;
 
 import fr.cnrs.liris.jpugetgil.converg.entailment.EntailmentRegime;
+import fr.cnrs.liris.jpugetgil.converg.inference.InferenceConfig;
+import fr.cnrs.liris.jpugetgil.converg.swrl.SWRLReasoner;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.graph.Triple;
@@ -35,15 +37,31 @@ public class VersioningQueryExecution implements QueryExecution {
     private static final EntailmentRegime ENTAILMENT_REGIME =
             EntailmentRegime.fromString(System.getenv("ENTAILMENT_REGIME"));
 
+    private static final SWRLReasoner SWRL_REASONER = SWRLReasoner.fromEnv();
+
+    /** The inference applied when a query does not specify an override. */
+    private static final InferenceConfig SERVER_DEFAULT =
+            new InferenceConfig(ENTAILMENT_REGIME, SWRL_REASONER.isEnabled());
+
     public VersioningQueryExecution(Query query) {
-        this.query = query;
-        this.translator = getTranslator();
+        this(query, null);
     }
 
-    private SPARQLLanguageTranslator getTranslator() {
+    /**
+     * @param query      the SPARQL query
+     * @param inferParam an inference override (may be null), enabling/disabling reasoning
+     *                   per query; when null the server default (from env) is used
+     */
+    public VersioningQueryExecution(Query query, String inferParam) {
+        this.query = query;
+        InferenceConfig config = InferenceConfig.resolve(inferParam, SERVER_DEFAULT, SWRL_REASONER.isEnabled());
+        this.translator = getTranslator(config);
+    }
+
+    private SPARQLLanguageTranslator getTranslator(InferenceConfig config) {
         // Add switch case for other target languages when implemented
         log.info("Using target language: {}", TARGET_LANG);
-        return new SPARQLtoSQLTranslator(CONDENSED_MODE, ENTAILMENT_REGIME);
+        return new SPARQLtoSQLTranslator(CONDENSED_MODE, config, SWRL_REASONER.getRules());
     }
 
     private static String getSupportedTargetLanguage(String targetLang) {

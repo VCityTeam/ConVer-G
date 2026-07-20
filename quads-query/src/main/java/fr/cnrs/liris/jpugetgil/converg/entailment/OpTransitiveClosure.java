@@ -14,8 +14,8 @@ import java.util.Objects;
  * Custom algebra operator representing a transitive closure over a property.
  * For example, {@code ?start rdfs:subClassOf* ?end} within a graph {@code ?g}.
  * <p>
- * This operator is produced by the {@link EntailmentRewriter} and consumed by
- * the {@code TransitiveClosureSQLOperator} to generate a recursive CTE.
+ * This operator is produced by the property-path rewriter ({@code PathRewriter}) and
+ * consumed by the {@code TransitiveClosureSQLOperator} to generate a recursive CTE.
  * The version set at each step of the chain is intersected (conjunctive semantics).
  */
 public class OpTransitiveClosure extends OpExt {

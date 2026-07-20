@@ -87,7 +87,8 @@ public class QuadPatternSQLOperator extends SQLOperator {
             if (quad.isDefaultGraphGenerated()) {
                 return ("metadata t" + index);
             } else if (context.condensedMode()) {
-                return ("versioned_quad t" + index);
+                // The saturated relation (query-time inference) when active, else versioned_quad
+                return (context.quadSource() + " t" + index);
             } else {
                 return ("versioned_quad_flat t" + index);
             }
