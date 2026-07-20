@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import Yasgui from "@triply/yasgui";
 import "@triply/yasgui/build/yasgui.min.css";
 import { QueryService } from "../services/QueryService";
-import { useAppDispatch } from "../state/hooks";
+import { useAppDispatch, useAppSelector } from "../state/hooks";
+import { inferQueryParam } from "../state/inferenceSlice";
 import { setHighlightedNodes } from "../state/versionedGraphSlice";
 import sparqlIcon from "../assets/sparql.png";
 import { useSigmaSPARQLSearch } from "../hooks/useSigmaSPARQLSearch";
@@ -11,6 +12,7 @@ import { useSigmaSPARQLSearch } from "../hooks/useSigmaSPARQLSearch";
 export const SparqlQuery: FC = () => {
   const { isValueInGraph, getFocusNodes } = useSigmaSPARQLSearch();
   const dispatch = useAppDispatch();
+  const inferMode = useAppSelector((state) => state.inference.mode);
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
   const yasguiRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export const SparqlQuery: FC = () => {
       yasguiRef.current.innerHTML = "";
       const yasgui = new Yasgui(yasguiRef.current, {
         requestConfig: {
-          endpoint: QueryService.QUERY_ENDPOINT,
+          endpoint: QueryService.endpointWithInference(inferQueryParam(inferMode)),
         },
         yasr: {
           prefixes: {
@@ -189,7 +191,7 @@ export const SparqlQuery: FC = () => {
         yasguiInstance.current = null;
       }
     };
-  }, [handleTermValue, isOpened, isValueInGraph, getFocusNodes]);
+  }, [handleTermValue, isOpened, isValueInGraph, getFocusNodes, inferMode]);
 
   return (
     <>
