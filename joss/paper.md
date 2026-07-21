@@ -10,24 +10,22 @@ tags:
 authors:
   - name: Jey Puget Gil
     orcid: 0009-0006-6198-7488
-    equal-contrib: true
     affiliation: "1"
   - name: Emmanuel Coquery
     orcid: 0000-0001-7015-5604
     affiliation: 1
   - name: John Samuel
     orcid: 0000-0001-8721-7007
-    equal-contrib: true
     affiliation: 2
   - name: Gilles Gesquière
     orcid: 0000-0001-7088-1067
     affiliation: 3
 affiliations:
- - name: Universite Claude Bernard Lyon 1, CNRS, INSA Lyon, LIRIS, UMR 5205
+ - name: Université Claude Bernard Lyon 1, CNRS, INSA Lyon, LIRIS, UMR 5205
    index: 1
- - name: CPE Lyon, CNRS, INSA Lyon, Universite Claude Bernard Lyon 1, Université Lumière Lyon 2, Ecole Centrale de Lyon, LIRIS, UMR 5205
+ - name: CPE Lyon, CNRS, INSA Lyon, Université Claude Bernard Lyon 1, Université Lumière Lyon 2, École Centrale de Lyon, LIRIS, UMR 5205
    index: 2
- - name: Université Lumière Lyon 2, CNRS, Université Claude Bernard Lyon 1, INSA Lyon, Ecole Centrale de Lyon, LIRIS, UMR 5205
+ - name: Université Lumière Lyon 2, CNRS, Université Claude Bernard Lyon 1, INSA Lyon, École Centrale de Lyon, LIRIS, UMR 5205
    index: 3
 date: 17 December 2025
 bibliography: paper.bib
@@ -80,7 +78,7 @@ The suite distinguishes itself in three ways: (i) it explicitly models concurren
 The software suite contributes three interoperable tools that operationalize the theoretical framework of concurrent KG versioning.
 We chose PostgreSQL over a triple store because it provides mature transactional guarantees, indexing strategies, and operational tooling, at the cost of translating SPARQL into SQL and encoding the versioning model relationally.
 For storage, we adopted a *condensed snapshot* representation—each quad is materialized once and a bitmask records its presence across snapshots—balancing storage efficiency with snapshot-query simplicity, avoiding both the redundancy of independent copies and the query cost of pure deltas.
-The architecture is modular, allowing each component to be used independently or in combination, as illustrated in Figure \autoref{fig:architecture}.
+The architecture is modular, allowing each component to be used independently or in combination, as illustrated in \autoref{fig:architecture}.
 
 ![Architecture of the ConVer-G system.\label{fig:architecture}](architecture.png){ width=75% }
 
@@ -91,7 +89,7 @@ It is responsible for mapping standard RDF serialization formats (Turtle, TriG, 
 Its primary goals are:
 
 * **Metadata Management:** It manages the metadata associated with provenance, effectively building the "Versioned Named Graph."
-* **Storage Optimization:** It condenses storage by identifying and storing the quads by managing a bitmask that indicates the presence of each quad across different snapshots.
+* **Storage Optimization:** It condenses storage by storing each quad only once and managing a bitmask that indicates the presence of that quad across different snapshots.
 
 ## Quads-Query
 
@@ -104,21 +102,21 @@ It allows users to execute queries against a specific snapshot or named branch, 
 ## Quads-Visualizer
 
 **Quads-Visualizer** is a React-based frontend application designed to visualize the metagraph: the metadata of the versioned KG.
-While the backend manages the data, Quads-Visualizer renders two graphs:
+While the backend manages the data, Quads-Visualizer renders two graphs (\autoref{fig:qua-viz}):
 
 - the **Metagraph**—a graph where nodes represent versions (snapshot) and edges represent derivation (parent-child relationships)
 - the **Versioned Graph**—a view of the RDF quads present in a selected snapshot.
 
 ![Left panel shows the metagraph and right panel shows the versioned graph.\label{fig:qua-viz}](qua-viz.png)
 
-A clustering feature organizes Versioned Named Graph (VNG) nodes using two PROV-O predicates: `prov:specializationOf` groups all temporal versions of the same named graph, while `prov:atLocation` groups all named graphs captured within the same snapshot.
+A clustering feature (\autoref{fig:qua-viz-clustering}) organizes Versioned Named Graph (VNG) nodes using two PROV-O predicates: `prov:specializationOf` groups all temporal versions of the same named graph, while `prov:atLocation` groups all named graphs captured within the same snapshot.
 Users can therefore navigate either by structure—observing how a single named graph evolves—or by time—inspecting the complete dataset state at a specific version.
 A **Focus mode** further hides non-PROV-O metadata triples to reduce visual noise.
 
 ![Clustering of nodes in the metagraph.\label{fig:qua-viz-clustering}](cluster.png)
 
-To support comparison, the tool computes a static layout shared across all versions, and a **Change versioned graph** view displays the delta between the currently selected version and any other version.
-A **Merged graphs** option allows users to visualize all versioned graphs merged into a single graph, with a search bar to filter nodes by label for navigation in large datasets.
+To support comparison, the tool computes a static layout shared across all versions, and a **Change versioned graph** view displays the delta between the currently selected version and any other version (\autoref{fig:delta-viz}).
+A **Merged graphs** option (\autoref{fig:merged-viz}) allows users to visualize all versioned graphs merged into a single graph, with a search bar to filter nodes by label for navigation in large datasets.
 
 ![Visualization of differences between two versioned graphs.\label{fig:delta-viz}](delta-viz.png)
 
@@ -127,7 +125,7 @@ A **Merged graphs** option allows users to visualize all versioned graphs merged
 # Research impact statement
 
 ConVer-G targets researchers and practitioners working with evolving RDF datasets who need to manage history explicitly rather than through ad-hoc copies or external scripts.
-By building concurrent versioning over a RDBMS and exposing a standard SPARQL endpoint, the suite lowers the entry cost for adopting versioned KGs in projects relying on relational infrastructure, and makes them usable from existing SPARQL clients without modification.
+By building concurrent versioning over an RDBMS and exposing a standard SPARQL endpoint, the suite lowers the entry cost for adopting versioned KGs in projects relying on relational infrastructure, and makes them usable from existing SPARQL clients without modification.
 
 The architectural and theoretical foundations, together with an empirical evaluation comparing the query performance of the condensed representation against an extensional (one-dataset-per-version) baseline, have been published [@gil2024convergconcurrentversioningknowledge].
 The software is used within the VCity project at the LIRIS laboratory, where evolving urban and geospatial datasets motivate explicit, branch-aware versioning.
