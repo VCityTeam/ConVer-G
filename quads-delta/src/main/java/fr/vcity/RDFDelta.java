@@ -43,42 +43,59 @@ public class RDFDelta {
             Model model1 = loadModel(file1);
             Model model2 = loadModel(file2);
 
-            Model additions = model2.difference(model1);
-            Model deletions = model1.difference(model2);
-
-            writeModel(additions, outFiles[0]);
-            writeModel(deletions, outFiles[1]);
+            writeModel(additions(model1, model2), outFiles[0]);
+            writeModel(deletions(model1, model2), outFiles[1]);
         } else {
             Dataset dataset1 = loadDataset(file1);
             Dataset dataset2 = loadDataset(file2);
 
-            Dataset additions = DatasetFactory.create();
-            Dataset deletions = DatasetFactory.create();
-
-            // Compute additions and deletions
-            dataset2.asDatasetGraph().find().forEachRemaining((Quad quad) -> {
-                if (!dataset1.asDatasetGraph().contains(quad)) {
-                    additions.asDatasetGraph().add(quad);
-                }
-            });
-
-            dataset1.asDatasetGraph().find().forEachRemaining((Quad quad) -> {
-                if (!dataset2.asDatasetGraph().contains(quad)) {
-                    deletions.asDatasetGraph().add(quad);
-                }
-            });
-
-            writeDataset(additions, outFiles[0]);
-            writeDataset(deletions, outFiles[1]);
+            writeDataset(additions(dataset1, dataset2), outFiles[0]);
+            writeDataset(deletions(dataset1, dataset2), outFiles[1]);
         }
 
         log.info("Output written to " + outFiles[0] + " and " + outFiles[1]);
     }
 
     /**
+     * Returns the triples present in {@code newModel} but not in {@code oldModel}.
+     */
+    static Model additions(Model oldModel, Model newModel) {
+        return newModel.difference(oldModel);
+    }
+
+    /**
+     * Returns the triples present in {@code oldModel} but not in {@code newModel}.
+     */
+    static Model deletions(Model oldModel, Model newModel) {
+        return oldModel.difference(newModel);
+    }
+
+    /**
+     * Returns the quads present in {@code newDataset} but not in {@code oldDataset}.
+     * The comparison is graph-aware: the same triple in a different named graph counts as a change.
+     */
+    static Dataset additions(Dataset oldDataset, Dataset newDataset) {
+        Dataset additions = DatasetFactory.create();
+        newDataset.asDatasetGraph().find().forEachRemaining((Quad quad) -> {
+            if (!oldDataset.asDatasetGraph().contains(quad)) {
+                additions.asDatasetGraph().add(quad);
+            }
+        });
+        return additions;
+    }
+
+    /**
+     * Returns the quads present in {@code oldDataset} but not in {@code newDataset}.
+     * The comparison is graph-aware: the same triple in a different named graph counts as a change.
+     */
+    static Dataset deletions(Dataset oldDataset, Dataset newDataset) {
+        return additions(newDataset, oldDataset);
+    }
+
+    /**
      * Validates the RDF file and returns its language.
      */
-    private static Lang validateAndGetLang(String filePath) {
+    static Lang validateAndGetLang(String filePath) {
         Lang lang = RDFLanguages.filenameToLang(filePath);
         if (lang == null || !RDFLanguages.isRegistered(lang)) {
             System.err.println("Unsupported RDF serialization: " + lang);
@@ -132,7 +149,7 @@ public class RDFDelta {
     /**
      * Returns output filenames for additions and deletions.
      */
-    private static String[] getOutputFilenames(String arg1, String arg2, String dataDir, boolean isTriples) {
+    static String[] getOutputFilenames(String arg1, String arg2, String dataDir, boolean isTriples) {
         String file1Base = new File(arg1).getName();
         String file2Base = new File(arg2).getName();
         int idx1 = file1Base.lastIndexOf('.');

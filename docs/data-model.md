@@ -24,10 +24,10 @@ sequenceDiagram
     participant Triple store
 
     loop For each Annotated version
-        System ->>+ QuaDer: Sends the version to import
-        QuaDer ->>+ Database: Inserts the version
-        Database ->>- QuaDer: Returns the insert status
-        QuaDer ->>- System: Returns the version index
+        System ->>+ Quads-loaDer: Sends the version to import
+        Quads-loaDer ->>+ Database: Inserts the version
+        Database ->>- Quads-loaDer: Returns the insert status
+        Quads-loaDer ->>- System: Returns the version index
         
         System ->>+ Triple store: Sends the version to import
         Triple store ->>- System: Returns the insert status
@@ -36,7 +36,7 @@ sequenceDiagram
     System ->>+ Triple store: Sends the theoretical annotations to import
     Triple store ->>- System: Returns the insert status
     
-    box QuaQue
+    box Quads-Query
         participant SPARQL-SQL translator
         participant SPARQL API
     end
