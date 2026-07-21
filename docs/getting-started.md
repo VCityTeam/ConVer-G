@@ -66,7 +66,10 @@ cd quads-loader
 
 ## wait until the PostgreSQL database is up
 ## starts the Java Spring application locally (http://localhost:8080/)
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" -jar target/quads-loader-0.0.1-SNAPSHOT.jar
+## the connection settings are optional, they default to the docker-compose database
+## (jdbc:postgresql://localhost:5432/converg, postgres/password)
+SPRING_DATASOURCE_URL=<url> SPRING_DATASOURCE_USERNAME=<username> SPRING_DATASOURCE_PASSWORD=<password> \
+  java -jar target/quads-loader-0.0.1-SNAPSHOT.jar
 ```
 
 ### 🦆 Quads-Query
@@ -83,9 +86,17 @@ cd quads-query
 # build the project
 mvn package
 
-## starts the Java Spring application locally (http://localhost:8081/)
+## starts the Apache Jena Fuseki server locally (http://localhost:8081/)
 ## `mvn package` produces the runnable shaded jar at target/quads-query-1.0-SNAPSHOT.jar
-java "-DDATASOURCE_URL=<url>" "-DDATASOURCE_USERNAME=<username>" "-DDATASOURCE_PASSWORD=<password>" ?"-DTARGET_LANG=<target language>" ?"-DCONDENSED_MODE=<boolean>" ?"-DENTAILMENT_REGIME=<NONE|RDFS|OWL_LITE>" ?"-DSWRL_RULES=<path to a SWRL rules ontology>" -jar target/quads-query-1.0-SNAPSHOT.jar
+## the connection settings are optional, they default to the docker-compose database
+DATASOURCE_URL=<url> DATASOURCE_USERNAME=<username> DATASOURCE_PASSWORD=<password> \
+  java -jar target/quads-query-1.0-SNAPSHOT.jar
+
+## optional environment variables:
+##   TARGET_LANG=<SQL>                            target query language (only SQL is supported, default: SQL)
+##   CONDENSED_MODE=<true|false>                  condensed vs flat versioned representation (default: true)
+##   ENTAILMENT_REGIME=<NONE|RDFS|OWL_LITE>       entailment regime (default: NONE)
+##   SWRL_RULES=<path to a SWRL rules ontology>   SWRL rules to apply, see inference.md
 ```
 
 See [inference.md](inference.md) for what the `ENTAILMENT_REGIME` and `SWRL_RULES` options enable.
