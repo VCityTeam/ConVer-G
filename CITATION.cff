@@ -1,40 +1,46 @@
-cff-version: 1.2.0
-message: "If you use one of these softwares, please cite the articles."
+cff-version: "1.2.0"
 authors:
-- family-names: "Puget Gil"
-  given-names: "Jey"
-- family-names: "Coquery"
-  given-names: "Emmanuel"
-- family-names: "Samuel"
-  given-names: "John"
-title: "ConVer-G"
-version: 1.0.0
-date-released: 2024-10-21
-url: "https://github.com/VCityTeam/ConVer-G"
+- family-names: Puget Gil
+  given-names: Jey 
+  orcid: "https://orcid.org/0009-0006-6198-7488"
+- family-names: Coquery
+  given-names: Emmanuel
+  orcid: "https://orcid.org/0000-0001-7015-5604"
+- family-names: Samuel
+  given-names: John
+  orcid: "https://orcid.org/0000-0001-8721-7007"
+- family-names: Gesquière
+  given-names: Gilles
+  orcid: "https://orcid.org/0000-0001-7088-1067"
+doi: 10.5281/zenodo.21724811
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
 preferred-citation:
-  type: inproceedings
   authors:
-    - family-names: "Puget Gil"
-      given-names: "Jey"
-    - family-names: "Coquery"
-      given-names: "Emmanuel"
-    - family-names: "Samuel"
-      given-names: "John"
-    - family-names: "Gesquière"
-      given-names: "Gilles"
-  title: "ConVer-G: Concurrent versioning of knowledge graphs"
-  booktitle: "40ème conférence sur la gestion des données (BDA)"
-  address: "Orléans, France"
-  year: 2024
-  month: 10
-  url: "https://hal.science/hal-04690144"
-  keywords:
-    - graph
-    - RDF
-    - versioning
-    - concurrent versioning
-    - query
-  identifiers:
-    - type: hal
-      value: "hal-04690144"
-  notes: "PDF: https://hal.science/hal-04690144v1/file/converg-jpg.pdf"
+  - family-names: Puget Gil
+    given-names: Jey 
+    orcid: "https://orcid.org/0009-0006-6198-7488"
+  - family-names: Coquery
+    given-names: Emmanuel
+    orcid: "https://orcid.org/0000-0001-7015-5604"
+  - family-names: Samuel
+    given-names: John
+    orcid: "https://orcid.org/0000-0001-8721-7007"
+  - family-names: Gesquière
+    given-names: Gilles
+    orcid: "https://orcid.org/0000-0001-7088-1067"
+  date-published: 2026-08-01
+  doi: 10.21105/joss.10828
+  issn: 2475-9066
+  issue: 124
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 10828
+  title: "ConVer-G: A Suite for Versioning, Querying and Visualization
+    of Dynamic Knowledge Graphs"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.10828"
+  volume: 11
+title: "ConVer-G: A Suite for Versioning, Querying and Visualization of
+  Dynamic Knowledge Graphs"
